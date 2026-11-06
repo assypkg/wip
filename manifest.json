@@ -1,0 +1,25 @@
+{
+  "name": "Smart WIP & SPA Assy Calculator",
+  "short_name": "WIP Assy",
+  "description": "Aplikasi Pendataan Sisa Barang Bagus (WIP) & SPA Assembly",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f1f5f9",
+  "theme_color": "#1a237e",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icon-assy-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-assy-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
