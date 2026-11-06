@@ -717,7 +717,7 @@
         <img src="icon-assy-192.png" alt="Logo" style="width:36px; height:36px; border-radius:8px; object-fit:cover; background:#fff;" onerror="this.style.display='none'" />
         <div>
           <div class="app-title">SMART WIP, FINISH GOOD & SPA</div>
-          <div class="app-subtitle">Cloud Firestore: <b>wipassembly-cd66b</b></div>
+          <div class="app-subtitle">Auto-Save Draft HP &bull; Cloud: <b>wipassembly-cd66b</b></div>
         </div>
       </div>
       <div class="header-actions">
@@ -774,7 +774,7 @@
       <div class="card" id="wipInputCard">
         <div class="card-header">
           <span class="card-title" id="wipFormTitle">1. Input Sisa Barang Bagus (WIP)</span>
-          <span style="font-size:0.72rem; font-weight:700; color:var(--emerald);">Cloud: wipassembly-cd66b</span>
+          <span style="font-size:0.71rem; font-weight:700; color:var(--emerald);">🔒 Auto-Save Draft Aktif</span>
         </div>
 
         <!-- BANNER SAAT MODE EDIT AKTIF -->
@@ -787,11 +787,11 @@
         <div class="meta-grid">
           <div>
             <label>Pilih Tanggal</label>
-            <input type="date" id="wipDate" onchange="renderWipAll(); renderFgAll();" />
+            <input type="date" id="wipDate" onchange="simpanDraftLokal(); renderWipAll(); renderFgAll();" />
           </div>
           <div>
             <label>Shift</label>
-            <select id="wipShift" onchange="renderWipAll()">
+            <select id="wipShift" onchange="simpanDraftLokal(); renderWipAll();">
               <option value="shift 1">Shift 1</option>
               <option value="shift 2">Shift 2</option>
               <option value="shift 3">Shift 3</option>
@@ -799,7 +799,7 @@
           </div>
           <div>
             <label>Plant</label>
-            <select id="wipPlant" onchange="renderWipAll(); renderFgAll();">
+            <select id="wipPlant" onchange="simpanDraftLokal(); renderWipAll(); renderFgAll();">
               <option value="plant alpha">Plant Alpha</option>
               <option value="plant beta">Plant Beta</option>
             </select>
@@ -827,11 +827,11 @@
         <div class="form-row-responsive">
           <div>
             <label>Kelompok Produk</label>
-            <input type="text" id="selectedGroup" placeholder="Misal: 8603 OMG" required />
+            <input type="text" id="selectedGroup" placeholder="Misal: 8603 OMG" oninput="simpanDraftLokal()" required />
           </div>
           <div>
             <label>Nama Komponen & Kode</label>
-            <input type="text" id="selectedPart" placeholder="Misal: Inbs(009)" required />
+            <input type="text" id="selectedPart" placeholder="Misal: Inbs(009)" oninput="simpanDraftLokal()" required />
           </div>
           <div style="grid-column: 1 / -1;">
             <label>Keterangan Cavity / Status / Mold (Opsional)</label>
@@ -839,6 +839,7 @@
               type="text"
               id="selectedNote"
               placeholder="Contoh: cvty 8 / cvty 12,13,16 / ss (Kosongkan jika reguler)"
+              oninput="simpanDraftLokal()"
             />
           </div>
         </div>
@@ -859,7 +860,7 @@
               id="calcBoxInput"
               class="input-calc"
               placeholder="Angka saja: 650 atau 650*5"
-              oninput="filterHanyaAngkaKalkulator(this)"
+              oninput="filterHanyaAngkaKalkulator(this); simpanDraftLokal();"
               onkeydown="if(event.key==='Enter'){event.preventDefault(); tambahAngkaBox(1);}"
             />
             <button type="button" class="btn btn-primary" onclick="tambahAngkaBox(1)">
@@ -870,7 +871,7 @@
             </button>
           </div>
           <div style="font-size:0.71rem; color:var(--text-muted); margin-top:5px;">
-            💡 Ketik qty per box lalu tekan <b>Enter</b> / <b>+ Tambah Box</b>. Jika ada barang diambil helper, ketik angkanya lalu klik <b>➖ Kurangi Qty</b>.
+            💡 Ketik qty per box lalu tekan <b>Enter</b> / <b>+ Tambah Box</b>. Data yang sedang diketik otomatis tersimpan di HP ini meskipun aplikasi ditutup sementara.
           </div>
 
           <div class="box-chips-container" id="boxChipsList"></div>
@@ -954,11 +955,11 @@
         <div class="meta-grid four-cols">
           <div>
             <label>Tanggal</label>
-            <input type="date" id="fgDate" onchange="renderFgAll()" />
+            <input type="date" id="fgDate" onchange="simpanDraftLokal(); renderFgAll();" />
           </div>
           <div>
             <label>Jam Laporan</label>
-            <input type="text" id="fgTime" value="23.00" placeholder="23.00" oninput="renderFgAll()" />
+            <input type="text" id="fgTime" value="23.00" placeholder="23.00" oninput="simpanDraftLokal(); renderFgAll();" />
           </div>
           <div>
             <label>Shift</label>
@@ -970,7 +971,7 @@
           </div>
           <div>
             <label>Plant</label>
-            <select id="fgPlant" onchange="renderFgAll()">
+            <select id="fgPlant" onchange="simpanDraftLokal(); renderFgAll();">
               <option value="PLANT ALPHA">PLANT ALPHA</option>
               <option value="PLANT BETA">PLANT BETA</option>
             </select>
@@ -981,11 +982,11 @@
         <div class="form-row-responsive">
           <div>
             <label>Nama Leader / Operator</label>
-            <input type="text" id="fgLeader" placeholder="Contoh: ISTIANAH" />
+            <input type="text" id="fgLeader" placeholder="Contoh: ISTIANAH" oninput="simpanDraftLokal()" />
           </div>
           <div>
             <label>Durasi Jam Kerja</label>
-            <input type="text" id="fgDuration" value="15.00-23.00" placeholder="Contoh: 15.00-23.00" />
+            <input type="text" id="fgDuration" value="15.00-23.00" placeholder="Contoh: 15.00-23.00" oninput="simpanDraftLokal()" />
           </div>
           <div style="grid-column: 1 / -1;">
             <label>Nama Produk & Nomor Job Order (JO)</label>
@@ -994,6 +995,7 @@
               id="fgProductJo"
               placeholder="Contoh: 8603 - BS(A) PROJECT NEW YORK - OMG LIP CREAM (JD26-0771)"
               list="fgProductHistoryList"
+              oninput="simpanDraftLokal()"
             />
             <datalist id="fgProductHistoryList">
               <option value="8603 - BS(A) PROJECT NEW YORK - OMG LIP CREAM (JD26-0771)"></option>
@@ -1006,6 +1008,7 @@
               id="fgNote"
               value="Pakai lem shadowless UV glue"
               placeholder="Contoh: Pakai lem shadowless UV glue"
+              oninput="simpanDraftLokal()"
             />
           </div>
           <div>
@@ -1016,7 +1019,7 @@
               id="fgTarget"
               value="19800"
               placeholder="Contoh: 19800"
-              oninput="this.value=this.value.replace(/[^0-9]/g,'')"
+              oninput="this.value=this.value.replace(/[^0-9]/g,''); simpanDraftLokal();"
             />
           </div>
         </div>
@@ -1039,7 +1042,7 @@
                 id="fgPcsPerBox"
                 value="550"
                 placeholder="550"
-                oninput="this.value=this.value.replace(/[^0-9]/g,''); hitungPreviewFg();"
+                oninput="this.value=this.value.replace(/[^0-9]/g,''); hitungPreviewFg(); simpanDraftLokal();"
               />
             </div>
             <div>
@@ -1049,7 +1052,7 @@
                 inputmode="numeric"
                 id="fgBoxA"
                 placeholder="Misal: 20"
-                oninput="this.value=this.value.replace(/[^0-9]/g,''); hitungPreviewFg();"
+                oninput="this.value=this.value.replace(/[^0-9]/g,''); hitungPreviewFg(); simpanDraftLokal();"
               />
             </div>
             <div>
@@ -1059,7 +1062,7 @@
                 inputmode="numeric"
                 id="fgBoxB"
                 placeholder="Misal: 16"
-                oninput="this.value=this.value.replace(/[^0-9]/g,''); hitungPreviewFg();"
+                oninput="this.value=this.value.replace(/[^0-9]/g,''); hitungPreviewFg(); simpanDraftLokal();"
               />
             </div>
           </div>
@@ -1089,7 +1092,7 @@
         <!-- OPSI GABUNG DENGAN SISA BARANG BAGUS WIP -->
         <div style="background:var(--emerald-bg); border:1.5px solid #81c784; padding:9px 12px; border-radius:8px; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; gap:8px;">
           <label style="margin:0; display:flex; align-items:center; gap:8px; cursor:pointer; color:var(--emerald); font-size:0.76rem;">
-            <input type="checkbox" id="mergeWipToggle" checked onchange="renderFgAll()" style="width:18px; height:18px;" />
+            <input type="checkbox" id="mergeWipToggle" checked onchange="simpanDraftLokal(); renderFgAll();" style="width:18px; height:18px;" />
             <span><b>Gabungkan Otomatis dengan Sisa Barang Bagus WIP</b> di bagian bawah Laporan WA</span>
           </label>
         </div>
@@ -1133,11 +1136,11 @@
         <div class="meta-grid two-cols">
           <div>
             <label>Pilih Tanggal SPA</label>
-            <input type="date" id="spaDate" onchange="renderSpaAll()" />
+            <input type="date" id="spaDate" onchange="simpanDraftLokal(); renderSpaAll();" />
           </div>
           <div>
             <label>Plant</label>
-            <select id="spaPlant" onchange="renderSpaAll()">
+            <select id="spaPlant" onchange="simpanDraftLokal(); renderSpaAll();">
               <option value="plant alpha">Plant Alpha</option>
               <option value="plant beta">Plant Beta</option>
             </select>
@@ -1164,11 +1167,11 @@
           <div class="form-row-responsive" style="margin-top:0;">
             <div style="grid-column: 1 / -1;">
               <label>Nama Produk Utama (Header SPA)</label>
-              <input type="text" id="spaGroup" placeholder="Contoh: 8603 OMG" />
+              <input type="text" id="spaGroup" placeholder="Contoh: 8603 OMG" oninput="simpanDraftLokal()" />
             </div>
             <div>
               <label>Info Line & Shift (Opsional)</label>
-              <input type="text" id="spaLineInfo" placeholder="Contoh: 6 line / 3 shift" />
+              <input type="text" id="spaLineInfo" placeholder="Contoh: 6 line / 3 shift" oninput="simpanDraftLokal()" />
             </div>
             <div>
               <label>Target Dasar (+Auto 5%)</label>
@@ -1177,7 +1180,7 @@
                 inputmode="numeric"
                 id="spaBaseTarget"
                 placeholder="Contoh: 118800"
-                oninput="this.value=this.value.replace(/[^0-9]/g,''); hitungTargetSpaPreview();"
+                oninput="this.value=this.value.replace(/[^0-9]/g,''); hitungTargetSpaPreview(); simpanDraftLokal();"
               />
             </div>
           </div>
@@ -1189,11 +1192,11 @@
         <div class="form-row-responsive">
           <div>
             <label>Komponen & Kode</label>
-            <input type="text" id="spaPart" placeholder="Contoh: Base(002)" />
+            <input type="text" id="spaPart" placeholder="Contoh: Base(002)" oninput="simpanDraftLokal()" />
           </div>
           <div>
             <label>Keterangan (Mold / Hold / Beta)</label>
-            <input type="text" id="spaNote" placeholder="Contoh: mold 3 / tunggu dari Beta" />
+            <input type="text" id="spaNote" placeholder="Contoh: mold 3 / tunggu dari Beta" oninput="simpanDraftLokal()" />
           </div>
         </div>
 
@@ -1489,12 +1492,10 @@
 
     let catalog = JSON.parse(localStorage.getItem("assy_catalog_v3")) || DEFAULT_CATALOG;
 
-    // Saat aplikasi dibuka, layar kerja dimulai kosong
     let wipList = [];
     let fgList = [];
     let spaList = [];
 
-    // Daftar Cloud & Daftar Hitam ID yang Sudah Dihapus (Mencegah Bug Muncul Lagi)
     let cloudArchive = JSON.parse(localStorage.getItem("assy_wip_cloud_archive_v1")) || [];
     let deletedCloudIds = JSON.parse(localStorage.getItem("assy_deleted_cloud_ids_v1")) || [];
 
@@ -1505,6 +1506,128 @@
     let currentSpaAssyBoxes = [];
     let currentSpaGudangBoxes = [];
     let editingSpaId = null;
+    let activeTabMode = "wip";
+
+    /********************************************************************
+     * 2B. SISTEM AUTO-SAVE DRAFT LOKAL PER HP (ANTI HILANG SAAT KELUAR)
+     *     Draft disimpan khusus di HP masing-masing (tidak bocor ke HP
+     *     user lain) dan otomatis bersih saat berganti hari baru.
+     ********************************************************************/
+    const DRAFT_STORAGE_KEY = "assy_local_working_draft_v1";
+
+    function getTodayWibIso() {
+      const tzOffset = new Date().getTimezoneOffset() * 60000;
+      return new Date(Date.now() - tzOffset).toISOString().slice(0, 10);
+    }
+
+    function simpanDraftLokal() {
+      try {
+        const draftObj = {
+          savedDayIso: getTodayWibIso(),
+          activeTabMode,
+          wipList,
+          fgList,
+          spaList,
+          currentBoxes,
+          currentSpaAssyBoxes,
+          currentSpaGudangBoxes,
+          forms: {
+            wipDate: document.getElementById("wipDate")?.value || "",
+            wipShift: document.getElementById("wipShift")?.value || "shift 1",
+            wipPlant: document.getElementById("wipPlant")?.value || "plant alpha",
+            selectedGroup: document.getElementById("selectedGroup")?.value || "",
+            selectedPart: document.getElementById("selectedPart")?.value || "",
+            selectedNote: document.getElementById("selectedNote")?.value || "",
+            calcBoxInput: document.getElementById("calcBoxInput")?.value || "",
+
+            fgDate: document.getElementById("fgDate")?.value || "",
+            fgTime: document.getElementById("fgTime")?.value || "23.00",
+            fgShift: document.getElementById("fgShift")?.value || "SHIFT 2",
+            fgPlant: document.getElementById("fgPlant")?.value || "PLANT ALPHA",
+            fgLeader: document.getElementById("fgLeader")?.value || "",
+            fgDuration: document.getElementById("fgDuration")?.value || "15.00-23.00",
+            fgProductJo: document.getElementById("fgProductJo")?.value || "",
+            fgNote: document.getElementById("fgNote")?.value || "Pakai lem shadowless UV glue",
+            fgTarget: document.getElementById("fgTarget")?.value || "19800",
+            fgPcsPerBox: document.getElementById("fgPcsPerBox")?.value || "550",
+            fgBoxA: document.getElementById("fgBoxA")?.value || "",
+            fgBoxB: document.getElementById("fgBoxB")?.value || "",
+            mergeWipToggle: document.getElementById("mergeWipToggle")?.checked ?? true,
+
+            spaDate: document.getElementById("spaDate")?.value || "",
+            spaPlant: document.getElementById("spaPlant")?.value || "plant alpha",
+            spaGroup: document.getElementById("spaGroup")?.value || "",
+            spaLineInfo: document.getElementById("spaLineInfo")?.value || "",
+            spaBaseTarget: document.getElementById("spaBaseTarget")?.value || "",
+            spaPart: document.getElementById("spaPart")?.value || "",
+            spaNote: document.getElementById("spaNote")?.value || ""
+          }
+        };
+        localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draftObj));
+      } catch (e) {}
+    }
+
+    function pulihkanDraftLokalJikaHariSama() {
+      const todayIso = getTodayWibIso();
+      document.getElementById("wipDate").value = todayIso;
+      document.getElementById("fgDate").value = todayIso;
+      document.getElementById("spaDate").value = todayIso;
+
+      try {
+        const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
+        if (!raw) return;
+        const draft = JSON.parse(raw);
+
+        // Jika sudah berganti hari baru, kosongkan draft lama secara otomatis!
+        if (draft.savedDayIso !== todayIso) {
+          localStorage.removeItem(DRAFT_STORAGE_KEY);
+          return;
+        }
+
+        // Jika masih di hari yang sama, pulihkan seluruh ketikan & daftar yang sedang dikerjakan
+        wipList = Array.isArray(draft.wipList) ? draft.wipList : [];
+        fgList = Array.isArray(draft.fgList) ? draft.fgList : [];
+        spaList = Array.isArray(draft.spaList) ? draft.spaList : [];
+        currentBoxes = Array.isArray(draft.currentBoxes) ? draft.currentBoxes : [];
+        currentSpaAssyBoxes = Array.isArray(draft.currentSpaAssyBoxes) ? draft.currentSpaAssyBoxes : [];
+        currentSpaGudangBoxes = Array.isArray(draft.currentSpaGudangBoxes) ? draft.currentSpaGudangBoxes : [];
+
+        const f = draft.forms || {};
+        if (f.wipDate) document.getElementById("wipDate").value = f.wipDate;
+        if (f.wipShift) document.getElementById("wipShift").value = f.wipShift;
+        if (f.wipPlant) document.getElementById("wipPlant").value = f.wipPlant;
+        if (f.selectedGroup !== undefined) document.getElementById("selectedGroup").value = f.selectedGroup;
+        if (f.selectedPart !== undefined) document.getElementById("selectedPart").value = f.selectedPart;
+        if (f.selectedNote !== undefined) document.getElementById("selectedNote").value = f.selectedNote;
+        if (f.calcBoxInput !== undefined) document.getElementById("calcBoxInput").value = f.calcBoxInput;
+
+        if (f.fgDate) document.getElementById("fgDate").value = f.fgDate;
+        if (f.fgTime !== undefined) document.getElementById("fgTime").value = f.fgTime;
+        if (f.fgShift) document.getElementById("fgShift").value = f.fgShift;
+        if (f.fgPlant) document.getElementById("fgPlant").value = f.fgPlant;
+        if (f.fgLeader !== undefined) document.getElementById("fgLeader").value = f.fgLeader;
+        if (f.fgDuration !== undefined) document.getElementById("fgDuration").value = f.fgDuration;
+        if (f.fgProductJo !== undefined) document.getElementById("fgProductJo").value = f.fgProductJo;
+        if (f.fgNote !== undefined) document.getElementById("fgNote").value = f.fgNote;
+        if (f.fgTarget !== undefined) document.getElementById("fgTarget").value = f.fgTarget;
+        if (f.fgPcsPerBox !== undefined) document.getElementById("fgPcsPerBox").value = f.fgPcsPerBox;
+        if (f.fgBoxA !== undefined) document.getElementById("fgBoxA").value = f.fgBoxA;
+        if (f.fgBoxB !== undefined) document.getElementById("fgBoxB").value = f.fgBoxB;
+        if (f.mergeWipToggle !== undefined) document.getElementById("mergeWipToggle").checked = f.mergeWipToggle;
+
+        if (f.spaDate) document.getElementById("spaDate").value = f.spaDate;
+        if (f.spaPlant) document.getElementById("spaPlant").value = f.spaPlant;
+        if (f.spaGroup !== undefined) document.getElementById("spaGroup").value = f.spaGroup;
+        if (f.spaLineInfo !== undefined) document.getElementById("spaLineInfo").value = f.spaLineInfo;
+        if (f.spaBaseTarget !== undefined) document.getElementById("spaBaseTarget").value = f.spaBaseTarget;
+        if (f.spaPart !== undefined) document.getElementById("spaPart").value = f.spaPart;
+        if (f.spaNote !== undefined) document.getElementById("spaNote").value = f.spaNote;
+
+        if (draft.activeTabMode) {
+          switchMode(draft.activeTabMode);
+        }
+      } catch (e) {}
+    }
 
     function deduplicateCatalogList(list) {
       const seen = new Set();
@@ -1517,7 +1640,6 @@
     }
     catalog = deduplicateCatalogList(catalog);
 
-    // Deduplikasi ketat rekaman Cloud & saring yang sudah dihapus
     function cleanAndDeduplicateCloudArchive(list) {
       const deletedSet = new Set(deletedCloudIds);
       const map = new Map();
@@ -1542,7 +1664,6 @@
       );
     }
 
-    // Pemisah ribuan dengan titik (contoh: 19.800 / 33.836) sesuai standar laporan Indonesia
     function formatNum(n) {
       const num = Number(n) || 0;
       return num.toLocaleString("id-ID");
@@ -1581,6 +1702,7 @@
      * 3. PINDAH TAB MODE (SISA WIP vs FINISH GOOD vs SPA AWAL SHIFT)
      ********************************************************************/
     function switchMode(mode) {
+      activeTabMode = mode;
       const secWip = document.getElementById("sectionWip");
       const secFg = document.getElementById("sectionFg");
       const secSpa = document.getElementById("sectionSpa");
@@ -1600,6 +1722,7 @@
       if (mode === "fg") {
         renderFgAll();
       }
+      simpanDraftLokal();
     }
 
     /********************************************************************
@@ -1655,6 +1778,7 @@
       document.getElementById("selectedGroup").value = group;
       document.getElementById("selectedPart").value = part;
       clearWipSearch();
+      simpanDraftLokal();
       document.getElementById("calcBoxInput").focus();
     }
 
@@ -1717,6 +1841,7 @@
           : [{ label: String(foundWip.qty), val: foundWip.qty }];
         renderSpaCalcBoxes();
       }
+      simpanDraftLokal();
       document.getElementById("spaCalcGudangInput").focus();
     }
 
@@ -1748,12 +1873,14 @@
       currentBoxes.push({ label: finalLabel, val: finalVal });
       inputEl.value = "";
       renderCurrentBoxes();
+      simpanDraftLokal();
       inputEl.focus();
     }
 
     function hapusBoxChip(idx) {
       currentBoxes.splice(idx, 1);
       renderCurrentBoxes();
+      simpanDraftLokal();
     }
 
     function renderCurrentBoxes() {
@@ -1848,6 +1975,7 @@
       renderCurrentBoxes();
       renderWipAll();
       renderFgAll();
+      simpanDraftLokal();
     }
 
     function mulaiEditWip(id) {
@@ -1892,6 +2020,7 @@
       const btnSubmit = document.getElementById("btnSubmitWip");
       btnSubmit.textContent = "✅ SIMPAN KE DAFTAR WIP";
       btnSubmit.style.background = "var(--emerald)";
+      simpanDraftLokal();
     }
 
     function hapusItemWip(id) {
@@ -1899,15 +2028,17 @@
       wipList = wipList.filter((x) => x.id !== id);
       renderWipAll();
       renderFgAll();
+      simpanDraftLokal();
     }
 
     function hapusSemuaWip() {
-      if (wipList.length === 0) return;
+      if (wipList.length === 0 && currentBoxes.length === 0) return;
       if (confirm("Kosongkan semua daftar Sisa Barang Bagus di layar saat ini?")) {
         batalEditWip();
         wipList = [];
         renderWipAll();
         renderFgAll();
+        simpanDraftLokal();
       }
     }
 
@@ -1947,6 +2078,7 @@
         durEl.value = "23.00-07.00";
       }
       renderFgAll();
+      simpanDraftLokal();
     }
 
     function hitungPreviewFg() {
@@ -1977,6 +2109,7 @@
       document.getElementById("fgTarget").value = last.target;
       document.getElementById("fgPcsPerBox").value = last.pcsPerBox;
       hitungPreviewFg();
+      simpanDraftLokal();
       document.getElementById("fgLeader").focus();
     }
 
@@ -2029,12 +2162,12 @@
         fgList.push(record);
       }
 
-      // Bersihkan hanya Nama Leader & Box A/B agar input operator berikutnya sangat cepat
       document.getElementById("fgLeader").value = "";
       document.getElementById("fgBoxA").value = "";
       document.getElementById("fgBoxB").value = "";
       hitungPreviewFg();
       renderFgAll();
+      simpanDraftLokal();
     }
 
     function mulaiEditFg(id) {
@@ -2073,12 +2206,14 @@
       const btn = document.getElementById("btnSubmitFg");
       btn.textContent = "✅ TAMBAHKAN KE LAPORAN FINISH GOOD";
       btn.style.background = "var(--emerald)";
+      simpanDraftLokal();
     }
 
     function hapusItemFg(id) {
       if (editingFgId === id) batalEditFg();
       fgList = fgList.filter((x) => x.id !== id);
       renderFgAll();
+      simpanDraftLokal();
     }
 
     function hapusSemuaFg() {
@@ -2087,6 +2222,7 @@
         batalEditFg();
         fgList = [];
         renderFgAll();
+        simpanDraftLokal();
       }
     }
 
@@ -2138,6 +2274,7 @@
       }
 
       renderFgAll();
+      simpanDraftLokal();
     }
 
     function renderFgAll() {
@@ -2173,7 +2310,6 @@
           .join("");
       }
 
-      // Generate Format Teks WhatsApp sesuai contoh persis dari user
       const tgl = formatTanggalLaporan(document.getElementById("fgDate").value);
       const jam = document.getElementById("fgTime").value.trim() || "23.00";
       const shift = document.getElementById("fgShift").value;
@@ -2310,10 +2446,6 @@
       );
     }
 
-    // Sinkronisasi Cloud Bebas Bug Muncul Lagi / Duplikat:
-    // 1. Selalu gunakan cache: "no-store" agar tidak membaca cache lama
-    // 2. Saring semua dokumen dengan daftar hitam deletedCloudIds
-    // 3. Hanya upload rekaman lokal yang berstatus pendingUpload === true
     async function sinkronTarikDariFirebase(showAlert = false) {
       const pid = getActiveProjectId();
       const badge = document.getElementById("firebaseConnBadge");
@@ -2335,7 +2467,6 @@
             const recId = f.recordId?.stringValue || actualDocId;
             if (!recId) continue;
 
-            // Jika dokumen ini sudah pernah dihapus oleh user, hapus dari server & jangan tampilkan lagi!
             if (deletedSet.has(recId) || deletedSet.has(actualDocId)) {
               fetch(`${getFirestoreBaseUrl()}/${COLLECTION_WIP_AUDIT}/${encodeURIComponent(actualDocId)}`, {
                 method: "DELETE",
@@ -2361,7 +2492,6 @@
             });
           }
 
-          // Hanya kirim data lokal yang benar-benar baru dibuat saat offline (pendingUpload === true)
           for (const localRec of cloudArchive) {
             if (
               localRec.pendingUpload === true &&
@@ -2374,7 +2504,6 @@
             }
           }
 
-          // Jadikan hasil terbaru dari server sebagai sumber utama (bebas duplikat!)
           cloudArchive = cleanAndDeduplicateCloudArchive(remoteRecords);
         }
       } catch (e) {
@@ -2402,18 +2531,15 @@
       const targetRec = cloudArchive.find((r) => r.recordId === recordId);
       const docIdToDelete = targetRec?.docId || recordId;
 
-      // 1. Masukkan ke Daftar Hitam (Blacklist) agar tidak pernah muncul lagi saat di-refresh
       if (!deletedCloudIds.includes(recordId)) deletedCloudIds.push(recordId);
       if (docIdToDelete && !deletedCloudIds.includes(docIdToDelete)) deletedCloudIds.push(docIdToDelete);
       localStorage.setItem("assy_deleted_cloud_ids_v1", JSON.stringify(deletedCloudIds));
 
-      // 2. Hapus dari memori lokal & perbarui tampilan seketika
       cloudArchive = cloudArchive.filter((r) => r.recordId !== recordId && r.docId !== docIdToDelete);
       localStorage.setItem("assy_wip_cloud_archive_v1", JSON.stringify(cloudArchive));
       updateCloudCounterUI();
       renderCloudArchiveList();
 
-      // 3. Hapus permanen dari server Firebase Cloud Firestore (tanpa cache)
       try {
         await fetch(`${getFirestoreBaseUrl()}/${COLLECTION_WIP_AUDIT}/${encodeURIComponent(docIdToDelete)}`, {
           method: "DELETE",
@@ -2574,7 +2700,7 @@
         }
       }
 
-      document.getElementById("wipDate").value = rec.isoDate || new Date().toISOString().slice(0, 10);
+      document.getElementById("wipDate").value = rec.isoDate || getTodayWibIso();
       document.getElementById("wipShift").value = rec.shift || "shift 1";
       document.getElementById("wipPlant").value = rec.plant || "plant alpha";
       wipList = JSON.parse(JSON.stringify(rec.items || []));
@@ -2582,6 +2708,7 @@
       switchMode("wip");
       renderWipAll();
       renderFgAll();
+      simpanDraftLokal();
       toggleModal("cloudModal", false);
 
       showCloudBanner(
@@ -2625,7 +2752,7 @@
       const ws = XLSX.utils.aoa_to_sheet(rows);
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Audit_WIP_Cloud");
-      XLSX.writeFile(wb, `Audit_Selisih_WIP_Assy_${new Date().toISOString().slice(0, 10)}.xlsx`);
+      XLSX.writeFile(wb, `Audit_Selisih_WIP_Assy_${getTodayWibIso()}.xlsx`);
     }
 
     function updateCloudCounterUI() {
@@ -2647,7 +2774,7 @@
 
       const groupEntries = Object.entries(grouped);
       if (groupEntries.length === 0) {
-        container.innerHTML = `<div style="text-align:center; padding:22px 12px; color:var(--text-muted); font-size:0.82rem;">Daftar kosong & siap digunakan. Ketik kode/nama part pada <b>Smart Search</b> di sebelah kiri, atau klik <b>"📥 Tarik Cloud"</b> untuk melihat riwayat sebelumnya.</div>`;
+        container.innerHTML = `<div style="text-align:center; padding:22px 12px; color:var(--text-muted); font-size:0.82rem;">Daftar siap digunakan. Ketik kode/nama part pada <b>Smart Search</b> di sebelah kiri, atau klik <b>"📥 Tarik Cloud"</b> untuk melihat riwayat sebelumnya.</div>`;
       } else {
         container.innerHTML = groupEntries
           .map(
@@ -2735,6 +2862,7 @@
 
       inputEl.value = "";
       renderSpaCalcBoxes();
+      simpanDraftLokal();
       inputEl.focus();
     }
 
@@ -2745,6 +2873,7 @@
         currentSpaGudangBoxes.splice(idx, 1);
       }
       renderSpaCalcBoxes();
+      simpanDraftLokal();
     }
 
     function renderSpaCalcBoxes() {
@@ -2840,6 +2969,7 @@
       currentSpaGudangBoxes = [];
       renderSpaCalcBoxes();
       renderSpaAll();
+      simpanDraftLokal();
     }
 
     function mulaiEditSpa(id) {
@@ -2897,6 +3027,7 @@
       const btnSubmit = document.getElementById("btnSubmitSpa");
       btnSubmit.textContent = "➕ SIMPAN KE LAPORAN SPA";
       btnSubmit.style.background = "var(--purple)";
+      simpanDraftLokal();
     }
 
     function tarikWipKeSpa() {
@@ -2938,12 +3069,14 @@
       });
       switchMode("spa");
       renderSpaAll();
+      simpanDraftLokal();
     }
 
     function hapusItemSpa(id) {
       if (editingSpaId === id) batalEditSpa();
       spaList = spaList.filter((x) => x.id !== id);
       renderSpaAll();
+      simpanDraftLokal();
     }
 
     function hapusSemuaSpa() {
@@ -2952,6 +3085,7 @@
         batalEditSpa();
         spaList = [];
         renderSpaAll();
+        simpanDraftLokal();
       }
     }
 
@@ -2979,7 +3113,7 @@
 
       const entries = Object.entries(grouped);
       if (entries.length === 0) {
-        container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted); font-size:0.82rem;">Daftar SPA kosong & siap digunakan. Silakan input komponen atau klik <b>"📥 Ambil Stok Assy dari WIP"</b>.</div>`;
+        container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted); font-size:0.82rem;">Daftar SPA siap digunakan. Silakan input komponen atau klik <b>"📥 Ambil Stok Assy dari WIP"</b>.</div>`;
       } else {
         container.innerHTML = entries
           .map(([gName, gData], idx) => {
@@ -3165,24 +3299,27 @@
       reader.readAsArrayBuffer(file);
     }
 
+    // Simpan otomatis juga ketika aplikasi diminimize atau berpindah tab di HP
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") {
+        simpanDraftLokal();
+      }
+    });
+
     // INISIALISASI SAAT BUKA APLIKASI
     window.addEventListener("DOMContentLoaded", () => {
       getActiveProjectId();
 
-      // Zona Waktu Lokal (WIB)
-      const tzOffset = new Date().getTimezoneOffset() * 60000;
-      const todayIso = new Date(Date.now() - tzOffset).toISOString().slice(0, 10);
-
-      document.getElementById("wipDate").value = todayIso;
-      document.getElementById("fgDate").value = todayIso;
-      document.getElementById("spaDate").value = todayIso;
-
       document.getElementById("masterCount").textContent = catalog.length;
       updateCloudCounterUI();
 
-      wipList = [];
-      fgList = [];
-      spaList = [];
+      // Pulihkan draft lokal jika masih di hari yang sama, atau reset otomatis jika sudah ganti hari
+      pulihkanDraftLokalJikaHariSama();
+
+      renderCurrentBoxes();
+      renderSpaCalcBoxes();
+      hitungPreviewFg();
+      hitungTargetSpaPreview();
       renderWipAll();
       renderFgAll();
       renderSpaAll();
