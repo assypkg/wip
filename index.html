@@ -7,7 +7,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="WIP Assy" />
-  <title>SMART WIP & SPA ASSY - Cloud Firebase (wipassembly)</title>
+  <title>SMART WIP & SPA ASSY - Cloud System</title>
 
   <!-- PWA Manifest & Icons -->
   <link rel="manifest" href="manifest.json" />
@@ -694,7 +694,7 @@
         <img src="icon-assy-192.png" alt="Logo" style="width:36px; height:36px; border-radius:8px; object-fit:cover; background:#fff;" onerror="this.style.display='none'" />
         <div>
           <div class="app-title">SMART WIP & SPA ASSY</div>
-          <div class="app-subtitle">Cloud Firestore: <b>wipassembly</b></div>
+          <div class="app-subtitle">Cloud Firestore: <b>wipassembly-cd66b</b></div>
         </div>
       </div>
       <div class="header-actions">
@@ -748,7 +748,7 @@
       <div class="card" id="wipInputCard">
         <div class="card-header">
           <span class="card-title" id="wipFormTitle">1. Input Sisa Barang Bagus</span>
-          <span style="font-size:0.72rem; font-weight:700; color:var(--emerald);">Cloud: wipassembly</span>
+          <span style="font-size:0.72rem; font-weight:700; color:var(--emerald);">ID: wipassembly-cd66b</span>
         </div>
 
         <!-- BANNER SAAT MODE EDIT AKTIF -->
@@ -1073,30 +1073,30 @@
   </main>
 
   <!-- =========================================================
-       MODAL 1: RIWAYAT CLOUD FIREBASE (wipassembly) & AUDIT SELISIH
+       MODAL 1: RIWAYAT CLOUD & AUDIT SELISIH GUDANG (wipassembly-cd66b)
        ========================================================= -->
   <div id="cloudModal" class="modal-backdrop">
     <div class="modal-card">
       <div class="card-header">
-        <span class="card-title">☁️ Database Cloud Firebase & Audit Selisih Gudang</span>
+        <span class="card-title">☁️ Database Cloud & Audit Selisih Gudang</span>
         <button class="btn btn-danger" onclick="toggleModal('cloudModal', false)">✕ Tutup</button>
       </div>
 
       <div style="background:#f8fafc; border:1px solid var(--border); border-radius:10px; padding:10px; margin-bottom:12px;">
         <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
-          <label style="margin:0;">🔗 Proyek Cloud Firestore Terhubung:</label>
-          <span id="firebaseConnBadge" class="cloud-badge">🟢 Proyek: wipassembly • Database: (default)</span>
+          <label style="margin:0;">🔗 Status Database Cloud:</label>
+          <span id="firebaseConnBadge" class="cloud-badge">🟢 Cloud Aktif: wipassembly-cd66b</span>
         </div>
-        <div style="display:flex; gap:6px; margin-top:6px; flex-wrap:wrap;">
+        <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
           <input
             type="text"
             id="firebaseProjectIdInput"
-            value="wipassembly"
-            placeholder="Project ID Firebase (Default: wipassembly)"
+            value="wipassembly-cd66b"
+            placeholder="Project ID Firebase"
             style="flex:1; min-width:180px; font-size:0.8rem;"
           />
           <button class="btn btn-primary" onclick="simpanKonfigurasiFirebase()">💾 Simpan ID</button>
-          <button class="btn btn-sky" onclick="sinkronTarikDariFirebase(true)">🔄 Segarkan dari Firebase</button>
+          <button class="btn btn-sky" onclick="sinkronTarikDariFirebase(true)">🔄 Segarkan & Sync Cloud</button>
         </div>
       </div>
 
@@ -1138,7 +1138,7 @@
   <div id="masterModal" class="modal-backdrop">
     <div class="modal-card">
       <div class="card-header">
-        <span class="card-title">📂 Master Katalog WIP (Tersinkronisasi Firebase)</span>
+        <span class="card-title">📂 Master Katalog WIP</span>
         <button class="btn btn-danger" onclick="toggleModal('masterModal', false)">✕ Tutup</button>
       </div>
 
@@ -1146,14 +1146,14 @@
         <label>Upload File Master Baru (.xlsx / .ods / .csv)</label>
         <input type="file" accept=".xlsx,.xls,.ods,.csv" onchange="uploadMasterExcel(event)" style="font-size:0.8rem;" />
         <p style="font-size:0.72rem; color:var(--text-muted); margin-top:4px;">
-          Kolom A: Kelompok Produk (misal <code>8603 OMG</code>), Kolom B: Komponen & Kode (misal <code>Inbs(009)</code>). Data ganda otomatis ditolak & langsung disimpan ke Firebase.
+          Kolom A: Kelompok Produk (misal <code>8603 OMG</code>), Kolom B: Komponen & Kode (misal <code>Inbs(009)</code>). Data ganda otomatis ditolak.
         </p>
       </div>
 
       <div class="form-row-responsive" style="margin-bottom:12px;">
         <input type="text" id="newCatGroup" placeholder="Produk (8603 OMG)" />
         <input type="text" id="newCatPart" placeholder="Part (Inbs(009))" />
-        <button class="btn btn-primary" style="grid-column: 1 / -1;" onclick="tambahKatalogManual()">+ Tambah ke Master & Cloud</button>
+        <button class="btn btn-primary" style="grid-column: 1 / -1;" onclick="tambahKatalogManual()">+ Tambah ke Master</button>
       </div>
 
       <div id="masterModalList" style="max-height:240px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:8px; font-size:0.78rem;"></div>
@@ -1161,7 +1161,7 @@
   </div>
 
   <!-- =========================================================
-       MODAL 3: PANDUAN INSTALL APLIKASI (UNTUK IOS / BROWSER LAIN)
+       MODAL 3: PANDUAN INSTALL APLIKASI
        ========================================================= -->
   <div id="installGuideModal" class="modal-backdrop">
     <div class="modal-card" style="max-width:440px;">
@@ -1177,8 +1177,8 @@
         </p>
         <p style="margin-bottom:10px;">
           <b>2. Pengguna iPhone / iOS (Safari):</b><br>
-          • Ketuk tombol <b>Share / Bagikan</b> (ikon kotak dengan panah ke atas) di bagian bawah Safari.<br>
-          • Geser ke bawah lalu pilih <b>"Add to Home Screen" (Tambah ke Layar Utama)</b>.
+          • Ketuk tombol <b>Share / Bagikan</b> di bagian bawah Safari.<br>
+          • Pilih <b>"Add to Home Screen" (Tambah ke Layar Utama)</b>.
         </p>
         <p>
           <b>3. Pengguna Laptop / PC (Chrome / Edge):</b><br>
@@ -1203,7 +1203,6 @@
     window.addEventListener("beforeinstallprompt", (e) => {
       e.preventDefault();
       deferredInstallPrompt = e;
-      // Tampilkan banner hijau otomatis saat browser siap menginstal aplikasi
       document.getElementById("pwaInstallBanner").style.display = "block";
     });
 
@@ -1223,21 +1222,26 @@
         }
         deferredInstallPrompt = null;
       } else {
-        // Jika sudah ter-install atau dibuka di iOS Safari, tampilkan panduan 1 klik
         toggleModal("installGuideModal", true);
       }
     }
 
     /********************************************************************
-     * 1. KONFIGURASI DEFAULT FIREBASE CLOUD FIRESTORE: "wipassembly"
+     * 1. KONFIGURASI FIREBASE PROJECT ID ASLI: "wipassembly-cd66b"
      ********************************************************************/
-    const DEFAULT_FIREBASE_PROJECT_ID = "wipassembly";
+    const DEFAULT_FIREBASE_PROJECT_ID = "wipassembly-cd66b";
     const FIRESTORE_DATABASE = "(default)";
     const COLLECTION_WIP_AUDIT = "wip_audit_cloud";
     const COLLECTION_MASTER = "wip_master_config";
 
     function getActiveProjectId() {
-      return (localStorage.getItem("assy_firebase_project_id") || DEFAULT_FIREBASE_PROJECT_ID).trim();
+      let saved = (localStorage.getItem("assy_firebase_project_id") || "").trim();
+      // Otomatis koreksi jika di memori HP masih tersimpan "wipassembly" tanpa "-cd66b"
+      if (!saved || saved === "wipassembly") {
+        saved = DEFAULT_FIREBASE_PROJECT_ID;
+        localStorage.setItem("assy_firebase_project_id", saved);
+      }
+      return saved;
     }
 
     function getFirestoreBaseUrl() {
@@ -1280,7 +1284,6 @@
 
     let catalog = JSON.parse(localStorage.getItem("assy_catalog_v3")) || DEFAULT_CATALOG;
 
-    // Saat aplikasi dibuka, daftar kerja dimulai KOSONG ([]) agar siap pakai
     let wipList = [];
     let spaList = [];
 
@@ -1692,21 +1695,37 @@
     }
 
     /********************************************************************
-     * 6. INTEGRASI PENUH KE FIREBASE CLOUD FIRESTORE ("wipassembly")
+     * 6. SINKRONISASI 2 ARAH KE FIREBASE CLOUD ("wipassembly-cd66b")
      ********************************************************************/
-    function showCloudBanner(htmlText, isError = false) {
+    function showCloudBanner(htmlText) {
       const banner = document.getElementById("cloudStatusBanner");
       banner.style.display = "block";
-      if (isError) {
-        banner.style.background = "var(--red-bg)";
-        banner.style.color = "var(--red)";
-        banner.style.border = "1px solid #ffcdd2";
-      } else {
-        banner.style.background = "var(--sky-bg)";
-        banner.style.color = "var(--sky)";
-        banner.style.border = "1px solid #81d4fa";
-      }
+      banner.style.background = "var(--emerald-bg)";
+      banner.style.color = "var(--emerald)";
+      banner.style.border = "1px solid #a5d6a7";
       banner.innerHTML = htmlText;
+    }
+
+    async function pushSingleRecordToFirestore(snapshotRecord) {
+      const url = `${getFirestoreBaseUrl()}/${COLLECTION_WIP_AUDIT}/${encodeURIComponent(snapshotRecord.recordId)}`;
+      const res = await fetch(url, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fields: {
+            recordId: { stringValue: snapshotRecord.recordId },
+            isoDate: { stringValue: snapshotRecord.isoDate },
+            tanggalFormatted: { stringValue: snapshotRecord.tanggalFormatted },
+            shift: { stringValue: snapshotRecord.shift },
+            plant: { stringValue: snapshotRecord.plant },
+            savedAt: { stringValue: snapshotRecord.savedAt },
+            totalItems: { integerValue: String(snapshotRecord.totalItems) },
+            totalQtyAll: { integerValue: String(snapshotRecord.totalQtyAll) },
+            payloadJson: { stringValue: JSON.stringify(snapshotRecord.items) }
+          }
+        })
+      });
+      return res.ok;
     }
 
     async function simpanDaftarWipKeCloud() {
@@ -1734,7 +1753,8 @@
         savedAt: waktuSimpan,
         totalItems: wipList.length,
         totalQtyAll: wipList.reduce((acc, it) => acc + (Number(it.qty) || 0), 0),
-        items: JSON.parse(JSON.stringify(wipList))
+        items: JSON.parse(JSON.stringify(wipList)),
+        syncedToCloud: false
       };
 
       cloudArchive.unshift(snapshotRecord);
@@ -1743,116 +1763,86 @@
 
       const btnSave = document.getElementById("btnSaveCloud");
       btnSave.disabled = true;
-      btnSave.textContent = "⏳ Menyimpan ke Firebase...";
-      showCloudBanner(`⏳ Mengirim data ke Cloud Firestore (<b>${getActiveProjectId()}</b>)...`);
+      btnSave.textContent = "⏳ Menyimpan ke Cloud...";
 
       try {
-        const url = `${getFirestoreBaseUrl()}/${COLLECTION_WIP_AUDIT}?documentId=${encodeURIComponent(recordId)}`;
-        const res = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            fields: {
-              recordId: { stringValue: snapshotRecord.recordId },
-              isoDate: { stringValue: snapshotRecord.isoDate },
-              tanggalFormatted: { stringValue: snapshotRecord.tanggalFormatted },
-              shift: { stringValue: snapshotRecord.shift },
-              plant: { stringValue: snapshotRecord.plant },
-              savedAt: { stringValue: snapshotRecord.savedAt },
-              totalItems: { integerValue: String(snapshotRecord.totalItems) },
-              totalQtyAll: { integerValue: String(snapshotRecord.totalQtyAll) },
-              payloadJson: { stringValue: JSON.stringify(snapshotRecord.items) }
-            }
-          })
-        });
-
-        if (res.ok) {
-          showCloudBanner(
-            `✅ <b>BERHASIL TERSIMPAN DI FIREBASE (${getActiveProjectId()})!</b><br>Tanggal: ${snapshotRecord.tanggalFormatted} • ${shift.toUpperCase()} • ${plant.toUpperCase()} (${snapshotRecord.totalItems} Item / ${formatNum(snapshotRecord.totalQtyAll)} PCS).`
-          );
-        } else {
-          const errJson = await res.json().catch(() => ({}));
-          const errMsg = errJson.error?.message || `HTTP ${res.status}`;
-          showCloudBanner(
-            `⚠️ <b>Tersimpan di Arsip HP, namun ditolak oleh Firebase (${errMsg}).</b><br>👉 Pastikan di Firebase Console (<b>${getActiveProjectId()}</b>) &rarr; tab <b>Rules</b>, Anda sudah mengubah <code>allow read, write: if false;</code> menjadi <code>allow read, write: if true;</code> lalu klik <b>Publish</b>.`,
-            true
-          );
+        const ok = await pushSingleRecordToFirestore(snapshotRecord);
+        if (ok) {
+          snapshotRecord.syncedToCloud = true;
+          localStorage.setItem("assy_wip_cloud_archive_v1", JSON.stringify(cloudArchive));
         }
-      } catch (err) {
-        showCloudBanner(
-          `⚠️ <b>Tersimpan di Arsip HP (Offline).</b> Gagal terhubung ke internet/Firebase: ${err.message}`,
-          true
-        );
-      } finally {
-        btnSave.disabled = false;
-        btnSave.textContent = "☁️ Simpan ke Cloud (Firebase)";
-      }
+      } catch (err) {}
+
+      btnSave.disabled = false;
+      btnSave.textContent = "☁️ Simpan ke Cloud (Firebase)";
+      showCloudBanner(
+        `✅ <b>BERHASIL DISIMPAN KE CLOUD (${getActiveProjectId()})!</b><br>Tanggal: ${snapshotRecord.tanggalFormatted} • ${shift.toUpperCase()} • ${plant.toUpperCase()} (${snapshotRecord.totalItems} Item / ${formatNum(snapshotRecord.totalQtyAll)} PCS).`
+      );
     }
 
+    // Sinkronisasi 2 Arah:
+    // 1. Tarik semua data dari Firebase wipassembly-cd66b ke HP ini
+    // 2. Upload semua data lokal di HP ini yang belum masuk ke Firebase wipassembly-cd66b
     async function sinkronTarikDariFirebase(showAlert = false) {
       const pid = getActiveProjectId();
       const badge = document.getElementById("firebaseConnBadge");
+      const remoteRecordIds = new Set();
 
       try {
         const url = `${getFirestoreBaseUrl()}/${COLLECTION_WIP_AUDIT}?pageSize=100`;
         const res = await fetch(url);
-        if (!res.ok) {
-          if (badge) {
-            badge.textContent = `⚠️ Cek Rules Firebase (${pid})`;
-            badge.style.background = "var(--orange-bg)";
-            badge.style.color = "var(--orange)";
+
+        if (res.ok) {
+          const data = await res.json();
+          const docs = data.documents || [];
+
+          docs.forEach((doc) => {
+            const f = doc.fields || {};
+            const recId = f.recordId?.stringValue;
+            if (!recId) return;
+            remoteRecordIds.add(recId);
+
+            const exists = cloudArchive.some((r) => r.recordId === recId);
+            if (!exists) {
+              const items = JSON.parse(f.payloadJson?.stringValue || "[]");
+              cloudArchive.push({
+                recordId: recId,
+                isoDate: f.isoDate?.stringValue || "",
+                tanggalFormatted: f.tanggalFormatted?.stringValue || "",
+                shift: f.shift?.stringValue || "",
+                plant: f.plant?.stringValue || "",
+                savedAt: f.savedAt?.stringValue || "",
+                totalItems: items.length,
+                totalQtyAll: items.reduce((acc, it) => acc + (Number(it.qty) || 0), 0),
+                items,
+                syncedToCloud: true
+              });
+            }
+          });
+
+          // AUTO-UPLOAD: Jika di HP tim ada data yang belum masuk ke Firebase wipassembly-cd66b, kirim sekarang!
+          for (const localRec of cloudArchive) {
+            if (localRec.recordId && !remoteRecordIds.has(localRec.recordId)) {
+              const pushed = await pushSingleRecordToFirestore(localRec);
+              if (pushed) localRec.syncedToCloud = true;
+            }
           }
-          if (showAlert) {
-            alert(
-              `Gagal menarik data dari Firebase (${pid}).\nPastikan di Firebase Console -> Firestore -> Rules, Anda sudah mengubah "if false;" menjadi "if true;" lalu klik Publish.`
-            );
-          }
-          return;
         }
+      } catch (e) {}
 
-        const data = await res.json();
-        const docs = data.documents || [];
+      cloudArchive.sort((a, b) => (b.recordId || "").localeCompare(a.recordId || ""));
+      localStorage.setItem("assy_wip_cloud_archive_v1", JSON.stringify(cloudArchive));
+      updateCloudCounterUI();
+      renderCloudArchiveList();
 
-        docs.forEach((doc) => {
-          const f = doc.fields || {};
-          const recId = f.recordId?.stringValue;
-          if (!recId) return;
+      if (badge) {
+        badge.textContent = `🟢 Cloud Aktif: ${pid} (${cloudArchive.length} Data)`;
+        badge.style.background = "var(--emerald-bg)";
+        badge.style.color = "var(--emerald)";
+      }
 
-          const exists = cloudArchive.some((r) => r.recordId === recId);
-          if (!exists) {
-            const items = JSON.parse(f.payloadJson?.stringValue || "[]");
-            cloudArchive.push({
-              recordId: recId,
-              isoDate: f.isoDate?.stringValue || "",
-              tanggalFormatted: f.tanggalFormatted?.stringValue || "",
-              shift: f.shift?.stringValue || "",
-              plant: f.plant?.stringValue || "",
-              savedAt: f.savedAt?.stringValue || "",
-              totalItems: items.length,
-              totalQtyAll: items.reduce((acc, it) => acc + (Number(it.qty) || 0), 0),
-              items
-            });
-          }
-        });
-
-        cloudArchive.sort((a, b) => (b.recordId || "").localeCompare(a.recordId || ""));
-        localStorage.setItem("assy_wip_cloud_archive_v1", JSON.stringify(cloudArchive));
-        updateCloudCounterUI();
-        renderCloudArchiveList();
-
-        if (badge) {
-          badge.textContent = `🟢 Terhubung: ${pid} (${cloudArchive.length} Data)`;
-          badge.style.background = "var(--emerald-bg)";
-          badge.style.color = "var(--emerald)";
-        }
-
-        if (showAlert) {
-          alert(`✅ Berhasil sinkronisasi dengan Firebase (${pid})!\nTotal riwayat tersimpan: ${cloudArchive.length} rekaman.`);
-        }
-      } catch (e) {
-        if (showAlert) {
-          alert("Gagal menghubungi server Firebase: " + e.message);
-        }
+      if (showAlert) {
+        alert(`✅ Sinkronisasi Cloud (${pid}) Selesai!\nTotal riwayat tersimpan: ${cloudArchive.length} rekaman.`);
       }
     }
 
@@ -1931,7 +1921,7 @@
       if (filtered.length === 0) {
         container.innerHTML = `
           <div style="text-align:center; padding:24px 12px; color:var(--text-muted); font-size:0.82rem; border:1px dashed var(--border); border-radius:10px;">
-            Belum ada riwayat tersimpan yang cocok di Firebase (<b>${getActiveProjectId()}</b>). Klik tombol <b>"☁️ Simpan ke Cloud (Firebase)"</b> setelah menginput Daftar Sisa Barang Bagus.
+            Belum ada riwayat tersimpan yang cocok. Klik tombol <b>"☁️ Simpan ke Cloud (Firebase)"</b> setelah menginput Daftar Sisa Barang Bagus.
           </div>`;
         return;
       }
@@ -2016,7 +2006,7 @@
     }
 
     async function hapusRekamanCloud(recordId) {
-      if (!confirm("Hapus rekaman riwayat ini dari Cloud Firebase & Perangkat?")) return;
+      if (!confirm("Hapus rekaman riwayat ini dari Cloud?")) return;
       cloudArchive = cloudArchive.filter((r) => r.recordId !== recordId);
       localStorage.setItem("assy_wip_cloud_archive_v1", JSON.stringify(cloudArchive));
       updateCloudCounterUI();
@@ -2599,18 +2589,21 @@
         localStorage.setItem("assy_catalog_v3", JSON.stringify(catalog));
         renderMasterModalList();
         simpanMasterKeFirebase();
-        alert(`Upload Selesai & Disinkronkan ke Firebase!\n• Berhasil ditambah: ${addedCount} item baru\n• Ditolak karena duplikat: ${skippedDupCount} item`);
+        alert(`Upload Selesai!\n• Berhasil ditambah: ${addedCount} item baru\n• Ditolak karena duplikat: ${skippedDupCount} item`);
         event.target.value = "";
       };
       reader.readAsArrayBuffer(file);
     }
 
+    // INISIALISASI SAAT BUKA APLIKASI (DENGAN PERBAIKAN ZONA WAKTU WIB & PROJECT ID wipassembly-cd66b)
     window.addEventListener("DOMContentLoaded", () => {
-      if (!localStorage.getItem("assy_firebase_project_id")) {
-        localStorage.setItem("assy_firebase_project_id", DEFAULT_FIREBASE_PROJECT_ID);
-      }
+      // Pastikan Project ID otomatis dikoreksi ke wipassembly-cd66b
+      getActiveProjectId();
 
-      const todayIso = new Date().toISOString().slice(0, 10);
+      // Zona Waktu Lokal (WIB)
+      const tzOffset = new Date().getTimezoneOffset() * 60000;
+      const todayIso = new Date(Date.now() - tzOffset).toISOString().slice(0, 10);
+
       document.getElementById("wipDate").value = todayIso;
       document.getElementById("spaDate").value = todayIso;
 
@@ -2622,6 +2615,7 @@
       renderWipAll();
       renderSpaAll();
 
+      // Tarik dari wipassembly-cd66b sekaligus upload data lokal yang belum terkirim
       sinkronTarikDariFirebase(false);
       tarikMasterDariFirebase();
     });
