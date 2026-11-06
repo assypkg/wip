@@ -318,16 +318,15 @@
             method: "POST", headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: "image/jpeg", data: base64Content } }] }],
-              generationConfig: { 
-                responseMimeType: "application/json",
-                temperature: 0.1 
+              generationConfig: {
+                responseMimeType: "application/json"
               }
             })
           });
 
           if (!response.ok) {
             const errorText = await response.text();
-            throw new Error(`Gemini HTTP ${response.status}: ${errorText.slice(0, 220)}`);
+            throw new Error(`Gemini HTTP ${response.status}: ${errorText.slice(0, 1200)}`);
           }
 
           const result = await response.json();
