@@ -454,18 +454,115 @@
 
     .input-calc {
       font-family: 'Montserrat', sans-serif;
-      font-size: 1.02rem;
+      font-size: 1.1rem;
       font-weight: 800;
-      color: var(--emerald);
+      color: var(--navy);
       flex: 1;
-      min-width: 140px;
+      min-width: 150px;
+      letter-spacing: 0.5px;
+    }
+
+    /* PAPAN KETIK KALKULATOR BUILT-IN (+ - × ÷ ENTER) */
+    .calc-keypad-wrapper {
+      margin-top: 10px;
+      background: #1e293b;
+      padding: 10px;
+      border-radius: 12px;
+      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.35);
+    }
+
+    .calc-keypad-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      color: #cbd5e1;
+      font-size: 0.72rem;
+      font-weight: 700;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .calc-live-result {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: #4ade80;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+
+    .calc-keypad-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 7px;
+    }
+
+    .key-btn {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 1.12rem;
+      font-weight: 800;
+      padding: 12px 6px;
+      border-radius: 9px;
+      border: none;
+      background: #334155;
+      color: #ffffff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 3px 0 #0f172a;
+      transition: transform 0.08s, background 0.1s;
+      user-select: none;
+    }
+
+    .key-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 #0f172a;
+      background: #475569;
+    }
+
+    .key-btn.key-op {
+      background: #3949ab;
+      color: #e8eaf6;
+      font-size: 1.25rem;
+    }
+
+    .key-btn.key-op:active {
+      background: #5c6bc0;
+    }
+
+    .key-btn.key-clear {
+      background: #c62828;
+      color: #fff;
+      font-size: 0.95rem;
+    }
+
+    .key-btn.key-back {
+      background: #d97706;
+      color: #fff;
+      font-size: 1rem;
+    }
+
+    .key-btn.key-enter {
+      grid-column: span 1;
+      background: #2e7d32;
+      color: #ffffff;
+      font-size: 0.88rem;
+      letter-spacing: 0.3px;
+      box-shadow: 0 3px 0 #1b5e20;
+    }
+
+    .key-btn.key-enter:active {
+      background: #388e3c;
     }
 
     .box-chips-container {
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
-      margin-top: 8px;
+      margin-top: 10px;
     }
 
     .box-chip {
@@ -473,9 +570,9 @@
       border: 1px solid #a5d6a7;
       color: var(--emerald);
       font-family: 'Montserrat', sans-serif;
-      font-size: 0.74rem;
+      font-size: 0.75rem;
       font-weight: 700;
-      padding: 4px 8px;
+      padding: 5px 9px;
       border-radius: 6px;
       display: inline-flex;
       align-items: center;
@@ -494,7 +591,7 @@
       color: var(--red);
       font-weight: 800;
       cursor: pointer;
-      font-size: 0.85rem;
+      font-size: 0.88rem;
     }
 
     /* BUTTONS */
@@ -717,7 +814,7 @@
         <img src="icon-assy-192.png" alt="Logo" style="width:36px; height:36px; border-radius:8px; object-fit:cover; background:#fff;" onerror="this.style.display='none'" />
         <div>
           <div class="app-title">SMART WIP, FINISH GOOD & SPA</div>
-          <div class="app-subtitle">Auto-Save Draft HP &bull; Cloud: <b>wipassembly-cd66b</b></div>
+          <div class="app-subtitle">Rincian Box Otomatis &bull; Cloud: <b>wipassembly-cd66b</b></div>
         </div>
       </div>
       <div class="header-actions">
@@ -844,10 +941,10 @@
           </div>
         </div>
 
-        <!-- AUTO KALKULATOR MULTI-BOX (KHUSUS ANGKA) -->
+        <!-- AUTO KALKULATOR MULTI-BOX DENGAN PECAH BOX OTOMATIS (650×4+120 -> 5 BOX) -->
         <div class="calc-panel">
           <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">
-            <label style="color:var(--emerald); margin:0;">🧮 Auto-Kalkulator Box (Khusus Angka):</label>
+            <label style="color:var(--emerald); margin:0;">🧮 Auto-Kalkulator Box (+ − × ÷):</label>
             <span style="font-size:0.75rem; font-weight:700; color:var(--navy);">
               Aktual: <b id="liveBoxCount" style="color:var(--purple);">0</b> Box | Total: <b id="liveCalcSum" style="font-size:1rem; color:var(--emerald);">0</b> PCS
             </span>
@@ -856,11 +953,11 @@
           <div class="calc-input-row">
             <input
               type="text"
-              inputmode="decimal"
+              inputmode="none"
               id="calcBoxInput"
               class="input-calc"
-              placeholder="Angka saja: 650 atau 650*5"
-              oninput="filterHanyaAngkaKalkulator(this); simpanDraftLokal();"
+              placeholder="Contoh: 650×4+120"
+              oninput="filterHanyaAngkaKalkulator(this); updateLiveFormulaPreview('wip'); simpanDraftLokal();"
               onkeydown="if(event.key==='Enter'){event.preventDefault(); tambahAngkaBox(1);}"
             />
             <button type="button" class="btn btn-primary" onclick="tambahAngkaBox(1)">
@@ -870,8 +967,47 @@
               ➖ Kurangi Qty
             </button>
           </div>
-          <div style="font-size:0.71rem; color:var(--text-muted); margin-top:5px;">
-            💡 Ketik qty per box lalu tekan <b>Enter</b> / <b>+ Tambah Box</b>. Data yang sedang diketik otomatis tersimpan di HP ini meskipun aplikasi ditutup sementara.
+
+          <!-- PAPAN KETIK KALKULATOR LENGKAP (+ - × ÷ ENTER) -->
+          <div class="calc-keypad-wrapper">
+            <div class="calc-keypad-top">
+              <span>🧮 Contoh: <b>650×4+120</b> &rarr; otomatis jadi 5 Box</span>
+              <span class="calc-live-result" id="wipFormulaPreview">= 0 Box (0 PCS)</span>
+              <button
+                type="button"
+                onclick="toggleKeyboardHpMode('calcBoxInput', this)"
+                style="background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.25); color:#fff; padding:3px 7px; border-radius:5px; font-size:0.66rem; cursor:pointer;"
+              >
+                ⌨️ Keyboard HP: OFF
+              </button>
+            </div>
+
+            <div class="calc-keypad-grid">
+              <button type="button" class="key-btn key-clear" onclick="tekanTombolKalkulator('wip', 'C')">C</button>
+              <button type="button" class="key-btn key-op" onclick="tekanTombolKalkulator('wip', '(')">(</button>
+              <button type="button" class="key-btn key-op" onclick="tekanTombolKalkulator('wip', ')')">)</button>
+              <button type="button" class="key-btn key-op" onclick="tekanTombolKalkulator('wip', '÷')">÷</button>
+
+              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('wip', '7')">7</button>
+              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('wip', '8')">8</button>
+              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('wip', '9')">9</button>
+              <button type="button" class="key-btn key-op" onclick="tekanTombolKalkulator('wip', '×')">×</button>
+
+              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('wip', '4')">4</button>
+              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('wip', '5')">5</button>
+              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('wip', '6')">6</button>
+              <button type="button" class="key-btn key-op" onclick="tekanTombolKalkulator('wip', '-')">−</button>
+
+              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('wip', '1')">1</button>
+              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('wip', '2')">2</button>
+              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('wip', '3')">3</button>
+              <button type="button" class="key-btn key-op" onclick="tekanTombolKalkulator('wip', '+')">+</button>
+
+              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('wip', '0')">0</button>
+              <button type="button" class="key-btn" style="font-size:0.95rem;" onclick="tekanTombolKalkulator('wip', '00')">00</button>
+              <button type="button" class="key-btn key-back" onclick="tekanTombolKalkulator('wip', 'BACK')">⌫</button>
+              <button type="button" class="key-btn key-enter" onclick="tekanTombolKalkulator('wip', 'ENTER')">ENTER ↵</button>
+            </div>
           </div>
 
           <div class="box-chips-container" id="boxChipsList"></div>
@@ -1118,7 +1254,7 @@
   </main>
 
   <!-- =========================================================
-       SHEET 3: LAPORAN SPA AWAL SHIFT (AUTO KALKULATOR & EDIT)
+       SHEET 3: LAPORAN SPA AWAL SHIFT (MASING-MASING KOLOM ADA PAPAN KALKULATOR)
        ========================================================= -->
   <main id="sectionSpa" class="container" style="display:none;">
     <section>
@@ -1200,7 +1336,9 @@
           </div>
         </div>
 
-        <!-- AUTO KALKULATOR 1: STOK DI ASSY -->
+        <!-- =====================================================
+             KOLOM 1: AUTO-KALKULATOR STOK ASSY (DENGAN PAPAN KETIK DI DALAMNYA)
+             ===================================================== -->
         <div class="calc-panel">
           <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">
             <label style="color:var(--emerald); margin:0;">🧮 Auto-Kalkulator Stok ASSY:</label>
@@ -1211,20 +1349,65 @@
           <div class="calc-input-row">
             <input
               type="text"
-              inputmode="decimal"
+              inputmode="none"
               id="spaCalcAssyInput"
               class="input-calc"
-              placeholder="Angka stok Assy (misal: 4059 atau 650*6)"
-              oninput="filterHanyaAngkaKalkulator(this)"
+              placeholder="Contoh: 650×6+159"
+              oninput="filterHanyaAngkaKalkulator(this); updateLiveFormulaPreview('spa_assy');"
               onkeydown="if(event.key==='Enter'){event.preventDefault(); tambahBoxSpa('assy', 1);}"
             />
             <button type="button" class="btn btn-primary" onclick="tambahBoxSpa('assy', 1)">+ Box Assy</button>
             <button type="button" class="btn btn-danger" onclick="tambahBoxSpa('assy', -1)">➖ Kurangi</button>
           </div>
+
+          <!-- PAPAN KALKULATOR KHUSUS STOK ASSY (TEPAT DI BAWAH INPUT ASSY) -->
+          <div class="calc-keypad-wrapper">
+            <div class="calc-keypad-top">
+              <span>🧮 Papan Kalkulator STOK ASSY</span>
+              <span class="calc-live-result" id="spaAssyFormulaPreview">= 0 Box (0 PCS)</span>
+              <button
+                type="button"
+                onclick="toggleKeyboardHpMode('spaCalcAssyInput', this)"
+                style="background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.25); color:#fff; padding:3px 7px; border-radius:5px; font-size:0.66rem; cursor:pointer;"
+              >
+                ⌨️ Keyboard HP: OFF
+              </button>
+            </div>
+            <div class="calc-keypad-grid">
+              <button type="button" class="key-btn key-clear" onclick="tekanTombolKalkulator('spa_assy', 'C')">C</button>
+              <button type="button" class="key-btn key-op" onclick="tekanTombolKalkulator('spa_assy', '(')">(</button>
+              <button type="button" class="key-btn key-op" onclick="tekanTombolKalkulator('spa_assy', ')')">)</button>
+              <button type="button" class="key-btn key-op" onclick="tekanTombolKalkulator('spa_assy', '÷')">÷</button>
+
+              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('spa_assy', '7')">7</button>
+              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('spa_assy', '8')">8</button>
+              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('spa_assy', '9')">9</button>
+              <button type="button" class="key-btn key-op" onclick="tekanTombolKalkulator('spa_assy', '×')">×</button>
+
+              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('spa_assy', '4')">4</button>
+              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('spa_assy', '5')">5</button>
+              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('spa_assy', '6')">6</button>
+              <button type="button" class="key-btn key-op" onclick="tekanTombolKalkulator('spa_assy', '-')">−</button>
+
+              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('spa_assy', '1')">1</button>
+              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('spa_assy', '2')">2</button>
+              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('spa_assy', '3')">3</button>
+              <button type="button" class="key-btn key-op" onclick="tekanTombolKalkulator('spa_assy', '+')">+</button>
+
+              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('spa_assy', '0')">0</button>
+              <button type="button" class="key-btn" style="font-size:0.95rem;" onclick="tekanTombolKalkulator('spa_assy', '00')">00</button>
+              <button type="button" class="key-btn key-back" onclick="tekanTombolKalkulator('spa_assy', 'BACK')">⌫</button>
+              <button type="button" class="key-btn key-enter" onclick="tekanTombolKalkulator('spa_assy', 'ENTER')">ENTER ↵</button>
+            </div>
+          </div>
+
+          <!-- DAFTAR BOX ASSY DI BAWAH KALKULATOR AGAR TIDAK MENDORONG LAYAR INPUT -->
           <div class="box-chips-container" id="spaAssyChips"></div>
         </div>
 
-        <!-- AUTO KALKULATOR 2: STOK DI GUDANG -->
+        <!-- =====================================================
+             KOLOM 2: AUTO-KALKULATOR STOK GUDANG (DENGAN PAPAN KETIK DI DALAMNYA)
+             ===================================================== -->
         <div class="calc-panel purple-calc">
           <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">
             <label style="color:var(--purple); margin:0;">🧮 Auto-Kalkulator Stok GUDANG:</label>
@@ -1235,17 +1418,60 @@
           <div class="calc-input-row">
             <input
               type="text"
-              inputmode="decimal"
+              inputmode="none"
               id="spaCalcGudangInput"
               class="input-calc"
               style="color:var(--purple);"
-              placeholder="Angka stok Gudang (misal: 342920)"
-              oninput="filterHanyaAngkaKalkulator(this)"
+              placeholder="Contoh: 650×10+420"
+              oninput="filterHanyaAngkaKalkulator(this); updateLiveFormulaPreview('spa_gudang');"
               onkeydown="if(event.key==='Enter'){event.preventDefault(); tambahBoxSpa('gudang', 1);}"
             />
             <button type="button" class="btn btn-purple" onclick="tambahBoxSpa('gudang', 1)">+ Box Gudang</button>
             <button type="button" class="btn btn-danger" onclick="tambahBoxSpa('gudang', -1)">➖ Kurangi</button>
           </div>
+
+          <!-- PAPAN KALKULATOR KHUSUS STOK GUDANG (TEPAT DI BAWAH INPUT GUDANG) -->
+          <div class="calc-keypad-wrapper">
+            <div class="calc-keypad-top">
+              <span style="color:#d8b4fe;">🧮 Papan Kalkulator STOK GUDANG</span>
+              <span class="calc-live-result" id="spaGudangFormulaPreview">= 0 Box (0 PCS)</span>
+              <button
+                type="button"
+                onclick="toggleKeyboardHpMode('spaCalcGudangInput', this)"
+                style="background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.25); color:#fff; padding:3px 7px; border-radius:5px; font-size:0.66rem; cursor:pointer;"
+              >
+                ⌨️ Keyboard HP: OFF
+              </button>
+            </div>
+            <div class="calc-keypad-grid">
+              <button type="button" class="key-btn key-clear" onclick="tekanTombolKalkulator('spa_gudang', 'C')">C</button>
+              <button type="button" class="key-btn key-op" onclick="tekanTombolKalkulator('spa_gudang', '(')">(</button>
+              <button type="button" class="key-btn key-op" onclick="tekanTombolKalkulator('spa_gudang', ')')">)</button>
+              <button type="button" class="key-btn key-op" onclick="tekanTombolKalkulator('spa_gudang', '÷')">÷</button>
+
+              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('spa_gudang', '7')">7</button>
+              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('spa_gudang', '8')">8</button>
+              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('spa_gudang', '9')">9</button>
+              <button type="button" class="key-btn key-op" onclick="tekanTombolKalkulator('spa_gudang', '×')">×</button>
+
+              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('spa_gudang', '4')">4</button>
+              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('spa_gudang', '5')">5</button>
+              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('spa_gudang', '6')">6</button>
+              <button type="button" class="key-btn key-op" onclick="tekanTombolKalkulator('spa_gudang', '-')">−</button>
+
+              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('spa_gudang', '1')">1</button>
+              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('spa_gudang', '2')">2</button>
+              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('spa_gudang', '3')">3</button>
+              <button type="button" class="key-btn key-op" onclick="tekanTombolKalkulator('spa_gudang', '+')">+</button>
+
+              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('spa_gudang', '0')">0</button>
+              <button type="button" class="key-btn" style="font-size:0.95rem;" onclick="tekanTombolKalkulator('spa_gudang', '00')">00</button>
+              <button type="button" class="key-btn key-back" onclick="tekanTombolKalkulator('spa_gudang', 'BACK')">⌫</button>
+              <button type="button" class="key-btn key-enter" onclick="tekanTombolKalkulator('spa_gudang', 'ENTER')">ENTER ↵</button>
+            </div>
+          </div>
+
+          <!-- DAFTAR BOX GUDANG DI BAWAH KALKULATOR AGAR TIDAK MENDORONG LAYAR INPUT -->
           <div class="box-chips-container" id="spaGudangChips"></div>
         </div>
 
@@ -1509,9 +1735,182 @@
     let activeTabMode = "wip";
 
     /********************************************************************
-     * 2B. SISTEM AUTO-SAVE DRAFT LOKAL PER HP (ANTI HILANG SAAT KELUAR)
-     *     Draft disimpan khusus di HP masing-masing (tidak bocor ke HP
-     *     user lain) dan otomatis bersih saat berganti hari baru.
+     * 2B. PARSER CERDAS PEMECAH RUMUS JADI RINCIAN BOX INDIVIDUAL
+     *     Contoh: "650×4+120" ->
+     *     Box 1: 650, Box 2: 650, Box 3: 650, Box 4: 650, Box 5: 120
+     ********************************************************************/
+    function filterHanyaAngkaKalkulator(inputEl) {
+      let v = inputEl.value.replace(/\*/g, "×").replace(/\//g, "÷");
+      inputEl.value = v.replace(/[^0-9+\-×÷().\s]/g, "");
+    }
+
+    function evaluateSingleMathChunk(expr) {
+      if (!expr) return 0;
+      const mathStr = String(expr)
+        .replace(/×/g, "*")
+        .replace(/÷/g, "/")
+        .replace(/−/g, "-")
+        .replace(/\./g, "")
+        .replace(/,/g, "")
+        .replace(/[^0-9+\-*/()\s]/g, "")
+        .trim();
+
+      if (!mathStr) return 0;
+      try {
+        const safeStr = mathStr.replace(/[+\-*/]+$/, "");
+        if (!safeStr) return 0;
+        const val = Function(`"use strict"; return (${safeStr})`)();
+        return Math.round(Number(val) || 0);
+      } catch (e) {
+        return parseInt(mathStr, 10) || 0;
+      }
+    }
+
+    function parseFormulaToBoxes(rawExpr, defaultMultiplier = 1) {
+      if (!rawExpr) return [];
+
+      let s = String(rawExpr)
+        .replace(/\./g, "")
+        .replace(/,/g, "")
+        .replace(/\*/g, "×")
+        .replace(/\//g, "÷")
+        .replace(/−/g, "-")
+        .replace(/\s+/g, "");
+
+      s = s.replace(/[+\-×÷]+$/, "");
+      if (!s) return [];
+
+      const terms = [];
+      let depth = 0;
+      let current = "";
+
+      for (let i = 0; i < s.length; i++) {
+        const ch = s[i];
+        if (ch === "(") depth++;
+        else if (ch === ")") depth = Math.max(0, depth - 1);
+
+        if (depth === 0 && (ch === "+" || ch === "-") && current.length > 0) {
+          terms.push(current);
+          current = ch;
+        } else {
+          current += ch;
+        }
+      }
+      if (current) terms.push(current);
+
+      const expandedBoxes = [];
+
+      for (let term of terms) {
+        let sign = defaultMultiplier < 0 ? -1 : 1;
+        if (term.startsWith("+")) {
+          term = term.slice(1);
+        } else if (term.startsWith("-")) {
+          sign = sign * -1;
+          term = term.slice(1);
+        }
+
+        if (term.startsWith("(") && term.endsWith(")")) {
+          const inner = term.slice(1, -1);
+          if (!inner.includes("(") && !inner.includes(")")) {
+            term = inner;
+          }
+        }
+
+        if (!term) continue;
+
+        const multMatch = term.match(/^(\d+)×(\d+)$/);
+        if (multMatch) {
+          const num1 = parseInt(multMatch[1], 10);
+          const num2 = parseInt(multMatch[2], 10);
+
+          if (num1 > 0 && num2 > 0 && num2 <= 500) {
+            const boxVal = sign * num1;
+            for (let k = 0; k < num2; k++) {
+              expandedBoxes.push({ label: String(boxVal), val: boxVal });
+            }
+            continue;
+          }
+        }
+
+        const val = evaluateSingleMathChunk(term);
+        if (val > 0 || term === "0") {
+          const finalVal = sign * Math.abs(val);
+          expandedBoxes.push({ label: String(finalVal), val: finalVal });
+        }
+      }
+
+      return expandedBoxes;
+    }
+
+    function updateLiveFormulaPreview(mode) {
+      let inputId = "calcBoxInput";
+      let previewId = "wipFormulaPreview";
+
+      if (mode === "spa_assy") {
+        inputId = "spaCalcAssyInput";
+        previewId = "spaAssyFormulaPreview";
+      } else if (mode === "spa_gudang") {
+        inputId = "spaCalcGudangInput";
+        previewId = "spaGudangFormulaPreview";
+      }
+
+      const inputEl = document.getElementById(inputId);
+      const previewEl = document.getElementById(previewId);
+      if (!inputEl || !previewEl) return;
+
+      const parsed = parseFormulaToBoxes(inputEl.value, 1);
+      const totalPcs = parsed.reduce((acc, b) => acc + b.val, 0);
+      const boxCount = parsed.filter((b) => b.val >= 0).length;
+      previewEl.textContent = `= ${boxCount} Box (${formatNum(totalPcs)} PCS)`;
+    }
+
+    function tekanTombolKalkulator(mode, key) {
+      let inputId = "calcBoxInput";
+      if (mode === "spa_assy") inputId = "spaCalcAssyInput";
+      else if (mode === "spa_gudang") inputId = "spaCalcGudangInput";
+
+      const inputEl = document.getElementById(inputId);
+      if (!inputEl) return;
+
+      if (key === "C") {
+        inputEl.value = "";
+      } else if (key === "BACK") {
+        inputEl.value = inputEl.value.slice(0, -1);
+      } else if (key === "ENTER") {
+        if (mode === "wip") {
+          tambahAngkaBox(1);
+        } else if (mode === "spa_assy") {
+          tambahBoxSpa("assy", 1);
+        } else if (mode === "spa_gudang") {
+          tambahBoxSpa("gudang", 1);
+        }
+        updateLiveFormulaPreview(mode);
+        return;
+      } else {
+        inputEl.value += key;
+      }
+
+      filterHanyaAngkaKalkulator(inputEl);
+      updateLiveFormulaPreview(mode);
+      simpanDraftLokal();
+    }
+
+    function toggleKeyboardHpMode(inputId, btnEl) {
+      const el = document.getElementById(inputId);
+      if (!el) return;
+      if (el.getAttribute("inputmode") === "none") {
+        el.setAttribute("inputmode", "decimal");
+        btnEl.textContent = "⌨️ Keyboard HP: ON";
+        el.focus();
+      } else {
+        el.setAttribute("inputmode", "none");
+        btnEl.textContent = "⌨️ Keyboard HP: OFF";
+        el.blur();
+      }
+    }
+
+    /********************************************************************
+     * 2C. SISTEM AUTO-SAVE DRAFT LOKAL PER HP (ANTI HILANG SAAT KELUAR)
      ********************************************************************/
     const DRAFT_STORAGE_KEY = "assy_local_working_draft_v1";
 
@@ -1578,13 +1977,11 @@
         if (!raw) return;
         const draft = JSON.parse(raw);
 
-        // Jika sudah berganti hari baru, kosongkan draft lama secara otomatis!
         if (draft.savedDayIso !== todayIso) {
           localStorage.removeItem(DRAFT_STORAGE_KEY);
           return;
         }
 
-        // Jika masih di hari yang sama, pulihkan seluruh ketikan & daftar yang sedang dikerjakan
         wipList = Array.isArray(draft.wipList) ? draft.wipList : [];
         fgList = Array.isArray(draft.fgList) ? draft.fgList : [];
         spaList = Array.isArray(draft.spaList) ? draft.spaList : [];
@@ -1683,21 +2080,6 @@
       return `${tgl} ${bulanIndo[blnIdx] || ""} ${thn}`;
     }
 
-    function filterHanyaAngkaKalkulator(inputEl) {
-      inputEl.value = inputEl.value.replace(/[^0-9+\-*/().\s]/g, "");
-    }
-
-    function evaluateMathExpression(expr) {
-      const cleaned = String(expr).replace(/\./g, "").replace(/,/g, "").replace(/[^0-9+\-*/()\s]/g, "").trim();
-      if (!cleaned) return 0;
-      try {
-        const val = Function(`"use strict"; return (${cleaned})`)();
-        return Math.round(Number(val) || 0);
-      } catch (e) {
-        return parseInt(cleaned, 10) || 0;
-      }
-    }
-
     /********************************************************************
      * 3. PINDAH TAB MODE (SISA WIP vs FINISH GOOD vs SPA AWAL SHIFT)
      ********************************************************************/
@@ -1779,7 +2161,6 @@
       document.getElementById("selectedPart").value = part;
       clearWipSearch();
       simpanDraftLokal();
-      document.getElementById("calcBoxInput").focus();
     }
 
     function onSpaSearchType() {
@@ -1842,7 +2223,6 @@
         renderSpaCalcBoxes();
       }
       simpanDraftLokal();
-      document.getElementById("spaCalcGudangInput").focus();
     }
 
     document.addEventListener("click", function (e) {
@@ -1857,24 +2237,21 @@
     });
 
     /********************************************************************
-     * 5. AUTO-KALKULATOR WIP & FITUR EDIT SISA BARANG BAGUS
+     * 5. AUTO-KALKULATOR WIP (PECAH RUMUS JADI BOX INDIVIDUAL)
      ********************************************************************/
     function tambahAngkaBox(multiplier = 1) {
       const inputEl = document.getElementById("calcBoxInput");
       const raw = inputEl.value.trim();
       if (!raw) return;
 
-      const hasil = evaluateMathExpression(raw);
-      if (hasil === 0 && raw !== "0") return;
+      const newBoxes = parseFormulaToBoxes(raw, multiplier);
+      if (newBoxes.length === 0) return;
 
-      const finalVal = multiplier < 0 ? -Math.abs(hasil) : hasil;
-      const finalLabel = multiplier < 0 ? `-${raw.replace(/^-/, "")}` : raw;
-
-      currentBoxes.push({ label: finalLabel, val: finalVal });
+      currentBoxes.push(...newBoxes);
       inputEl.value = "";
+      updateLiveFormulaPreview("wip");
       renderCurrentBoxes();
       simpanDraftLokal();
-      inputEl.focus();
     }
 
     function hapusBoxChip(idx) {
@@ -1894,14 +2271,15 @@
       sumEl.textContent = formatNum(total);
       countEl.textContent = positiveBoxes;
 
+      let posBoxIdx = 0;
       container.innerHTML = currentBoxes
         .map((b, i) => {
           const isNeg = b.val < 0;
-          const prefix = isNeg ? `Diambil: ` : `Box ${i + 1}: `;
-          const formulaInfo = b.label !== String(b.val) ? `(${b.label}) = ` : "";
+          if (!isNeg) posBoxIdx++;
+          const prefix = isNeg ? `Diambil: ` : `Box ${posBoxIdx}: `;
           return `
             <span class="box-chip ${isNeg ? "minus-chip" : ""}">
-              ${prefix}${formulaInfo}${formatNum(b.val)}
+              ${prefix}${formatNum(b.val)}
               <button type="button" onclick="hapusBoxChip(${i})" title="Hapus box ini">&times;</button>
             </span>`;
         })
@@ -1972,6 +2350,7 @@
       currentBoxes = [];
       document.getElementById("selectedNote").value = "";
       document.getElementById("calcBoxInput").value = "";
+      updateLiveFormulaPreview("wip");
       renderCurrentBoxes();
       renderWipAll();
       renderFgAll();
@@ -2003,7 +2382,6 @@
       btnSubmit.style.background = "var(--orange)";
 
       document.getElementById("wipInputCard").scrollIntoView({ behavior: "smooth" });
-      document.getElementById("calcBoxInput").focus();
     }
 
     function batalEditWip() {
@@ -2013,6 +2391,7 @@
       document.getElementById("selectedPart").value = "";
       document.getElementById("selectedNote").value = "";
       document.getElementById("calcBoxInput").value = "";
+      updateLiveFormulaPreview("wip");
       renderCurrentBoxes();
 
       document.getElementById("wipInputCard").classList.remove("editing-mode");
@@ -2049,10 +2428,12 @@
           : [{ label: String(fallbackQty), val: fallbackQty }];
 
       const posCount = list.filter((b) => b.val >= 0).length;
+      let posIdx = 0;
       const details = list
-        .map((b, i) => {
+        .map((b) => {
           if (b.val < 0) return `<span style="color:var(--red); font-weight:700;">[Diambil: ${formatNum(b.val)}]</span>`;
-          return `[Box ${i + 1}: <b>${formatNum(b.val)}</b>]`;
+          posIdx++;
+          return `[Box ${posIdx}: <b>${formatNum(b.val)}</b>]`;
         })
         .join(" ");
 
@@ -2357,7 +2738,7 @@
     }
 
     /********************************************************************
-     * 7. PERBAIKAN TOTAL CLOUD FIREBASE ("wipassembly-cd66b") ANTI-BUG
+     * 7. CLOUD FIREBASE ("wipassembly-cd66b") ANTI-BUG
      ********************************************************************/
     function showCloudBanner(htmlText) {
       const banner = document.getElementById("cloudStatusBanner");
@@ -2647,8 +3028,13 @@
                 it.boxes && it.boxes.length > 0
                   ? it.boxes
                   : [{ label: String(it.qty), val: it.qty }];
+              let pIdx = 0;
               const boxStr = boxList
-                .map((b, i) => (b.val < 0 ? `[Diambil: ${formatNum(b.val)}]` : `[Box ${i + 1}: ${formatNum(b.val)}]`))
+                .map((b) => {
+                  if (b.val < 0) return `[Diambil: ${formatNum(b.val)}]`;
+                  pIdx++;
+                  return `[Box ${pIdx}: ${formatNum(b.val)}]`;
+                })
                 .join(" ");
 
               return `
@@ -2730,8 +3116,13 @@
         (rec.items || []).forEach((it) => {
           const boxList = it.boxes && it.boxes.length > 0 ? it.boxes : [{ label: String(it.qty), val: it.qty }];
           const posCount = boxList.filter((b) => b.val >= 0).length;
+          let pIdx = 0;
           const rincianText = boxList
-            .map((b, i) => (b.val < 0 ? `Diambil: ${b.val}` : `Box ${i + 1}: ${b.val}`))
+            .map((b) => {
+              if (b.val < 0) return `Diambil: ${b.val}`;
+              pIdx++;
+              return `Box ${pIdx}: ${b.val}`;
+            })
             .join(" | ");
 
           rows.push([
@@ -2831,7 +3222,7 @@
     }
 
     /********************************************************************
-     * 9. SHEET 3: SPA AWAL SHIFT (AUTO KALKULATOR + FITUR EDIT)
+     * 9. SHEET 3: SPA AWAL SHIFT (AUTO KALKULATOR PECAH BOX + EDIT)
      ********************************************************************/
     function hitungTargetSpaPreview() {
       const base = Number(document.getElementById("spaBaseTarget").value) || 0;
@@ -2844,26 +3235,24 @@
 
     function tambahBoxSpa(targetType, multiplier = 1) {
       const inputId = targetType === "assy" ? "spaCalcAssyInput" : "spaCalcGudangInput";
+      const previewMode = targetType === "assy" ? "spa_assy" : "spa_gudang";
       const inputEl = document.getElementById(inputId);
       const raw = inputEl.value.trim();
       if (!raw) return;
 
-      const hasil = evaluateMathExpression(raw);
-      if (hasil === 0 && raw !== "0") return;
-
-      const finalVal = multiplier < 0 ? -Math.abs(hasil) : hasil;
-      const finalLabel = multiplier < 0 ? `-${raw.replace(/^-/, "")}` : raw;
+      const newBoxes = parseFormulaToBoxes(raw, multiplier);
+      if (newBoxes.length === 0) return;
 
       if (targetType === "assy") {
-        currentSpaAssyBoxes.push({ label: finalLabel, val: finalVal });
+        currentSpaAssyBoxes.push(...newBoxes);
       } else {
-        currentSpaGudangBoxes.push({ label: finalLabel, val: finalVal });
+        currentSpaGudangBoxes.push(...newBoxes);
       }
 
       inputEl.value = "";
+      updateLiveFormulaPreview(previewMode);
       renderSpaCalcBoxes();
       simpanDraftLokal();
-      inputEl.focus();
     }
 
     function hapusBoxSpaChip(targetType, idx) {
@@ -2881,12 +3270,15 @@
       const assyPosCount = currentSpaAssyBoxes.filter((b) => b.val >= 0).length;
       document.getElementById("spaAssySum").textContent = formatNum(assyTotal);
       document.getElementById("spaAssyBoxCount").textContent = assyPosCount;
+
+      let assyIdx = 0;
       document.getElementById("spaAssyChips").innerHTML = currentSpaAssyBoxes
         .map((b, i) => {
           const isNeg = b.val < 0;
+          if (!isNeg) assyIdx++;
           return `
             <span class="box-chip ${isNeg ? "minus-chip" : ""}">
-              ${isNeg ? "Kurang: " : `Box ${i + 1}: `}${formatNum(b.val)}
+              ${isNeg ? "Kurang: " : `Box ${assyIdx}: `}${formatNum(b.val)}
               <button type="button" onclick="hapusBoxSpaChip('assy', ${i})">&times;</button>
             </span>`;
         })
@@ -2896,12 +3288,15 @@
       const gudangPosCount = currentSpaGudangBoxes.filter((b) => b.val >= 0).length;
       document.getElementById("spaGudangSum").textContent = formatNum(gudangTotal);
       document.getElementById("spaGudangBoxCount").textContent = gudangPosCount;
+
+      let gudangIdx = 0;
       document.getElementById("spaGudangChips").innerHTML = currentSpaGudangBoxes
         .map((b, i) => {
           const isNeg = b.val < 0;
+          if (!isNeg) gudangIdx++;
           return `
             <span class="box-chip ${isNeg ? "minus-chip" : ""}">
-              ${isNeg ? "Kurang: " : `Box ${i + 1}: `}${formatNum(b.val)}
+              ${isNeg ? "Kurang: " : `Box ${gudangIdx}: `}${formatNum(b.val)}
               <button type="button" onclick="hapusBoxSpaChip('gudang', ${i})">&times;</button>
             </span>`;
         })
@@ -3020,6 +3415,8 @@
       document.getElementById("spaNote").value = "";
       document.getElementById("spaCalcAssyInput").value = "";
       document.getElementById("spaCalcGudangInput").value = "";
+      updateLiveFormulaPreview("spa_assy");
+      updateLiveFormulaPreview("spa_gudang");
       renderSpaCalcBoxes();
 
       document.getElementById("spaInputCard").classList.remove("editing-mode");
@@ -3299,7 +3696,6 @@
       reader.readAsArrayBuffer(file);
     }
 
-    // Simpan otomatis juga ketika aplikasi diminimize atau berpindah tab di HP
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "hidden") {
         simpanDraftLokal();
@@ -3313,11 +3709,13 @@
       document.getElementById("masterCount").textContent = catalog.length;
       updateCloudCounterUI();
 
-      // Pulihkan draft lokal jika masih di hari yang sama, atau reset otomatis jika sudah ganti hari
       pulihkanDraftLokalJikaHariSama();
 
       renderCurrentBoxes();
       renderSpaCalcBoxes();
+      updateLiveFormulaPreview("wip");
+      updateLiveFormulaPreview("spa_assy");
+      updateLiveFormulaPreview("spa_gudang");
       hitungPreviewFg();
       hitungTargetSpaPreview();
       renderWipAll();
