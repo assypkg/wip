@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>SMART WIP SCANNER - V5 Akurat</title>
+  <title>SMART WIP SCANNER - V6 Final (Anti Error)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -89,7 +89,7 @@
     <div class="header-top">
       <div>
         <div class="app-title">SMART WIP SCANNER</div>
-        <div class="app-subtitle">V5 Akurat &bull; Tanpa Lemot</div>
+        <div class="app-subtitle">V6 Final &bull; Anti Error &bull; Tanpa Lemot</div>
       </div>
       <button class="btn-settings" onclick="toggleModal('settingsModal', true)">
         📂 Master WIP (<span id="masterCountHeader">0</span>) & API
@@ -231,8 +231,8 @@
   </div>
 
   <script>
-    let masterItems = JSON.parse(localStorage.getItem("wip_master_clean_v5")) || {};
-    let wipLogs = JSON.parse(localStorage.getItem("wip_good_stock_logs_v5")) || [];
+    let masterItems = JSON.parse(localStorage.getItem("wip_master_clean_v6")) || {};
+    let wipLogs = JSON.parse(localStorage.getItem("wip_good_stock_logs_v6")) || [];
     let videoStream = null; let autoScanTimer = null; let isScanningNow = false;
 
     function playBeep() { try { const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.type = "sine"; osc.frequency.setValueAtTime(1850, ctx.currentTime); gain.gain.setValueAtTime(0.18, ctx.currentTime); osc.connect(gain); gain.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + 0.12); } catch (e) {} }
@@ -294,18 +294,44 @@
       try {
         if (apiKey) {
           const base64Content = base64DataUrl.split(",")[1];
-          const prompt = `Baca dokumen pabrik ini. Cari Kode Item, Nama/Part, Lot, dan Qty (Jumlah). Tulisan tangan mungkin jelek, tebak yang paling relevan. Abaikan teks lain. WAJIB KEMBALIKAN HANYA OBJEK JSON MURNI TANPA MARKDOWN ATAU KATA LAIN. Contoh: {"kode":"WI-C8603-009","nama":"BASE","lot":"02.10.02","qty":120}`;
+          const prompt = `Anda adalah mesin ekstraktor data JSON.
+Tugas Anda HANYA SATU: Ekstrak data dari bon pabrik ini dan KEMBALIKAN DALAM BENTUK JSON MURNI.
+DILARANG memberikan kalimat pembuka, penutup, atau penjelasan apapun.
+DILARANG menggunakan format markdown (seperti \`\`\`json).
+
+Cari 4 data ini:
+1. "kode": (teks pada kolom KODE, ubah titik jadi strip, misal "WI-C8603-009")
+2. "nama": (teks pada kolom PART)
+3. "lot": (teks pada kolom NOMOR LOT PRODUKSI)
+4. "qty": (angka saja pada kolom JUMLAH/QTY)
+
+Contoh output yang benar dan satu-satunya yang boleh Anda berikan:
+{"kode":"WI-C8603-009","nama":"BASE","lot":"02.10.02","qty":120}
+
+JIKA DATA TIDAK ADA ATAU BURAM, KEMBALIKAN:
+{"kode":""}`;
           
           const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
             method: "POST", headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: "image/jpeg", data: base64Content } }] }],
-              generationConfig: { responseMimeType: "application/json" }
+              generationConfig: { 
+                responseMimeType: "application/json",
+                temperature: 0.1 // Kurangi kreativitas AI agar output konsisten
+              }
             })
           });
           const result = await response.json();
           let rawJson = result.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
-          rawJson = rawJson.replace(/```json/gi, "").replace(/```/gi, "").trim(); // Fix JSON Bug
+          
+          // PEMBERSIH DATA SUPER KUAT (REGEX)
+          const jsonMatch = rawJson.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            rawJson = jsonMatch[0];
+          } else {
+            rawJson = "{}";
+          }
+          
           const parsed = JSON.parse(rawJson);
           
           if (parsed.kode) terapkanHasilScanMurni(parsed);
@@ -354,18 +380,18 @@
             const rawCode = (rows[i][0] || "").toString().trim(); const rawName = (rows[i][1] || "").toString().trim().toUpperCase();
             if (rawCode && rawName) { const cleanCode = normalizeItemCode(rawCode); if (cleanCode.length >= 3) { masterItems[cleanCode] = rawName; imported++; } }
           }
-          localStorage.setItem("wip_master_clean_v5", JSON.stringify(masterItems)); renderMasterList(); onKodeItemInput(); alert(`Mengimpor ${imported} kode.`);
+          localStorage.setItem("wip_master_clean_v6", JSON.stringify(masterItems)); renderMasterList(); onKodeItemInput(); alert(`Mengimpor ${imported} kode.`);
         } catch (err) { alert("Gagal: " + err.message); }
       }; reader.readAsArrayBuffer(file);
     }
 
     function tambahMasterItemManual() {
       const c = normalizeItemCode(document.getElementById("newMasterCode").value); const n = document.getElementById("newMasterName").value.trim().toUpperCase();
-      if (!c || !n) return alert("Isi Kode & Nama"); masterItems[c] = n; localStorage.setItem("wip_master_clean_v5", JSON.stringify(masterItems));
+      if (!c || !n) return alert("Isi Kode & Nama"); masterItems[c] = n; localStorage.setItem("wip_master_clean_v6", JSON.stringify(masterItems));
       document.getElementById("newMasterCode").value = ""; document.getElementById("newMasterName").value = ""; renderMasterList(); onKodeItemInput();
     }
-    function hapusSatuMaster(k) { delete masterItems[k]; localStorage.setItem("wip_master_clean_v5", JSON.stringify(masterItems)); renderMasterList(); onKodeItemInput(); }
-    function hapusSemuaMaster() { if(confirm("Hapus master?")){ masterItems = {}; localStorage.setItem("wip_master_clean_v5", "{}"); renderMasterList(); onKodeItemInput(); } }
+    function hapusSatuMaster(k) { delete masterItems[k]; localStorage.setItem("wip_master_clean_v6", JSON.stringify(masterItems)); renderMasterList(); onKodeItemInput(); }
+    function hapusSemuaMaster() { if(confirm("Hapus master?")){ masterItems = {}; localStorage.setItem("wip_master_clean_v6", "{}"); renderMasterList(); onKodeItemInput(); } }
     
     function renderMasterList() {
       const entries = Object.entries(masterItems); document.getElementById("masterCountHeader").textContent = entries.length; document.getElementById("masterCountModal").textContent = entries.length;
@@ -374,9 +400,9 @@
     }
 
     function simpanDataWIP(e) { e.preventDefault(); const kode = matchWithMasterWIP(document.getElementById("kodeItem").value).code || document.getElementById("kodeItem").value; const nama = document.getElementById("namaItem").value.trim().toUpperCase(); const lot = document.getElementById("lotProduksi").value.trim().toUpperCase(); const qty = parseInt(document.getElementById("qtyItem").value, 10); if (!kode || !nama || isNaN(qty) || qty <= 0) return alert("Lengkapi data!"); masukkanKeRekapData(kode, nama, lot, qty); document.getElementById("wipForm").reset(); onKodeItemInput(); }
-    function masukkanKeRekapData(kode, nama, lot, qty) { wipLogs.unshift({ id: Date.now(), waktu: new Date().toLocaleTimeString("id-ID"), kode, nama, lot: lot || "-", qty }); localStorage.setItem("wip_good_stock_logs_v5", JSON.stringify(wipLogs)); renderDashboard(); }
-    function hapusSatuData(id) { wipLogs = wipLogs.filter((i) => i.id !== id); localStorage.setItem("wip_good_stock_logs_v5", JSON.stringify(wipLogs)); renderDashboard(); }
-    function hapusSemuaData() { if(confirm("Reset rekap?")){ wipLogs = []; localStorage.setItem("wip_good_stock_logs_v5", "[]"); renderDashboard(); } }
+    function masukkanKeRekapData(kode, nama, lot, qty) { wipLogs.unshift({ id: Date.now(), waktu: new Date().toLocaleTimeString("id-ID"), kode, nama, lot: lot || "-", qty }); localStorage.setItem("wip_good_stock_logs_v6", JSON.stringify(wipLogs)); renderDashboard(); }
+    function hapusSatuData(id) { wipLogs = wipLogs.filter((i) => i.id !== id); localStorage.setItem("wip_good_stock_logs_v6", JSON.stringify(wipLogs)); renderDashboard(); }
+    function hapusSemuaData() { if(confirm("Reset rekap?")){ wipLogs = []; localStorage.setItem("wip_good_stock_logs_v6", "[]"); renderDashboard(); } }
 
     function renderDashboard() {
       let gt = 0, sm = {}; wipLogs.forEach(l => { gt += l.qty; if (!sm[l.kode]) sm[l.kode] = { kode: l.kode, nama: l.nama, qty: 0, box: 0, lot: new Set() }; sm[l.kode].qty += l.qty; sm[l.kode].box++; if(l.lot && l.lot !== "-") sm[l.kode].lot.add(l.lot); });
