@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>SMART WIP SCANNER - V6 Final (Anti Error)</title>
+  <title>SMART WIP SCANNER - V7 Stabil</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -89,7 +89,7 @@
     <div class="header-top">
       <div>
         <div class="app-title">SMART WIP SCANNER</div>
-        <div class="app-subtitle">V6 Final &bull; Anti Error &bull; Tanpa Lemot</div>
+        <div class="app-subtitle">V7 Stabil &bull; Fokus Kode, Nama & Qty</div>
       </div>
       <button class="btn-settings" onclick="toggleModal('settingsModal', true)">
         📂 Master WIP (<span id="masterCountHeader">0</span>) & API
@@ -159,8 +159,8 @@
               <input type="text" id="namaItem" placeholder="Nama Part" required />
             </div>
             <div class="form-group">
-              <label>Nomor Lot</label>
-              <input type="text" id="lotProduksi" placeholder="Lot" required />
+              <label>Nomor Lot (Opsional)</label>
+              <input type="text" id="lotProduksi" placeholder="Lot (Opsional)" />
             </div>
             <div class="form-group">
               <label>Qty (PCS)</label>
@@ -231,8 +231,8 @@
   </div>
 
   <script>
-    let masterItems = JSON.parse(localStorage.getItem("wip_master_clean_v6")) || {};
-    let wipLogs = JSON.parse(localStorage.getItem("wip_good_stock_logs_v6")) || [];
+    let masterItems = JSON.parse(localStorage.getItem("wip_master_clean_v7")) || {};
+    let wipLogs = JSON.parse(localStorage.getItem("wip_good_stock_logs_v7")) || [];
     let videoStream = null; let autoScanTimer = null; let isScanningNow = false;
 
     function playBeep() { try { const ctx = new (window.AudioContext || window.webkitAudioContext)(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.type = "sine"; osc.frequency.setValueAtTime(1850, ctx.currentTime); gain.gain.setValueAtTime(0.18, ctx.currentTime); osc.connect(gain); gain.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + 0.12); } catch (e) {} }
@@ -289,42 +289,39 @@
       const apiKey = localStorage.getItem("wip_gemini_api_key") || "";
 
       hudText.textContent = "⏳ Membaca teks...";
-      if (!isSilentAuto) { statusEl.className = "scan-status loading"; statusEl.innerHTML = "⏳ <b>Sedang memindai gambar...</b> Mohon tunggu sekitar 3 detik."; }
+      if (!isSilentAuto) { statusEl.className = "scan-status loading"; statusEl.innerHTML = "⏳ <b>Sedang memindai gambar...</b> Mohon tunggu sebentar."; }
 
       try {
         if (apiKey) {
           const base64Content = base64DataUrl.split(",")[1];
-          const prompt = `Anda adalah mesin ekstraktor data JSON.
-Tugas Anda HANYA SATU: Ekstrak data dari bon pabrik ini dan KEMBALIKAN DALAM BENTUK JSON MURNI.
-DILARANG memberikan kalimat pembuka, penutup, atau penjelasan apapun.
-DILARANG menggunakan format markdown (seperti \`\`\`json).
-
-Cari 4 data ini:
-1. "kode": (teks pada kolom KODE, ubah titik jadi strip, misal "WI-C8603-009")
-2. "nama": (teks pada kolom PART)
-3. "lot": (teks pada kolom NOMOR LOT PRODUKSI)
-4. "qty": (angka saja pada kolom JUMLAH/QTY)
-
-Contoh output yang benar dan satu-satunya yang boleh Anda berikan:
-{"kode":"WI-C8603-009","nama":"BASE","lot":"02.10.02","qty":120}
-
-JIKA DATA TIDAK ADA ATAU BURAM, KEMBALIKAN:
-{"kode":""}`;
+          // Gunakan model gemini-1.5-flash yang sangat stabil di API key
+          const prompt = `Ekstrak data dari bon produksi pabrik ini ke format JSON murni:
+{
+  "kode": "Kode item (contoh: WI-C8603-009, ubah titik jadi strip)",
+  "nama": "Nama part/item",
+  "lot": "Nomor lot produksi jika ada (boleh kosong jika tidak terbaca)",
+  "qty": 120
+}
+HANYA kembalikan objek JSON murni tanpa markdown, tanpa teks lain.`;
           
-          const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
+          const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
             method: "POST", headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: "image/jpeg", data: base64Content } }] }],
               generationConfig: { 
                 responseMimeType: "application/json",
-                temperature: 0.1 // Kurangi kreativitas AI agar output konsisten
+                temperature: 0.1 
               }
             })
           });
+
+          if (!response.ok) {
+            throw new Error("Gagal terhubung ke API Gemini (Periksa kembali API Key Anda).");
+          }
+
           const result = await response.json();
           let rawJson = result.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
           
-          // PEMBERSIH DATA SUPER KUAT (REGEX)
           const jsonMatch = rawJson.match(/\{[\s\S]*\}/);
           if (jsonMatch) {
             rawJson = jsonMatch[0];
@@ -334,14 +331,23 @@ JIKA DATA TIDAK ADA ATAU BURAM, KEMBALIKAN:
           
           const parsed = JSON.parse(rawJson);
           
-          if (parsed.kode) terapkanHasilScanMurni(parsed);
-          else if (!isSilentAuto) { statusEl.className = "scan-status error"; statusEl.innerHTML = "⚠️ Bon tidak terbaca. Pastikan tulisan terang dan jelas."; }
+          if (parsed.kode || parsed.qty) {
+            terapkanHasilScanMurni(parsed);
+          } else if (!isSilentAuto) {
+            statusEl.className = "scan-status error";
+            statusEl.innerHTML = "⚠️ Bon tidak terbaca. Pastikan pencahayaan cukup dan tulisan Kode & Qty terlihat jelas.";
+          }
         } else {
-          // Tesseract fallback...
-          if (!isSilentAuto) { statusEl.className = "scan-status error"; statusEl.innerHTML = "⚠️ Tanpa API Key, tulisan tangan sulit terbaca."; }
+          if (!isSilentAuto) {
+            statusEl.className = "scan-status error";
+            statusEl.innerHTML = "⚠️ Gemini API Key belum diisi di menu Pengaturan pojok kanan atas.";
+          }
         }
       } catch (err) {
-        if (!isSilentAuto) { statusEl.className = "scan-status error"; statusEl.innerHTML = `⚠️ Gagal membaca data: Pastikan gambar jelas dan tidak goyang.`; }
+        if (!isSilentAuto) {
+          statusEl.className = "scan-status error";
+          statusEl.innerHTML = `⚠️ Error: ${err.message}`;
+        }
       } finally {
         isScanningNow = false; hudText.textContent = "Siap scan";
       }
@@ -357,15 +363,19 @@ JIKA DATA TIDAK ADA ATAU BURAM, KEMBALIKAN:
       playBeep();
       document.getElementById("scannerWrapper").classList.add("scan-hit"); setTimeout(() => document.getElementById("scannerWrapper").classList.remove("scan-hit"), 700);
 
-      document.getElementById("kodeItem").value = finalCode; document.getElementById("namaItem").value = finalNama;
-      document.getElementById("lotProduksi").value = finalLot; document.getElementById("qtyItem").value = finalQty || "";
+      document.getElementById("kodeItem").value = finalCode; 
+      document.getElementById("namaItem").value = finalNama;
+      document.getElementById("lotProduksi").value = finalLot === "-" ? "" : finalLot; 
+      document.getElementById("qtyItem").value = finalQty || "";
       onKodeItemInput();
 
-      if (document.getElementById("autoSubmitToggle").checked && finalCode && finalNama && finalQty > 0) {
-        masukkanKeRekapData(finalCode, finalNama, finalLot, finalQty);
-        document.getElementById("scanStatus").className = "scan-status success"; document.getElementById("scanStatus").innerHTML = `✅ <b>MASUK REKAP:</b> ${finalCode} (+${finalQty} PCS)`;
+      if (document.getElementById("autoSubmitToggle").checked && finalCode && (finalNama || matched.name) && finalQty > 0) {
+        masukkanKeRekapData(finalCode, finalNama || matched.name, finalLot, finalQty);
+        document.getElementById("scanStatus").className = "scan-status success"; 
+        document.getElementById("scanStatus").innerHTML = `✅ <b>MASUK REKAP:</b> ${finalCode} (+${finalQty} PCS)`;
       } else {
-        document.getElementById("scanStatus").className = "scan-status success"; document.getElementById("scanStatus").innerHTML = `✅ Hasil dimuat ke form.`;
+        document.getElementById("scanStatus").className = "scan-status success"; 
+        document.getElementById("scanStatus").innerHTML = `✅ Hasil dimuat ke form. Silakan klik Tambahkan.`;
       }
     }
 
@@ -380,18 +390,18 @@ JIKA DATA TIDAK ADA ATAU BURAM, KEMBALIKAN:
             const rawCode = (rows[i][0] || "").toString().trim(); const rawName = (rows[i][1] || "").toString().trim().toUpperCase();
             if (rawCode && rawName) { const cleanCode = normalizeItemCode(rawCode); if (cleanCode.length >= 3) { masterItems[cleanCode] = rawName; imported++; } }
           }
-          localStorage.setItem("wip_master_clean_v6", JSON.stringify(masterItems)); renderMasterList(); onKodeItemInput(); alert(`Mengimpor ${imported} kode.`);
+          localStorage.setItem("wip_master_clean_v7", JSON.stringify(masterItems)); renderMasterList(); onKodeItemInput(); alert(`Mengimpor ${imported} kode.`);
         } catch (err) { alert("Gagal: " + err.message); }
       }; reader.readAsArrayBuffer(file);
     }
 
     function tambahMasterItemManual() {
       const c = normalizeItemCode(document.getElementById("newMasterCode").value); const n = document.getElementById("newMasterName").value.trim().toUpperCase();
-      if (!c || !n) return alert("Isi Kode & Nama"); masterItems[c] = n; localStorage.setItem("wip_master_clean_v6", JSON.stringify(masterItems));
+      if (!c || !n) return alert("Isi Kode & Nama"); masterItems[c] = n; localStorage.setItem("wip_master_clean_v7", JSON.stringify(masterItems));
       document.getElementById("newMasterCode").value = ""; document.getElementById("newMasterName").value = ""; renderMasterList(); onKodeItemInput();
     }
-    function hapusSatuMaster(k) { delete masterItems[k]; localStorage.setItem("wip_master_clean_v6", JSON.stringify(masterItems)); renderMasterList(); onKodeItemInput(); }
-    function hapusSemuaMaster() { if(confirm("Hapus master?")){ masterItems = {}; localStorage.setItem("wip_master_clean_v6", "{}"); renderMasterList(); onKodeItemInput(); } }
+    function hapusSatuMaster(k) { delete masterItems[k]; localStorage.setItem("wip_master_clean_v7", JSON.stringify(masterItems)); renderMasterList(); onKodeItemInput(); }
+    function hapusSemuaMaster() { if(confirm("Hapus master?")){ masterItems = {}; localStorage.setItem("wip_master_clean_v7", "{}"); renderMasterList(); onKodeItemInput(); } }
     
     function renderMasterList() {
       const entries = Object.entries(masterItems); document.getElementById("masterCountHeader").textContent = entries.length; document.getElementById("masterCountModal").textContent = entries.length;
@@ -399,10 +409,26 @@ JIKA DATA TIDAK ADA ATAU BURAM, KEMBALIKAN:
       document.getElementById("masterListDisplay").innerHTML = entries.length ? entries.map(([k, v]) => `<div style="display:flex; justify-content:space-between; align-items:center; padding:5px; border-bottom:1px solid #e2e8f0;"><span><b>${k}</b> - ${v}</span><button class="btn btn-danger" onclick="hapusSatuMaster('${k}')">Hapus</button></div>`).join("") : "Belum ada.";
     }
 
-    function simpanDataWIP(e) { e.preventDefault(); const kode = matchWithMasterWIP(document.getElementById("kodeItem").value).code || document.getElementById("kodeItem").value; const nama = document.getElementById("namaItem").value.trim().toUpperCase(); const lot = document.getElementById("lotProduksi").value.trim().toUpperCase(); const qty = parseInt(document.getElementById("qtyItem").value, 10); if (!kode || !nama || isNaN(qty) || qty <= 0) return alert("Lengkapi data!"); masukkanKeRekapData(kode, nama, lot, qty); document.getElementById("wipForm").reset(); onKodeItemInput(); }
-    function masukkanKeRekapData(kode, nama, lot, qty) { wipLogs.unshift({ id: Date.now(), waktu: new Date().toLocaleTimeString("id-ID"), kode, nama, lot: lot || "-", qty }); localStorage.setItem("wip_good_stock_logs_v6", JSON.stringify(wipLogs)); renderDashboard(); }
-    function hapusSatuData(id) { wipLogs = wipLogs.filter((i) => i.id !== id); localStorage.setItem("wip_good_stock_logs_v6", JSON.stringify(wipLogs)); renderDashboard(); }
-    function hapusSemuaData() { if(confirm("Reset rekap?")){ wipLogs = []; localStorage.setItem("wip_good_stock_logs_v6", "[]"); renderDashboard(); } }
+    function simpanDataWIP(e) { 
+      e.preventDefault(); 
+      const kode = matchWithMasterWIP(document.getElementById("kodeItem").value).code || document.getElementById("kodeItem").value; 
+      const nama = document.getElementById("namaItem").value.trim().toUpperCase(); 
+      const lot = document.getElementById("lotProduksi").value.trim().toUpperCase(); 
+      const qty = parseInt(document.getElementById("qtyItem").value, 10); 
+      if (!kode || !nama || isNaN(qty) || qty <= 0) return alert("Lengkapi Kode, Nama, dan Qty!"); 
+      masukkanKeRekapData(kode, nama, lot || "-", qty); 
+      document.getElementById("wipForm").reset(); 
+      onKodeItemInput(); 
+    }
+
+    function masukkanKeRekapData(kode, nama, lot, qty) { 
+      wipLogs.unshift({ id: Date.now(), waktu: new Date().toLocaleTimeString("id-ID"), kode, nama, lot: lot || "-", qty }); 
+      localStorage.setItem("wip_good_stock_logs_v7", JSON.stringify(wipLogs)); 
+      renderDashboard(); 
+    }
+
+    function hapusSatuData(id) { wipLogs = wipLogs.filter((i) => i.id !== id); localStorage.setItem("wip_good_stock_logs_v7", JSON.stringify(wipLogs)); renderDashboard(); }
+    function hapusSemuaData() { if(confirm("Reset rekap?")){ wipLogs = []; localStorage.setItem("wip_good_stock_logs_v7", "[]"); renderDashboard(); } }
 
     function renderDashboard() {
       let gt = 0, sm = {}; wipLogs.forEach(l => { gt += l.qty; if (!sm[l.kode]) sm[l.kode] = { kode: l.kode, nama: l.nama, qty: 0, box: 0, lot: new Set() }; sm[l.kode].qty += l.qty; sm[l.kode].box++; if(l.lot && l.lot !== "-") sm[l.kode].lot.add(l.lot); });
@@ -410,8 +436,22 @@ JIKA DATA TIDAK ADA ATAU BURAM, KEMBALIKAN:
       document.getElementById("rekapContainer").innerHTML = sl.length ? sl.map(i => `<div class="rekap-item"><div class="rekap-top"><div><div class="rekap-code">${i.kode}</div><div class="rekap-name">${i.nama}</div></div><div><div class="rekap-qty">${i.qty.toLocaleString("id-ID")} PCS</div><div class="rekap-box-count">${i.box} Bon</div></div></div><div class="rekap-lot-list">Lot: ${Array.from(i.lot).join(", ") || "-"}</div></div>`).join("") : "<div style='text-align:center; padding:20px;'>Belum ada scan.</div>";
       document.getElementById("riwayatTableBody").innerHTML = wipLogs.length ? wipLogs.map(l => `<tr><td><b>${l.kode}</b><br><small>${l.nama}</small></td><td>${l.lot}<br><small>${l.waktu}</small></td><td><b>${l.qty.toLocaleString("id-ID")}</b></td><td><button class="btn btn-danger" onclick="hapusSatuData(${l.id})">Hapus</button></td></tr>`).join("") : "<tr><td colspan='4' style='text-align:center;'>Belum ada data.</td></tr>";
     }
-    function copyRekapWA() { if (!wipLogs.length) return alert("Kosong!"); let t = `*REKAP WIP*\nTgl: ${new Date().toLocaleDateString("id-ID")}\n---\n`, sm = {}, gt = 0; wipLogs.forEach(l => { gt += l.qty; if(!sm[l.kode]) sm[l.kode] = { n: l.nama, q: 0, b: 0, ls: new Set() }; sm[l.kode].q += l.qty; sm[l.kode].b++; if(l.lot !== "-") sm[l.kode].ls.add(l.lot); }); Object.entries(sm).forEach(([k, d], i) => t += `${i+1}. *${k}* (${d.n})\n   • Total: *${d.q.toLocaleString("id-ID")} PCS* (${d.b} Bon)\n   • Lot: ${Array.from(d.ls).join(", ") || "-"}\n\n`); t += `---\n*GRAND TOTAL: ${gt.toLocaleString("id-ID")} PCS*`; navigator.clipboard.writeText(t).then(() => alert("Tersalin!")); }
-    function exportCSV() { if (!wipLogs.length) return alert("Kosong!"); const blob = new Blob(["Waktu,Kode,Nama,Lot,Qty\n" + wipLogs.map(l => `"${l.waktu}","${l.kode}","${l.nama}","${l.lot}",${l.qty}`).join("\n")], { type: "text/csv" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `WIP_${new Date().toISOString().slice(0, 10)}.csv`; a.click(); }
+
+    function copyRekapWA() { 
+      if (!wipLogs.length) return alert("Kosong!"); 
+      let t = `*REKAP WIP*\nTgl: ${new Date().toLocaleDateString("id-ID")}\n---\n`, sm = {}, gt = 0; 
+      wipLogs.forEach(l => { gt += l.qty; if(!sm[l.kode]) sm[l.kode] = { n: l.nama, q: 0, b: 0, ls: new Set() }; sm[l.kode].q += l.qty; sm[l.kode].b++; if(l.lot !== "-") sm[l.kode].ls.add(l.lot); }); 
+      Object.entries(sm).forEach(([k, d], i) => t += `${i+1}. *${k}* (${d.n})\n   • Total: *${d.q.toLocaleString("id-ID")} PCS* (${d.b} Bon)\n   • Lot: ${Array.from(d.ls).join(", ") || "-"}\n\n`); 
+      t += `---\n*GRAND TOTAL: ${gt.toLocaleString("id-ID")} PCS*`; 
+      navigator.clipboard.writeText(t).then(() => alert("Tersalin!")); 
+    }
+
+    function exportCSV() { 
+      if (!wipLogs.length) return alert("Kosong!"); 
+      const blob = new Blob(["Waktu,Kode,Nama,Lot,Qty\n" + wipLogs.map(l => `"${l.waktu}","${l.kode}","${l.nama}","${l.lot}",${l.qty}`).join("\n")], { type: "text/csv" }); 
+      const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `WIP_${new Date().toISOString().slice(0, 10)}.csv`; a.click(); 
+    }
+
     function toggleModal(id, show) { document.getElementById(id).style.display = show ? "flex" : "none"; if(show){ document.getElementById("geminiApiKeyInput").value = localStorage.getItem("wip_gemini_api_key") || ""; renderMasterList(); } }
     function simpanPengaturan() { localStorage.setItem("wip_gemini_api_key", document.getElementById("geminiApiKeyInput").value.trim()); updateOcrModeIndicator(); toggleModal("settingsModal", false); alert("Tersimpan!"); }
 
