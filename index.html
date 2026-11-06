@@ -3,7 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>SMART WIP & SPA CALCULATOR - Plant Alpha/Beta</title>
+  <meta name="theme-color" content="#1a237e" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="WIP Assy" />
+  <title>SMART WIP & SPA ASSY - Cloud Firebase (wipassembly)</title>
+
+  <!-- PWA Manifest & Icons -->
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-assy-192.png" />
+  <link rel="apple-touch-icon" href="icon-assy-192.png" />
 
   <!-- Google Fonts: Montserrat & Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,8 +28,12 @@
       --navy-light: #283593;
       --emerald: #2e7d32;
       --emerald-bg: #e8f5e9;
+      --wa-green: #25d366;
+      --wa-dark: #128c7e;
       --purple: #6a1b9a;
       --purple-bg: #f3e5f5;
+      --sky: #0277bd;
+      --sky-bg: #e1f5fe;
       --orange: #ef6c00;
       --orange-bg: #fff3e0;
       --red: #c62828;
@@ -42,18 +55,19 @@
       font-family: 'Inter', sans-serif;
       background-color: var(--bg-main);
       color: var(--text-main);
-      padding-bottom: 50px;
+      padding-bottom: 48px;
+      -webkit-tap-highlight-color: transparent;
     }
 
     h1, h2, h3, .font-title {
       font-family: 'Montserrat', sans-serif;
     }
 
-    /* HEADER */
+    /* HEADER RESPONSIF */
     .app-header {
       background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
       color: #fff;
-      padding: 14px 16px;
+      padding: 12px 16px;
       position: sticky;
       top: 0;
       z-index: 100;
@@ -61,7 +75,7 @@
     }
 
     .header-inner {
-      max-width: 1080px;
+      max-width: 1140px;
       margin: 0 auto;
       display: flex;
       justify-content: space-between;
@@ -71,49 +85,85 @@
     }
 
     .app-title {
-      font-size: 1.05rem;
+      font-size: 1rem;
       font-weight: 800;
       letter-spacing: 0.4px;
     }
 
     .app-subtitle {
-      font-size: 0.74rem;
+      font-size: 0.72rem;
       opacity: 0.9;
       margin-top: 2px;
     }
 
     .header-actions {
       display: flex;
-      gap: 8px;
+      gap: 6px;
+      flex-wrap: wrap;
     }
 
     .btn-header {
       background: rgba(255, 255, 255, 0.16);
       border: 1px solid rgba(255, 255, 255, 0.35);
       color: #fff;
-      padding: 8px 12px;
+      padding: 7px 11px;
       border-radius: 8px;
       font-family: 'Montserrat', sans-serif;
-      font-size: 0.74rem;
+      font-size: 0.72rem;
       font-weight: 700;
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .btn-header.install-btn {
+      background: var(--emerald);
+      border-color: #81c784;
+      box-shadow: 0 2px 8px rgba(46, 125, 50, 0.4);
+    }
+
+    .btn-header.cloud-btn {
+      background: rgba(2, 119, 189, 0.9);
+      border-color: #81d4fa;
+    }
+
+    /* BANNER INSTALL PWA */
+    .pwa-install-banner {
+      display: none;
+      max-width: 1140px;
+      margin: 10px auto 0;
+      padding: 0 12px;
+    }
+
+    .pwa-install-box {
+      background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%);
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      box-shadow: 0 4px 12px rgba(46, 125, 50, 0.25);
     }
 
     /* MODE TABS */
     .mode-tabs {
-      max-width: 1080px;
-      margin: 14px auto 0;
+      max-width: 1140px;
+      margin: 12px auto 0;
       padding: 0 12px;
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 10px;
+      gap: 8px;
     }
 
     .tab-btn {
       font-family: 'Montserrat', sans-serif;
-      font-size: 0.84rem;
+      font-size: 0.78rem;
       font-weight: 800;
-      padding: 13px 10px;
+      padding: 12px 8px;
       border-radius: 10px;
       border: 2px solid var(--border);
       background: #fff;
@@ -137,20 +187,26 @@
       box-shadow: 0 4px 10px rgba(106, 27, 154, 0.2);
     }
 
-    /* MAIN GRID */
+    /* MAIN GRID CONTAINER (ADAPTIF HP & DESKTOP) */
     .container {
-      max-width: 1080px;
-      margin: 14px auto;
+      max-width: 1140px;
+      margin: 12px auto;
       padding: 0 12px;
       display: grid;
       grid-template-columns: 1fr;
-      gap: 16px;
+      gap: 14px;
     }
 
-    @media (min-width: 860px) {
+    @media (min-width: 880px) {
       .container {
-        grid-template-columns: 1.05fr 1fr;
+        grid-template-columns: 1.08fr 1fr;
         align-items: start;
+      }
+      .app-title {
+        font-size: 1.12rem;
+      }
+      .tab-btn {
+        font-size: 0.86rem;
       }
     }
 
@@ -158,10 +214,15 @@
     .card {
       background: var(--card-bg);
       border-radius: 14px;
-      padding: 16px;
+      padding: 15px;
       box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
       border: 1px solid #e2e8f0;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
+    }
+
+    .card.editing-mode {
+      border: 2.5px solid var(--orange);
+      box-shadow: 0 4px 16px rgba(239, 108, 0, 0.18);
     }
 
     .card-header {
@@ -176,23 +237,61 @@
     }
 
     .card-title {
-      font-size: 0.9rem;
+      font-size: 0.88rem;
       font-weight: 800;
       color: var(--navy);
       text-transform: uppercase;
       letter-spacing: 0.4px;
     }
 
+    /* EDIT BANNER */
+    .edit-banner {
+      display: none;
+      background: var(--orange-bg);
+      border: 1.5px solid var(--orange);
+      color: #b45309;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
     /* META BAR (TANGGAL, SHIFT, PLANT) */
     .meta-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: 1fr;
       gap: 8px;
       margin-bottom: 14px;
       background: #f8fafc;
       padding: 10px;
       border-radius: 10px;
       border: 1px solid #e2e8f0;
+    }
+
+    @media (min-width: 520px) {
+      .meta-grid {
+        grid-template-columns: 1.2fr 0.9fr 0.9fr;
+      }
+      .meta-grid.two-cols {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .form-row-responsive {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    @media (min-width: 520px) {
+      .form-row-responsive {
+        grid-template-columns: 1fr 1fr;
+      }
     }
 
     label {
@@ -222,33 +321,62 @@
       box-shadow: 0 0 0 3px rgba(26, 35, 126, 0.12);
     }
 
-    /* SMART SEARCH BOX */
+    /* SMART SEARCH BOX (HANYA MUNCUL SAAT DIKETIK) */
     .search-box-wrapper {
       position: relative;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
+    }
+
+    .search-input-container {
+      position: relative;
+      display: flex;
+      align-items: center;
     }
 
     .search-input {
       font-family: 'Montserrat', sans-serif;
-      font-size: 0.98rem;
+      font-size: 0.92rem;
       font-weight: 700;
-      padding-left: 12px;
+      padding: 11px 36px 11px 12px;
       border: 2px solid var(--navy);
       background: #fff;
+      border-radius: 10px;
+    }
+
+    .btn-clear-search {
+      position: absolute;
+      right: 10px;
+      background: #e2e8f0;
+      border: none;
+      color: var(--text-main);
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      font-size: 0.75rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
     }
 
     .quick-results {
-      max-height: 210px;
+      display: none;
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      z-index: 60;
+      max-height: 230px;
       overflow-y: auto;
-      border: 1px solid var(--border);
+      border: 2px solid var(--navy);
       border-radius: 10px;
       background: #fff;
-      margin-top: 6px;
-      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.18);
     }
 
     .quick-item {
-      padding: 9px 12px;
+      padding: 10px 12px;
       border-bottom: 1px solid #f1f5f9;
       cursor: pointer;
       display: flex;
@@ -257,87 +385,68 @@
       transition: background 0.12s;
     }
 
-    .quick-item:hover, .quick-item.selected {
+    .quick-item:hover, .quick-item:active {
       background: var(--emerald-bg);
     }
 
     .quick-item-left {
-      font-size: 0.84rem;
+      font-size: 0.85rem;
       font-weight: 700;
       color: var(--navy);
     }
 
     .quick-item-sub {
-      font-size: 0.75rem;
+      font-size: 0.74rem;
       color: var(--text-muted);
       font-weight: 600;
     }
 
     .quick-item-badge {
       font-family: 'Montserrat', sans-serif;
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       font-weight: 800;
       background: var(--purple-bg);
       color: var(--purple);
-      padding: 3px 8px;
+      padding: 4px 8px;
       border-radius: 6px;
-    }
-
-    /* FILTER CHIPS */
-    .chip-bar {
-      display: flex;
-      gap: 6px;
-      overflow-x: auto;
-      padding-bottom: 6px;
-      margin-bottom: 10px;
-    }
-
-    .chip {
-      font-family: 'Montserrat', sans-serif;
-      font-size: 0.72rem;
-      font-weight: 700;
-      padding: 6px 10px;
-      border-radius: 20px;
-      background: #e2e8f0;
-      color: var(--text-main);
-      border: none;
-      cursor: pointer;
       white-space: nowrap;
     }
 
-    .chip.active {
-      background: var(--navy);
-      color: #fff;
-    }
-
-    /* AUTO CALCULATOR PANEL */
+    /* AUTO CALCULATOR PANEL (KHUSUS ANGKA) */
     .calc-panel {
       background: var(--emerald-bg);
       border: 2px solid var(--emerald);
       border-radius: 12px;
-      padding: 14px;
-      margin-top: 10px;
+      padding: 12px;
+      margin-top: 12px;
+    }
+
+    .calc-panel.purple-calc {
+      background: var(--purple-bg);
+      border-color: var(--purple);
     }
 
     .calc-input-row {
       display: flex;
-      gap: 8px;
+      gap: 6px;
       margin-top: 6px;
+      flex-wrap: wrap;
     }
 
     .input-calc {
       font-family: 'Montserrat', sans-serif;
-      font-size: 1.15rem;
+      font-size: 1.05rem;
       font-weight: 800;
       color: var(--emerald);
       flex: 1;
+      min-width: 140px;
     }
 
     .box-chips-container {
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
-      margin-top: 10px;
+      margin-top: 8px;
     }
 
     .box-chip {
@@ -345,7 +454,7 @@
       border: 1px solid #a5d6a7;
       color: var(--emerald);
       font-family: 'Montserrat', sans-serif;
-      font-size: 0.76rem;
+      font-size: 0.74rem;
       font-weight: 700;
       padding: 4px 8px;
       border-radius: 6px;
@@ -354,44 +463,83 @@
       gap: 6px;
     }
 
+    .box-chip.minus-chip {
+      background: var(--red-bg);
+      border-color: #ffcdd2;
+      color: var(--red);
+    }
+
     .box-chip button {
       background: none;
       border: none;
       color: var(--red);
       font-weight: 800;
       cursor: pointer;
+      font-size: 0.85rem;
     }
 
     /* BUTTONS */
     .btn {
       font-family: 'Montserrat', sans-serif;
       font-weight: 700;
-      font-size: 0.8rem;
-      padding: 10px 14px;
+      font-size: 0.75rem;
+      padding: 9px 12px;
       border-radius: 8px;
       border: none;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: 5px;
       transition: all 0.15s;
     }
 
     .btn:active { transform: scale(0.98); }
     .btn-primary { background: var(--navy); color: #fff; }
-    .btn-emerald { background: var(--emerald); color: #fff; width: 100%; padding: 13px; font-size: 0.9rem; }
+    .btn-emerald { background: var(--emerald); color: #fff; width: 100%; padding: 13px; font-size: 0.88rem; }
+    .btn-sky { background: var(--sky); color: #fff; }
+    .btn-sky-outline { background: var(--sky-bg); color: var(--sky); border: 1px solid #81d4fa; }
+    .btn-wa {
+      background: var(--wa-dark);
+      color: #fff;
+      padding: 10px 14px;
+      font-size: 0.8rem;
+      box-shadow: 0 3px 8px rgba(18, 140, 126, 0.25);
+    }
     .btn-purple { background: var(--purple); color: #fff; }
     .btn-outline { background: #fff; color: var(--navy); border: 1.5px solid var(--navy); }
-    .btn-danger { background: var(--red-bg); color: var(--red); border: 1px solid #ffcdd2; padding: 6px 10px; font-size: 0.72rem; }
+    .btn-edit {
+      background: var(--orange-bg);
+      color: var(--orange);
+      border: 1px solid #ffcc80;
+      padding: 5px 9px;
+      font-size: 0.72rem;
+    }
+    .btn-danger {
+      background: var(--red-bg);
+      color: var(--red);
+      border: 1px solid #ffcdd2;
+      padding: 5px 9px;
+      font-size: 0.72rem;
+    }
 
-    /* GROUPED REPORT DISPLAY */
+    /* TOOLBAR CLOUD DI ATAS DAFTAR WIP */
+    .wip-action-toolbar {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    /* GROUPED REPORT DISPLAY & RINCIAN BOX */
     .group-card {
       border: 1px solid var(--border);
       border-left: 5px solid var(--navy);
       border-radius: 10px;
       padding: 12px;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
       background: #fff;
     }
 
@@ -410,7 +558,7 @@
 
     .group-name {
       font-family: 'Montserrat', sans-serif;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       font-weight: 800;
       color: var(--navy);
       text-transform: uppercase;
@@ -419,26 +567,38 @@
     .part-row {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      padding: 6px 0;
-      border-bottom: 1px solid #f8fafc;
-      font-size: 0.84rem;
+      align-items: flex-start;
+      padding: 8px 0;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 0.82rem;
       gap: 8px;
     }
 
     .part-label {
-      font-weight: 600;
+      font-weight: 700;
       color: var(--text-main);
     }
 
     .part-note {
-      font-size: 0.74rem;
+      font-size: 0.7rem;
       color: var(--purple);
       background: var(--purple-bg);
       padding: 2px 6px;
       border-radius: 4px;
       margin-left: 4px;
       font-weight: 600;
+      display: inline-block;
+    }
+
+    .box-breakdown-info {
+      margin-top: 4px;
+      font-size: 0.72rem;
+      color: #334155;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 4px 8px;
+      border-radius: 6px;
+      line-height: 1.4;
     }
 
     .part-qty {
@@ -452,9 +612,9 @@
     /* WHATSAPP PREVIEW BOX */
     .wa-preview {
       width: 100%;
-      min-height: 260px;
+      min-height: 240px;
       font-family: monospace;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       background: #dcf8c6;
       border: 1.5px solid #25d366;
       border-radius: 10px;
@@ -462,6 +622,14 @@
       color: #111b21;
       white-space: pre-wrap;
       line-height: 1.45;
+    }
+
+    .wa-action-bar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      width: 100%;
+      margin-bottom: 10px;
     }
 
     /* MODAL */
@@ -473,17 +641,47 @@
       z-index: 200;
       align-items: center;
       justify-content: center;
-      padding: 14px;
+      padding: 12px;
     }
 
     .modal-card {
       background: #fff;
-      max-width: 560px;
+      max-width: 680px;
       width: 100%;
       border-radius: 14px;
       padding: 18px;
-      max-height: 90vh;
+      max-height: 92vh;
       overflow-y: auto;
+    }
+
+    .cloud-record-card {
+      border: 1.5px solid var(--border);
+      border-left: 5px solid var(--sky);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 10px;
+      background: #fff;
+    }
+
+    .cloud-record-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding-bottom: 8px;
+      border-bottom: 1px dashed var(--border);
+    }
+
+    .cloud-badge {
+      display: inline-block;
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: var(--emerald-bg);
+      color: var(--emerald);
+      border: 1px solid #a5d6a7;
     }
   </style>
 </head>
@@ -492,24 +690,52 @@
   <!-- HEADER -->
   <header class="app-header">
     <div class="header-inner">
-      <div>
-        <div class="app-title">SMART WIP & SPA ASSY CALCULATOR</div>
-        <div class="app-subtitle">Smart Search 3-Digit &bull; Auto-Kalkulator &bull; Laporan WA Rapi</div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <img src="icon-assy-192.png" alt="Logo" style="width:36px; height:36px; border-radius:8px; object-fit:cover; background:#fff;" onerror="this.style.display='none'" />
+        <div>
+          <div class="app-title">SMART WIP & SPA ASSY</div>
+          <div class="app-subtitle">Cloud Firestore: <b>wipassembly</b></div>
+        </div>
       </div>
       <div class="header-actions">
-        <button class="btn-header" onclick="muatDataContohUser()">⚡ Muat Contoh (05-06 Nov)</button>
-        <button class="btn-header" onclick="toggleModal('masterModal', true)">📂 Master Item (<span id="masterCount">0</span>)</button>
+        <button class="btn-header install-btn" id="btnInstallHeader" onclick="triggerInstallApp()">
+          📲 Download Aplikasi
+        </button>
+        <button class="btn-header cloud-btn" onclick="bukaModalCloud()">
+          ☁️ Cloud (<span id="cloudCountHeader">0</span>)
+        </button>
+        <button class="btn-header" onclick="toggleModal('masterModal', true)">
+          📂 Master (<span id="masterCount">0</span>)
+        </button>
       </div>
     </div>
   </header>
 
+  <!-- BANNER OTOMATIS MUNCUL SAAT SIAP DI-INSTALL SEBAGAI APLIKASI -->
+  <div id="pwaInstallBanner" class="pwa-install-banner">
+    <div class="pwa-install-box">
+      <div style="font-size:0.8rem;">
+        <b>📲 Pasang Aplikasi Smart WIP Assy di HP Anda!</b><br>
+        <span style="font-size:0.72rem; opacity:0.92;">Akses lebih cepat dari layar utama HP tanpa buka browser.</span>
+      </div>
+      <div style="display:flex; gap:6px;">
+        <button class="btn" style="background:#fff; color:var(--emerald); font-weight:800;" onclick="triggerInstallApp()">
+          ⬇️ Install Sekarang
+        </button>
+        <button class="btn" style="background:rgba(255,255,255,0.2); color:#fff;" onclick="document.getElementById('pwaInstallBanner').style.display='none'">
+          ✕
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- PILIHAN MODE LAPORAN -->
   <div class="mode-tabs">
     <button id="tabBtnWip" class="tab-btn active-wip" onclick="switchMode('wip')">
-      📦 1. SISA BARANG BAGUS (AKHIR SHIFT)
+      📦 1. SISA BARANG BAGUS
     </button>
     <button id="tabBtnSpa" class="tab-btn" onclick="switchMode('spa')">
-      📋 2. LAPORAN SPA (AWAL SHIFT)
+      📋 2. LAPORAN SPA AWAL SHIFT
     </button>
   </div>
 
@@ -519,55 +745,60 @@
   <main id="sectionWip" class="container">
     <!-- KOLOM KIRI: SMART SEARCH & AUTO KALKULATOR -->
     <section>
-      <div class="card">
+      <div class="card" id="wipInputCard">
         <div class="card-header">
-          <span class="card-title">1. Input Cepat Sisa Barang Bagus</span>
-          <span style="font-size:0.75rem; font-weight:700; color:var(--emerald);">Tanpa Kamera / Anti Error</span>
+          <span class="card-title" id="wipFormTitle">1. Input Sisa Barang Bagus</span>
+          <span style="font-size:0.72rem; font-weight:700; color:var(--emerald);">Cloud: wipassembly</span>
         </div>
 
-        <!-- INFO TANGGAL, SHIFT, PLANT -->
+        <!-- BANNER SAAT MODE EDIT AKTIF -->
+        <div id="wipEditBanner" class="edit-banner">
+          <span id="wipEditBannerText">✏️ MODE EDIT: Silakan tambah/hapus box atau kurangi qty yang diambil helper.</span>
+          <button type="button" class="btn btn-danger" onclick="batalEditWip()">Batal Edit</button>
+        </div>
+
+        <!-- INFO TANGGAL (KALENDER OTOMATIS), SHIFT, PLANT -->
         <div class="meta-grid">
           <div>
-            <label>Tanggal</label>
-            <input type="text" id="wipDate" value="05 NOVEMBER 2026" oninput="renderWipAll()" />
+            <label>Pilih Tanggal</label>
+            <input type="date" id="wipDate" onchange="renderWipAll()" />
           </div>
           <div>
             <label>Shift</label>
             <select id="wipShift" onchange="renderWipAll()">
-              <option value="Shift 1">Shift 1</option>
-              <option value="Shift 2">Shift 2</option>
-              <option value="Shift 3">Shift 3</option>
+              <option value="shift 1">Shift 1</option>
+              <option value="shift 2">Shift 2</option>
+              <option value="shift 3">Shift 3</option>
             </select>
           </div>
           <div>
             <label>Plant</label>
             <select id="wipPlant" onchange="renderWipAll()">
-              <option value="Plant Alpha">Plant Alpha</option>
-              <option value="Plant Beta">Plant Beta</option>
+              <option value="plant alpha">Plant Alpha</option>
+              <option value="plant beta">Plant Beta</option>
             </select>
           </div>
         </div>
 
-        <!-- FILTER KATEGORI PRODUK CEPAT -->
-        <label>Filter Cepat Produk / Line:</label>
-        <div class="chip-bar" id="productChipBar"></div>
-
-        <!-- SMART SEARCH BAR -->
-        <div class="search-box-wrapper">
-          <label>Smart Search (Ketik 3 Angka Kode / Nama Part / Produk)</label>
-          <input
-            type="text"
-            id="smartSearchInput"
-            class="search-input"
-            placeholder="Ketik misal: 009, 8603, inbs, wardah, 1e03..."
-            oninput="renderSmartSearchList()"
-            autocomplete="off"
-          />
+        <!-- SMART SEARCH BAR (HANYA MUNCUL SAAT DIKETIK) -->
+        <div class="search-box-wrapper" id="wipSearchWrapper">
+          <label>🔍 Smart Search (Ketik Kode / Nama Part / Produk)</label>
+          <div class="search-input-container">
+            <input
+              type="text"
+              id="smartSearchInput"
+              class="search-input"
+              placeholder="Ketik misal: 009, 8603, inbs, wardah, 1e03..."
+              oninput="onWipSearchType()"
+              autocomplete="off"
+            />
+            <button type="button" id="clearWipSearchBtn" class="btn-clear-search" onclick="clearWipSearch()">✕</button>
+          </div>
           <div class="quick-results" id="smartSearchResults"></div>
         </div>
 
         <!-- FORM ITEM TERPILIH -->
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:10px;">
+        <div class="form-row-responsive">
           <div>
             <label>Kelompok Produk</label>
             <input type="text" id="selectedGroup" placeholder="Misal: 8603 OMG" required />
@@ -581,64 +812,90 @@
             <input
               type="text"
               id="selectedNote"
-              placeholder="Contoh: cvty 8 / cvty 12,13,16 / ss / Kosongkan jika reguler"
+              placeholder="Contoh: cvty 8 / cvty 12,13,16 / ss (Kosongkan jika reguler)"
             />
           </div>
         </div>
 
-        <!-- AUTO KALKULATOR MULTI-BOX -->
+        <!-- AUTO KALKULATOR MULTI-BOX (KHUSUS ANGKA) -->
         <div class="calc-panel">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <label style="color:var(--emerald); margin:0;">🧮 Auto-Kalkulator Bon / Box (Bisa Rumus):</label>
-            <span style="font-size:0.74rem; font-weight:700; color:var(--navy);">
-              Total Terhitung: <b id="liveCalcSum" style="font-size:1rem; color:var(--emerald);">0</b> PCS
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">
+            <label style="color:var(--emerald); margin:0;">🧮 Auto-Kalkulator Box (Khusus Angka):</label>
+            <span style="font-size:0.75rem; font-weight:700; color:var(--navy);">
+              Aktual: <b id="liveBoxCount" style="color:var(--purple);">0</b> Box | Total: <b id="liveCalcSum" style="font-size:1rem; color:var(--emerald);">0</b> PCS
             </span>
           </div>
 
           <div class="calc-input-row">
             <input
               type="text"
+              inputmode="decimal"
               id="calcBoxInput"
               class="input-calc"
-              placeholder="Ketik 650 atau 650*10+420 lalu Enter"
-              onkeydown="if(event.key==='Enter'){event.preventDefault(); tambahAngkaBox();}"
+              placeholder="Angka saja: 650 atau 650*5"
+              oninput="filterHanyaAngkaKalkulator(this)"
+              onkeydown="if(event.key==='Enter'){event.preventDefault(); tambahAngkaBox(1);}"
             />
-            <button type="button" class="btn btn-primary" onclick="tambahAngkaBox()">
+            <button type="button" class="btn btn-primary" onclick="tambahAngkaBox(1)">
               + Tambah Box
             </button>
+            <button type="button" class="btn btn-danger" onclick="tambahAngkaBox(-1)" title="Gunakan jika diambil helper">
+              ➖ Kurangi Qty
+            </button>
           </div>
-          <div style="font-size:0.72rem; color:var(--text-muted); margin-top:5px;">
-            💡 <b>Tips Cepat:</b> Ketik angka per bon lalu tekan <b>Enter</b> (bisa berkali-kali), atau ketik langsung totalnya di bawah.
+          <div style="font-size:0.71rem; color:var(--text-muted); margin-top:5px;">
+            💡 Ketik qty per box lalu tekan <b>Enter</b> / <b>+ Tambah Box</b>. Jika ada barang diambil helper, ketik angkanya lalu klik <b>➖ Kurangi Qty</b>.
           </div>
 
           <!-- DAFTAR BOX YANG DIJUMLAHKAN -->
           <div class="box-chips-container" id="boxChipsList"></div>
         </div>
 
-        <button type="button" class="btn btn-emerald" style="margin-top:12px;" onclick="simpanItemWip()">
-          ✅ SIMPAN / TAMBAHKAN KE DAFTAR WIP
+        <button type="button" id="btnSubmitWip" class="btn btn-emerald" style="margin-top:12px;" onclick="simpanItemWip()">
+          ✅ SIMPAN KE DAFTAR WIP
         </button>
       </div>
     </section>
 
-    <!-- KOLOM KANAN: REKAP & PREVIEW LAPORAN WA -->
+    <!-- KOLOM KANAN: REKAP, SIMPAN CLOUD & SHARE LANGSUNG WA -->
     <section>
       <div class="card">
-        <div class="card-header">
-          <span class="card-title">2. Daftar Sisa Barang Bagus Terdata</span>
-          <div style="display:flex; gap:6px;">
-            <button class="btn btn-purple" onclick="tarikWipKeSpa()">🔄 Tarik ke SPA Besok</button>
-            <button class="btn btn-danger" onclick="hapusSemuaWip()">🗑️ Kosongkan</button>
-          </div>
+        <div class="card-header" style="margin-bottom:8px; border-bottom:none; padding-bottom:0;">
+          <span class="card-title">2. Daftar Sisa Barang Bagus (Rincian Box & Edit)</span>
         </div>
+
+        <!-- TOOLBAR: SIMPAN CLOUD, TARIK CLOUD, TARIK KE SPA, RESET -->
+        <div class="wip-action-toolbar">
+          <button class="btn btn-sky" onclick="simpanDaftarWipKeCloud()" id="btnSaveCloud">
+            ☁️ Simpan ke Cloud (Firebase)
+          </button>
+          <button class="btn btn-sky-outline" onclick="bukaModalCloud()">
+            📥 Tarik Data Cloud
+          </button>
+          <button class="btn btn-purple" onclick="tarikWipKeSpa()">
+            🔄 Tarik ke SPA
+          </button>
+          <button class="btn btn-danger" onclick="hapusSemuaWip()">
+            🗑️ Reset
+          </button>
+        </div>
+
+        <div id="cloudStatusBanner" style="display:none; margin-bottom:10px; padding:9px 11px; border-radius:8px; font-size:0.75rem; font-weight:700; line-height:1.45;"></div>
 
         <div id="wipGroupedContainer"></div>
       </div>
 
       <div class="card">
         <div class="card-header">
-          <span class="card-title">3. Laporan WhatsApp (Siap Kirim)</span>
-          <button class="btn btn-primary" onclick="copyWaText('waPreviewWip')">📋 SALIN LAPORAN WA</button>
+          <span class="card-title">3. Laporan WhatsApp</span>
+        </div>
+        <div class="wa-action-bar">
+          <button class="btn btn-wa" style="flex:1.5;" onclick="kirimLangsungWA('waPreviewWip')">
+            📲 KIRIM LANGSUNG KE WHATSAPP
+          </button>
+          <button class="btn btn-outline" style="flex:1;" onclick="copyWaText('waPreviewWip')">
+            📋 Salin Teks
+          </button>
         </div>
         <textarea id="waPreviewWip" class="wa-preview" readonly></textarea>
       </div>
@@ -646,47 +903,57 @@
   </main>
 
   <!-- =========================================================
-       MODE 2: LAPORAN SPA AWAL SHIFT (KEBUTUHAN + ASSY & GUDANG)
+       MODE 2: LAPORAN SPA AWAL SHIFT (AUTO KALKULATOR & EDIT)
        ========================================================= -->
   <main id="sectionSpa" class="container" style="display:none;">
-    <!-- KOLOM KIRI: INPUT KEBUTUHAN LINE & KETERSEDIAAN -->
+    <!-- KOLOM KIRI: INPUT KEBUTUHAN LINE & AUTO KALKULATOR SPA -->
     <section>
-      <div class="card">
+      <div class="card" id="spaInputCard">
         <div class="card-header">
-          <span class="card-title">1. Input SPA & Ketersediaan Awal Shift</span>
-          <button class="btn btn-outline" onclick="tarikWipKeSpa()">📥 Ambil Stok Assy dari Sisa WIP</button>
+          <span class="card-title" id="spaFormTitle">1. Input SPA & Ketersediaan</span>
+          <button class="btn btn-outline" onclick="tarikWipKeSpa()">📥 Ambil Stok Assy dari WIP</button>
         </div>
 
-        <div class="meta-grid" style="grid-template-columns: 1fr 1fr;">
+        <!-- BANNER SAAT MODE EDIT SPA AKTIF -->
+        <div id="spaEditBanner" class="edit-banner">
+          <span id="spaEditBannerText">✏️ MODE EDIT SPA: Silakan ubah rincian box Assy / Gudang.</span>
+          <button type="button" class="btn btn-danger" onclick="batalEditSpa()">Batal Edit</button>
+        </div>
+
+        <div class="meta-grid two-cols">
           <div>
-            <label>Tanggal SPA</label>
-            <input type="text" id="spaDate" value="06 NOVEMBER 2026" oninput="renderSpaAll()" />
+            <label>Pilih Tanggal SPA</label>
+            <input type="date" id="spaDate" onchange="renderSpaAll()" />
           </div>
           <div>
             <label>Plant</label>
             <select id="spaPlant" onchange="renderSpaAll()">
-              <option value="Plant Alpha">Plant Alpha</option>
-              <option value="Plant Beta">Plant Beta</option>
+              <option value="plant alpha">Plant Alpha</option>
+              <option value="plant beta">Plant Beta</option>
             </select>
           </div>
         </div>
 
-        <!-- PILIH CEPAT DARI KATALOG ITEM -->
-        <div class="search-box-wrapper">
-          <label>Cari Cepat Produk / Komponen untuk SPA:</label>
-          <input
-            type="text"
-            id="spaSearchInput"
-            class="search-input"
-            placeholder="Ketik 8603, 8604, 4022, 1e02, inbs..."
-            oninput="renderSpaSearchList()"
-          />
-          <div class="quick-results" id="spaSearchResults" style="max-height:150px;"></div>
+        <!-- SMART SEARCH SPA (HANYA MUNCUL SAAT DIKETIK) -->
+        <div class="search-box-wrapper" id="spaSearchWrapper">
+          <label>🔍 Cari Cepat Produk / Komponen untuk SPA:</label>
+          <div class="search-input-container">
+            <input
+              type="text"
+              id="spaSearchInput"
+              class="search-input"
+              placeholder="Ketik 8603, 8604, 4022, 1e02, inbs..."
+              oninput="onSpaSearchType()"
+              autocomplete="off"
+            />
+            <button type="button" id="clearSpaSearchBtn" class="btn-clear-search" onclick="clearSpaSearch()">✕</button>
+          </div>
+          <div class="quick-results" id="spaSearchResults"></div>
         </div>
 
-        <!-- FORM SPA -->
+        <!-- FORM HEADER PRODUK & TARGET SPA -->
         <div style="background:#f8fafc; padding:12px; border-radius:10px; border:1px solid var(--border);">
-          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:8px;">
+          <div class="form-row-responsive" style="margin-top:0;">
             <div style="grid-column: 1 / -1;">
               <label>Nama Produk Utama (Header SPA)</label>
               <input type="text" id="spaGroup" placeholder="Contoh: 8603 OMG" />
@@ -697,15 +964,22 @@
             </div>
             <div>
               <label>Target Dasar (+Auto 5%)</label>
-              <input type="number" id="spaBaseTarget" placeholder="Contoh: 118800" oninput="hitungTargetSpaPreview()" />
+              <input
+                type="text"
+                inputmode="numeric"
+                id="spaBaseTarget"
+                placeholder="Contoh: 118800"
+                oninput="this.value=this.value.replace(/[^0-9]/g,''); hitungTargetSpaPreview();"
+              />
             </div>
           </div>
-          <div id="spaTargetPreview" style="font-size:0.76rem; font-weight:700; color:var(--purple); margin-top:6px;">
+          <div id="spaTargetPreview" style="font-size:0.75rem; font-weight:700; color:var(--purple); margin-top:6px;">
             Target + 5% Buffer: 0 pcs
           </div>
         </div>
 
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-top:12px;">
+        <!-- KOMPONEN & KETERANGAN SPA -->
+        <div class="form-row-responsive">
           <div>
             <label>Komponen & Kode</label>
             <input type="text" id="spaPart" placeholder="Contoh: Base(002)" />
@@ -714,17 +988,58 @@
             <label>Keterangan (Mold / Hold / Beta)</label>
             <input type="text" id="spaNote" placeholder="Contoh: mold 3 / tunggu dari Beta" />
           </div>
-          <div>
-            <label>Stok di Assy (PCS)</label>
-            <input type="number" id="spaQtyAssy" placeholder="4059" value="0" />
-          </div>
-          <div>
-            <label>Stok di Gudang (PCS)</label>
-            <input type="number" id="spaQtyGudang" placeholder="342920" value="0" />
-          </div>
         </div>
 
-        <button type="button" class="btn btn-emerald" style="margin-top:14px; background:var(--purple);" onclick="simpanItemSpa()">
+        <!-- AUTO KALKULATOR 1: STOK DI ASSY -->
+        <div class="calc-panel">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">
+            <label style="color:var(--emerald); margin:0;">🧮 Auto-Kalkulator Stok ASSY:</label>
+            <span style="font-size:0.74rem; font-weight:700; color:var(--navy);">
+              <b id="spaAssyBoxCount" style="color:var(--purple);">0</b> Box | Total Assy: <b id="spaAssySum" style="font-size:0.95rem; color:var(--emerald);">0</b> PCS
+            </span>
+          </div>
+          <div class="calc-input-row">
+            <input
+              type="text"
+              inputmode="decimal"
+              id="spaCalcAssyInput"
+              class="input-calc"
+              placeholder="Angka stok Assy (misal: 4059 atau 650*6)"
+              oninput="filterHanyaAngkaKalkulator(this)"
+              onkeydown="if(event.key==='Enter'){event.preventDefault(); tambahBoxSpa('assy', 1);}"
+            />
+            <button type="button" class="btn btn-primary" onclick="tambahBoxSpa('assy', 1)">+ Box Assy</button>
+            <button type="button" class="btn btn-danger" onclick="tambahBoxSpa('assy', -1)">➖ Kurangi</button>
+          </div>
+          <div class="box-chips-container" id="spaAssyChips"></div>
+        </div>
+
+        <!-- AUTO KALKULATOR 2: STOK DI GUDANG -->
+        <div class="calc-panel purple-calc">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">
+            <label style="color:var(--purple); margin:0;">🧮 Auto-Kalkulator Stok GUDANG:</label>
+            <span style="font-size:0.74rem; font-weight:700; color:var(--navy);">
+              <b id="spaGudangBoxCount" style="color:var(--purple);">0</b> Box | Total Gudang: <b id="spaGudangSum" style="font-size:0.95rem; color:var(--purple);">0</b> PCS
+            </span>
+          </div>
+          <div class="calc-input-row">
+            <input
+              type="text"
+              inputmode="decimal"
+              id="spaCalcGudangInput"
+              class="input-calc"
+              style="color:var(--purple);"
+              placeholder="Angka stok Gudang (misal: 342920)"
+              oninput="filterHanyaAngkaKalkulator(this)"
+              onkeydown="if(event.key==='Enter'){event.preventDefault(); tambahBoxSpa('gudang', 1);}"
+            />
+            <button type="button" class="btn btn-purple" onclick="tambahBoxSpa('gudang', 1)">+ Box Gudang</button>
+            <button type="button" class="btn btn-danger" onclick="tambahBoxSpa('gudang', -1)">➖ Kurangi</button>
+          </div>
+          <div class="box-chips-container" id="spaGudangChips"></div>
+        </div>
+
+        <button type="button" id="btnSubmitSpa" class="btn btn-emerald" style="margin-top:14px; background:var(--purple);" onclick="simpanItemSpa()">
           ➕ SIMPAN KE LAPORAN SPA
         </button>
       </div>
@@ -734,27 +1049,96 @@
     <section>
       <div class="card">
         <div class="card-header">
-          <span class="card-title">2. Rincian SPA & Total (Assy + Gudang)</span>
-          <button class="btn btn-danger" onclick="hapusSemuaSpa()">🗑️ Kosongkan SPA</button>
+          <span class="card-title">2. Rincian SPA (Assy + Gudang & Edit)</span>
+          <button class="btn btn-danger" onclick="hapusSemuaSpa()">🗑️ Reset SPA</button>
         </div>
         <div id="spaGroupedContainer"></div>
       </div>
 
       <div class="card">
         <div class="card-header">
-          <span class="card-title">3. Laporan WA SPA (Siap Kirim)</span>
-          <button class="btn btn-primary" onclick="copyWaText('waPreviewSpa')">📋 SALIN LAPORAN SPA</button>
+          <span class="card-title">3. Laporan WA SPA</span>
+        </div>
+        <div class="wa-action-bar">
+          <button class="btn btn-wa" style="flex:1.5;" onclick="kirimLangsungWA('waPreviewSpa')">
+            📲 KIRIM LANGSUNG KE WHATSAPP
+          </button>
+          <button class="btn btn-outline" style="flex:1;" onclick="copyWaText('waPreviewSpa')">
+            📋 Salin Teks
+          </button>
         </div>
         <textarea id="waPreviewSpa" class="wa-preview" readonly></textarea>
       </div>
     </section>
   </main>
 
-  <!-- MODAL MASTER KATALOG & UPLOAD EXCEL -->
+  <!-- =========================================================
+       MODAL 1: RIWAYAT CLOUD FIREBASE (wipassembly) & AUDIT SELISIH
+       ========================================================= -->
+  <div id="cloudModal" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="card-header">
+        <span class="card-title">☁️ Database Cloud Firebase & Audit Selisih Gudang</span>
+        <button class="btn btn-danger" onclick="toggleModal('cloudModal', false)">✕ Tutup</button>
+      </div>
+
+      <div style="background:#f8fafc; border:1px solid var(--border); border-radius:10px; padding:10px; margin-bottom:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
+          <label style="margin:0;">🔗 Proyek Cloud Firestore Terhubung:</label>
+          <span id="firebaseConnBadge" class="cloud-badge">🟢 Proyek: wipassembly • Database: (default)</span>
+        </div>
+        <div style="display:flex; gap:6px; margin-top:6px; flex-wrap:wrap;">
+          <input
+            type="text"
+            id="firebaseProjectIdInput"
+            value="wipassembly"
+            placeholder="Project ID Firebase (Default: wipassembly)"
+            style="flex:1; min-width:180px; font-size:0.8rem;"
+          />
+          <button class="btn btn-primary" onclick="simpanKonfigurasiFirebase()">💾 Simpan ID</button>
+          <button class="btn btn-sky" onclick="sinkronTarikDariFirebase(true)">🔄 Segarkan dari Firebase</button>
+        </div>
+      </div>
+
+      <div class="form-row-responsive" style="margin-bottom:12px; margin-top:0;">
+        <div>
+          <label>Filter Tanggal Produksi</label>
+          <input type="date" id="cloudFilterDate" onchange="renderCloudArchiveList()" />
+        </div>
+        <div>
+          <label>Cari Produk / Kode Part (Audit Selisih)</label>
+          <input
+            type="text"
+            id="cloudFilterKeyword"
+            placeholder="Ketik misal: 009, 8603, inbs..."
+            oninput="renderCloudArchiveList()"
+          />
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
+        <span style="font-size:0.75rem; font-weight:700; color:var(--navy);">
+          Ditemukan: <b id="cloudFoundCount">0</b> Rekaman Cloud
+        </span>
+        <div style="display:flex; gap:6px;">
+          <button class="btn btn-outline" style="padding:5px 9px; font-size:0.7rem;" onclick="resetFilterCloud()">Tampilkan Semua</button>
+          <button class="btn btn-emerald" style="width:auto; padding:5px 10px; font-size:0.72rem;" onclick="exportSemuaCloudKeExcel()">
+            📊 Export Excel Audit
+          </button>
+        </div>
+      </div>
+
+      <div id="cloudArchiveContainer" style="max-height:360px; overflow-y:auto;"></div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL 2: MASTER KATALOG WIP & UPLOAD EXCEL
+       ========================================================= -->
   <div id="masterModal" class="modal-backdrop">
     <div class="modal-card">
       <div class="card-header">
-        <span class="card-title">📂 Master Katalog WIP & Upload Excel</span>
+        <span class="card-title">📂 Master Katalog WIP (Tersinkronisasi Firebase)</span>
         <button class="btn btn-danger" onclick="toggleModal('masterModal', false)">✕ Tutup</button>
       </div>
 
@@ -762,36 +1146,115 @@
         <label>Upload File Master Baru (.xlsx / .ods / .csv)</label>
         <input type="file" accept=".xlsx,.xls,.ods,.csv" onchange="uploadMasterExcel(event)" style="font-size:0.8rem;" />
         <p style="font-size:0.72rem; color:var(--text-muted); margin-top:4px;">
-          Kolom A: Kelompok Produk (misal <code>8603 OMG</code>), Kolom B: Komponen & Kode (misal <code>Inbs(009)</code>).
+          Kolom A: Kelompok Produk (misal <code>8603 OMG</code>), Kolom B: Komponen & Kode (misal <code>Inbs(009)</code>). Data ganda otomatis ditolak & langsung disimpan ke Firebase.
         </p>
       </div>
 
-      <div style="display:grid; grid-template-columns: 1fr 1fr auto; gap:6px; margin-bottom:12px;">
+      <div class="form-row-responsive" style="margin-bottom:12px;">
         <input type="text" id="newCatGroup" placeholder="Produk (8603 OMG)" />
         <input type="text" id="newCatPart" placeholder="Part (Inbs(009))" />
-        <button class="btn btn-primary" onclick="tambahKatalogManual()">+ Tambah</button>
+        <button class="btn btn-primary" style="grid-column: 1 / -1;" onclick="tambahKatalogManual()">+ Tambah ke Master & Cloud</button>
       </div>
 
       <div id="masterModalList" style="max-height:240px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:8px; font-size:0.78rem;"></div>
     </div>
   </div>
 
+  <!-- =========================================================
+       MODAL 3: PANDUAN INSTALL APLIKASI (UNTUK IOS / BROWSER LAIN)
+       ========================================================= -->
+  <div id="installGuideModal" class="modal-backdrop">
+    <div class="modal-card" style="max-width:440px;">
+      <div class="card-header">
+        <span class="card-title">📲 Cara Download / Pasang Aplikasi</span>
+        <button class="btn btn-danger" onclick="toggleModal('installGuideModal', false)">✕ Tutup</button>
+      </div>
+      <div style="font-size:0.84rem; line-height:1.55; color:var(--text-main);">
+        <p style="margin-bottom:10px;">
+          <b>1. Pengguna HP Android (Chrome):</b><br>
+          • Klik ikon <b>Titik Tiga (⋮)</b> di pojok kanan atas browser Chrome.<br>
+          • Pilih menu <b>"Tambahkan ke layar utama"</b> atau <b>"Instal aplikasi"</b>.
+        </p>
+        <p style="margin-bottom:10px;">
+          <b>2. Pengguna iPhone / iOS (Safari):</b><br>
+          • Ketuk tombol <b>Share / Bagikan</b> (ikon kotak dengan panah ke atas) di bagian bawah Safari.<br>
+          • Geser ke bawah lalu pilih <b>"Add to Home Screen" (Tambah ke Layar Utama)</b>.
+        </p>
+        <p>
+          <b>3. Pengguna Laptop / PC (Chrome / Edge):</b><br>
+          • Klik ikon <b>Install (🖥️⬇️)</b> di sisi kanan kolom alamat URL browser di bagian atas.
+        </p>
+      </div>
+    </div>
+  </div>
+
   <script>
     /********************************************************************
-     * 1. MASTER KATALOG STANDAR PABRIK (SESUAI DATA NYATA PLANT ALPHA)
+     * 0. REGISTRASI SERVICE WORKER (sw.js) & TOMBOL DOWNLOAD APLIKASI PWA
+     ********************************************************************/
+    let deferredInstallPrompt = null;
+
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch(() => {});
+      });
+    }
+
+    window.addEventListener("beforeinstallprompt", (e) => {
+      e.preventDefault();
+      deferredInstallPrompt = e;
+      // Tampilkan banner hijau otomatis saat browser siap menginstal aplikasi
+      document.getElementById("pwaInstallBanner").style.display = "block";
+    });
+
+    window.addEventListener("appinstalled", () => {
+      deferredInstallPrompt = null;
+      document.getElementById("pwaInstallBanner").style.display = "none";
+      const btnHeader = document.getElementById("btnInstallHeader");
+      if (btnHeader) btnHeader.style.display = "none";
+    });
+
+    async function triggerInstallApp() {
+      if (deferredInstallPrompt) {
+        deferredInstallPrompt.prompt();
+        const { outcome } = await deferredInstallPrompt.userChoice;
+        if (outcome === "accepted") {
+          document.getElementById("pwaInstallBanner").style.display = "none";
+        }
+        deferredInstallPrompt = null;
+      } else {
+        // Jika sudah ter-install atau dibuka di iOS Safari, tampilkan panduan 1 klik
+        toggleModal("installGuideModal", true);
+      }
+    }
+
+    /********************************************************************
+     * 1. KONFIGURASI DEFAULT FIREBASE CLOUD FIRESTORE: "wipassembly"
+     ********************************************************************/
+    const DEFAULT_FIREBASE_PROJECT_ID = "wipassembly";
+    const FIRESTORE_DATABASE = "(default)";
+    const COLLECTION_WIP_AUDIT = "wip_audit_cloud";
+    const COLLECTION_MASTER = "wip_master_config";
+
+    function getActiveProjectId() {
+      return (localStorage.getItem("assy_firebase_project_id") || DEFAULT_FIREBASE_PROJECT_ID).trim();
+    }
+
+    function getFirestoreBaseUrl() {
+      const pid = getActiveProjectId();
+      return `https://firestore.googleapis.com/v1/projects/${encodeURIComponent(pid)}/databases/${FIRESTORE_DATABASE}/documents`;
+    }
+
+    /********************************************************************
+     * 2. MASTER KATALOG STANDAR PABRIK & STATE KOSONG SAAT BUKA APLIKASI
      ********************************************************************/
     const DEFAULT_CATALOG = [
-      // 8604 CV Wardah
       { group: "8604 CV Wardah", part: "Cover(004)", keywords: "8604 cv wardah cover 004" },
       { group: "8604 CV Wardah", part: "Rod(006)", keywords: "8604 cv wardah rod 006" },
       { group: "8604 CV Wardah", part: "Wiper(040)", keywords: "8604 cv wardah wiper 040" },
       { group: "8604 CV Wardah", part: "Aplikator(0013)", keywords: "8604 cv wardah aplikator 0013" },
-
-      // 8604 OMG / Wardah Base
       { group: "8604 OMG", part: "Base(002)", keywords: "8604 omg wardah base 002" },
       { group: "8604 OMG", part: "Inbs(003)", keywords: "8604 omg wardah inbs inner base 003" },
-
-      // 8603 OMG
       { group: "8603 OMG", part: "Base(002)", keywords: "8603 omg base 002" },
       { group: "8603 OMG", part: "Base(011)", keywords: "8603 omg base 011" },
       { group: "8603 OMG", part: "Base(013)", keywords: "8603 omg base 013 mold 3" },
@@ -799,20 +1262,14 @@
       { group: "8603 OMG", part: "Inbs(009)", keywords: "8603 omg inbs inner base ib1 009 wi-c8603-009" },
       { group: "8603 OMG", part: "Inbs(024)", keywords: "8603 omg inbs inner base 024 mold 3" },
       { group: "8603 OMG", part: "Inbs(034)", keywords: "8603 omg inbs inner base 034 jn200" },
-
-      // 4022 Caramel
       { group: "4022 caramel", part: "Cover(040)", keywords: "4022 cv caramel cover 040" },
       { group: "4022 caramel", part: "Hish(0014)", keywords: "4022 cv caramel hish 0014" },
       { group: "4022 caramel", part: "Base(042)", keywords: "4022 base caramel 042" },
       { group: "4022 caramel", part: "Inbs(074)", keywords: "4022 base caramel inbs 074" },
-
-      // 1E02 Pasang Magnet
       { group: "1E02 pasang magnet", part: "Incv(001)", keywords: "1e02 pasang magnet incv 001" },
       { group: "1E02 pasang magnet", part: "Inbs(002)", keywords: "1e02 pasang magnet inbs 002" },
       { group: "1E02 pasang magnet", part: "STEL ring(071)", keywords: "1e02 pasang magnet stel ring 071" },
       { group: "1E02 pasang magnet", part: "Magnet(0026)", keywords: "1e02 pasang magnet 0026" },
-
-      // 1E03 Nars
       { group: "1E03 Nars", part: "Metal base(0203)", keywords: "1e03 nars metal base 0203" },
       { group: "1E03 Nars", part: "Adapter(002)", keywords: "1e03 nars adapter 002" },
       { group: "1E03 Nars", part: "Magnet(014)", keywords: "1e03 nars magnet 014" },
@@ -821,21 +1278,76 @@
       { group: "1E03 Nars", part: "Inbs modif+adapter+pemberat+magnet", keywords: "1e03 nars inbs modif set" }
     ];
 
-    let catalog = JSON.parse(localStorage.getItem("assy_catalog_v1")) || DEFAULT_CATALOG;
-    let wipList = JSON.parse(localStorage.getItem("assy_wip_list_v1")) || [];
-    let spaList = JSON.parse(localStorage.getItem("assy_spa_list_v1")) || [];
+    let catalog = JSON.parse(localStorage.getItem("assy_catalog_v3")) || DEFAULT_CATALOG;
 
-    // State Kalkulator Multi-Box
+    // Saat aplikasi dibuka, daftar kerja dimulai KOSONG ([]) agar siap pakai
+    let wipList = [];
+    let spaList = [];
+
+    let cloudArchive = JSON.parse(localStorage.getItem("assy_wip_cloud_archive_v1")) || [];
+
     let currentBoxes = [];
-    let activeGroupFilter = "ALL";
+    let editingWipId = null;
+
+    let currentSpaAssyBoxes = [];
+    let currentSpaGudangBoxes = [];
+    let editingSpaId = null;
+
+    function deduplicateCatalogList(list) {
+      const seen = new Set();
+      return list.filter((item) => {
+        const key = `${item.group.trim().toLowerCase()}|${item.part.trim().toLowerCase()}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    }
+    catalog = deduplicateCatalogList(catalog);
+
+    function isCatalogDuplicate(group, part) {
+      const gKey = group.trim().toLowerCase();
+      const pKey = part.trim().toLowerCase();
+      return catalog.some(
+        (c) => c.group.trim().toLowerCase() === gKey && c.part.trim().toLowerCase() === pKey
+      );
+    }
 
     function formatNum(n) {
       const num = Number(n) || 0;
-      return num.toLocaleString("en-US"); // Menggunakan koma (72,420) sesuai standar laporan
+      return num.toLocaleString("en-US");
+    }
+
+    function formatTanggalLaporan(isoDate) {
+      if (!isoDate) return "";
+      const parts = isoDate.split("-");
+      if (parts.length !== 3) return isoDate.toUpperCase();
+      const bulanIndo = [
+        "JANUARI", "FEBRUARI", "MARET", "APRIL", "MEI", "JUNI",
+        "JULI", "AGUSTUS", "SEPTEMBER", "OKTOBER", "NOVEMBER", "DESEMBER"
+      ];
+      const thn = parts[0];
+      const blnIdx = parseInt(parts[1], 10) - 1;
+      const tgl = parts[2];
+      return `${tgl} ${bulanIndo[blnIdx] || ""} ${thn}`;
+    }
+
+    function filterHanyaAngkaKalkulator(inputEl) {
+      inputEl.value = inputEl.value.replace(/[^0-9+\-*/().\s]/g, "");
+    }
+
+    function evaluateMathExpression(expr) {
+      const cleaned = String(expr).replace(/,/g, "").replace(/[^0-9+\-*/().\s]/g, "").trim();
+      if (!cleaned) return 0;
+      try {
+        const val = Function(`"use strict"; return (${cleaned})`)();
+        return Math.round(Number(val) || 0);
+      } catch (e) {
+        return parseInt(cleaned, 10) || 0;
+      }
     }
 
     /********************************************************************
-     * 2. PINDAH TAB MODE (SISA WIP vs SPA AWAL SHIFT)
+     * 3. PINDAH TAB MODE (SISA WIP vs SPA AWAL SHIFT)
      ********************************************************************/
     function switchMode(mode) {
       const secWip = document.getElementById("sectionWip");
@@ -857,43 +1369,35 @@
     }
 
     /********************************************************************
-     * 3. SMART SEARCH & FILTER CHIP PRODUK
+     * 4. SMART SEARCH: HANYA MUNCUL SAAT DIKETIK
      ********************************************************************/
-    function renderProductChips() {
-      const groups = ["ALL", ...new Set(catalog.map((c) => c.group))];
-      const bar = document.getElementById("productChipBar");
-      bar.innerHTML = groups
-        .map(
-          (g) => `
-          <button type="button" class="chip ${activeGroupFilter === g ? "active" : ""}" onclick="setGroupFilter('${g}')">
-            ${g === "ALL" ? "Semua Produk" : g}
-          </button>`
-        )
-        .join("");
-    }
+    function onWipSearchType() {
+      const inputEl = document.getElementById("smartSearchInput");
+      const clearBtn = document.getElementById("clearWipSearchBtn");
+      const resultsBox = document.getElementById("smartSearchResults");
+      const query = inputEl.value.toLowerCase().trim();
 
-    function setGroupFilter(groupName) {
-      activeGroupFilter = groupName;
-      renderProductChips();
-      renderSmartSearchList();
-    }
-
-    function renderSmartSearchList() {
-      const query = document.getElementById("smartSearchInput").value.toLowerCase().trim();
-      const container = document.getElementById("smartSearchResults");
-
-      const filtered = catalog.filter((item) => {
-        const matchGroup = activeGroupFilter === "ALL" || item.group === activeGroupFilter;
-        const searchTarget = `${item.group} ${item.part} ${item.keywords || ""}`.toLowerCase();
-        return matchGroup && (!query || searchTarget.includes(query));
-      });
-
-      if (filtered.length === 0) {
-        container.innerHTML = `<div style="padding:10px; font-size:0.78rem; color:var(--text-muted);">Tidak ditemukan. Anda tetap bisa mengetik manual di kolom bawah.</div>`;
+      if (!query) {
+        resultsBox.style.display = "none";
+        clearBtn.style.display = "none";
+        resultsBox.innerHTML = "";
         return;
       }
 
-      container.innerHTML = filtered
+      clearBtn.style.display = "flex";
+      const filtered = catalog.filter((item) => {
+        const searchTarget = `${item.group} ${item.part} ${item.keywords || ""}`.toLowerCase();
+        return searchTarget.includes(query);
+      });
+
+      resultsBox.style.display = "block";
+
+      if (filtered.length === 0) {
+        resultsBox.innerHTML = `<div style="padding:10px 12px; font-size:0.78rem; color:var(--text-muted);">Item tidak ditemukan di Master. Silakan ketik langsung pada kolom di bawah.</div>`;
+        return;
+      }
+
+      resultsBox.innerHTML = filtered
         .map(
           (item) => `
           <div class="quick-item" onclick="pilihItemWip('${item.group}', '${item.part}')">
@@ -907,35 +1411,107 @@
         .join("");
     }
 
+    function clearWipSearch() {
+      document.getElementById("smartSearchInput").value = "";
+      document.getElementById("smartSearchResults").style.display = "none";
+      document.getElementById("clearWipSearchBtn").style.display = "none";
+    }
+
     function pilihItemWip(group, part) {
       document.getElementById("selectedGroup").value = group;
       document.getElementById("selectedPart").value = part;
+      clearWipSearch();
       document.getElementById("calcBoxInput").focus();
     }
 
-    /********************************************************************
-     * 4. AUTO-KALKULATOR MULTI-BOX (MENDUKUNG RUMUS 650*10+420)
-     ********************************************************************/
-    function evaluateMathExpression(expr) {
-      const cleaned = expr.replace(/,/g, "").replace(/[^0-9+\-*/().\s]/g, "").trim();
-      if (!cleaned) return 0;
-      try {
-        const val = Function(`"use strict"; return (${cleaned})`)();
-        return Math.round(Number(val) || 0);
-      } catch (e) {
-        return parseInt(cleaned, 10) || 0;
+    function onSpaSearchType() {
+      const inputEl = document.getElementById("spaSearchInput");
+      const clearBtn = document.getElementById("clearSpaSearchBtn");
+      const resultsBox = document.getElementById("spaSearchResults");
+      const query = inputEl.value.toLowerCase().trim();
+
+      if (!query) {
+        resultsBox.style.display = "none";
+        clearBtn.style.display = "none";
+        resultsBox.innerHTML = "";
+        return;
       }
+
+      clearBtn.style.display = "flex";
+      const filtered = catalog.filter((c) =>
+        `${c.group} ${c.part} ${c.keywords || ""}`.toLowerCase().includes(query)
+      );
+
+      resultsBox.style.display = "block";
+
+      if (filtered.length === 0) {
+        resultsBox.innerHTML = `<div style="padding:10px 12px; font-size:0.78rem; color:var(--text-muted);">Tidak ditemukan. Silakan isi manual di bawah.</div>`;
+        return;
+      }
+
+      resultsBox.innerHTML = filtered
+        .map(
+          (c) => `
+          <div class="quick-item" onclick="pilihItemSpa('${c.group}', '${c.part}')">
+            <div>
+              <div class="quick-item-left">${c.part}</div>
+              <div class="quick-item-sub">${c.group}</div>
+            </div>
+            <span class="quick-item-badge">Pilih &rarr;</span>
+          </div>`
+        )
+        .join("");
     }
 
-    function tambahAngkaBox() {
+    function clearSpaSearch() {
+      document.getElementById("spaSearchInput").value = "";
+      document.getElementById("spaSearchResults").style.display = "none";
+      document.getElementById("clearSpaSearchBtn").style.display = "none";
+    }
+
+    function pilihItemSpa(group, part) {
+      document.getElementById("spaGroup").value = group;
+      document.getElementById("spaPart").value = part;
+      clearSpaSearch();
+
+      const foundWip = wipList.find(
+        (w) => w.group.toLowerCase() === group.toLowerCase() && w.part.toLowerCase() === part.toLowerCase()
+      );
+      if (foundWip && editingSpaId === null) {
+        currentSpaAssyBoxes = foundWip.boxes
+          ? JSON.parse(JSON.stringify(foundWip.boxes))
+          : [{ label: String(foundWip.qty), val: foundWip.qty }];
+        renderSpaCalcBoxes();
+      }
+      document.getElementById("spaCalcGudangInput").focus();
+    }
+
+    document.addEventListener("click", function (e) {
+      const wipWrap = document.getElementById("wipSearchWrapper");
+      const spaWrap = document.getElementById("spaSearchWrapper");
+      if (wipWrap && !wipWrap.contains(e.target)) {
+        document.getElementById("smartSearchResults").style.display = "none";
+      }
+      if (spaWrap && !spaWrap.contains(e.target)) {
+        document.getElementById("spaSearchResults").style.display = "none";
+      }
+    });
+
+    /********************************************************************
+     * 5. AUTO-KALKULATOR WIP & FITUR EDIT SISA BARANG BAGUS
+     ********************************************************************/
+    function tambahAngkaBox(multiplier = 1) {
       const inputEl = document.getElementById("calcBoxInput");
       const raw = inputEl.value.trim();
       if (!raw) return;
 
       const hasil = evaluateMathExpression(raw);
-      if (hasil < 0) return;
+      if (hasil === 0 && raw !== "0") return;
 
-      currentBoxes.push({ label: raw, val: hasil });
+      const finalVal = multiplier < 0 ? -Math.abs(hasil) : hasil;
+      const finalLabel = multiplier < 0 ? `-${raw.replace(/^-/, "")}` : raw;
+
+      currentBoxes.push({ label: finalLabel, val: finalVal });
       inputEl.value = "";
       renderCurrentBoxes();
       inputEl.focus();
@@ -949,17 +1525,25 @@
     function renderCurrentBoxes() {
       const container = document.getElementById("boxChipsList");
       const sumEl = document.getElementById("liveCalcSum");
-      const total = currentBoxes.reduce((acc, b) => acc + b.val, 0);
+      const countEl = document.getElementById("liveBoxCount");
+
+      const total = Math.max(0, currentBoxes.reduce((acc, b) => acc + b.val, 0));
+      const positiveBoxes = currentBoxes.filter((b) => b.val >= 0).length;
 
       sumEl.textContent = formatNum(total);
+      countEl.textContent = positiveBoxes;
+
       container.innerHTML = currentBoxes
-        .map(
-          (b, i) => `
-          <span class="box-chip">
-            ${b.label !== String(b.val) ? `${b.label} = ` : ""}${formatNum(b.val)}
-            <button type="button" onclick="hapusBoxChip(${i})">&times;</button>
-          </span>`
-        )
+        .map((b, i) => {
+          const isNeg = b.val < 0;
+          const prefix = isNeg ? `Diambil: ` : `Box ${i + 1}: `;
+          const formulaInfo = b.label !== String(b.val) ? `(${b.label}) = ` : "";
+          return `
+            <span class="box-chip ${isNeg ? "minus-chip" : ""}">
+              ${prefix}${formulaInfo}${formatNum(b.val)}
+              <button type="button" onclick="hapusBoxChip(${i})" title="Hapus box ini">&times;</button>
+            </span>`;
+        })
         .join("");
     }
 
@@ -970,7 +1554,7 @@
       const pendingInput = document.getElementById("calcBoxInput").value.trim();
 
       if (pendingInput) {
-        tambahAngkaBox();
+        tambahAngkaBox(1);
       }
 
       if (!group || !part) {
@@ -978,29 +1562,52 @@
         return;
       }
 
-      const totalQty = currentBoxes.reduce((acc, b) => acc + b.val, 0);
-
-      // Cari apakah kombinasi Group + Part + Note sudah ada; jika ada, tambahkan jumlahnya
-      const existingIdx = wipList.findIndex(
-        (x) =>
-          x.group.toLowerCase() === group.toLowerCase() &&
-          x.part.toLowerCase() === part.toLowerCase() &&
-          (x.note || "").toLowerCase() === note.toLowerCase()
-      );
-
-      if (existingIdx !== -1) {
-        wipList[existingIdx].qty += totalQty;
-      } else {
-        wipList.push({
-          id: Date.now() + Math.random(),
-          group,
-          part,
-          note,
-          qty: totalQty
-        });
+      if (currentBoxes.length === 0) {
+        alert("Masukkan jumlah qty pada Auto-Kalkulator terlebih dahulu.");
+        return;
       }
 
-      localStorage.setItem("assy_wip_list_v1", JSON.stringify(wipList));
+      const totalQty = Math.max(0, currentBoxes.reduce((acc, b) => acc + b.val, 0));
+
+      if (editingWipId !== null) {
+        const idx = wipList.findIndex((x) => x.id === editingWipId);
+        if (idx !== -1) {
+          wipList[idx].group = group;
+          wipList[idx].part = part;
+          wipList[idx].note = note;
+          wipList[idx].qty = totalQty;
+          wipList[idx].boxes = JSON.parse(JSON.stringify(currentBoxes));
+        }
+        batalEditWip();
+      } else {
+        const existingIdx = wipList.findIndex(
+          (x) =>
+            x.group.toLowerCase() === group.toLowerCase() &&
+            x.part.toLowerCase() === part.toLowerCase() &&
+            (x.note || "").toLowerCase() === note.toLowerCase()
+        );
+
+        if (existingIdx !== -1) {
+          if (!wipList[existingIdx].boxes) {
+            wipList[existingIdx].boxes = [{ label: String(wipList[existingIdx].qty), val: wipList[existingIdx].qty }];
+          }
+          wipList[existingIdx].boxes.push(...JSON.parse(JSON.stringify(currentBoxes)));
+          wipList[existingIdx].qty = Math.max(
+            0,
+            wipList[existingIdx].boxes.reduce((acc, b) => acc + b.val, 0)
+          );
+        } else {
+          wipList.push({
+            id: Date.now() + Math.random(),
+            group,
+            part,
+            note,
+            qty: totalQty,
+            boxes: JSON.parse(JSON.stringify(currentBoxes))
+          });
+        }
+      }
+
       currentBoxes = [];
       document.getElementById("selectedNote").value = "";
       document.getElementById("calcBoxInput").value = "";
@@ -1008,22 +1615,464 @@
       renderWipAll();
     }
 
+    function mulaiEditWip(id) {
+      const item = wipList.find((x) => x.id === id);
+      if (!item) return;
+
+      editingWipId = item.id;
+      document.getElementById("selectedGroup").value = item.group;
+      document.getElementById("selectedPart").value = item.part;
+      document.getElementById("selectedNote").value = item.note || "";
+
+      currentBoxes =
+        item.boxes && item.boxes.length > 0
+          ? JSON.parse(JSON.stringify(item.boxes))
+          : [{ label: String(item.qty), val: item.qty }];
+
+      renderCurrentBoxes();
+
+      document.getElementById("wipInputCard").classList.add("editing-mode");
+      document.getElementById("wipEditBanner").style.display = "flex";
+      document.getElementById("wipEditBannerText").innerHTML =
+        `✏️ <b>MODE EDIT: ${item.group} — ${item.part}</b><br>Ketik angka lalu klik <b>➖ Kurangi Qty</b> jika diambil helper, atau hapus box di bawah.`;
+      const btnSubmit = document.getElementById("btnSubmitWip");
+      btnSubmit.textContent = "💾 UPDATE DATA WIP";
+      btnSubmit.style.background = "var(--orange)";
+
+      document.getElementById("wipInputCard").scrollIntoView({ behavior: "smooth" });
+      document.getElementById("calcBoxInput").focus();
+    }
+
+    function batalEditWip() {
+      editingWipId = null;
+      currentBoxes = [];
+      document.getElementById("selectedGroup").value = "";
+      document.getElementById("selectedPart").value = "";
+      document.getElementById("selectedNote").value = "";
+      document.getElementById("calcBoxInput").value = "";
+      renderCurrentBoxes();
+
+      document.getElementById("wipInputCard").classList.remove("editing-mode");
+      document.getElementById("wipEditBanner").style.display = "none";
+      const btnSubmit = document.getElementById("btnSubmitWip");
+      btnSubmit.textContent = "✅ SIMPAN KE DAFTAR WIP";
+      btnSubmit.style.background = "var(--emerald)";
+    }
+
     function hapusItemWip(id) {
+      if (editingWipId === id) batalEditWip();
       wipList = wipList.filter((x) => x.id !== id);
-      localStorage.setItem("assy_wip_list_v1", JSON.stringify(wipList));
       renderWipAll();
     }
 
     function hapusSemuaWip() {
-      if (confirm("Kosongkan semua daftar Sisa Barang Bagus saat ini?")) {
+      if (wipList.length === 0) return;
+      if (confirm("Kosongkan semua daftar Sisa Barang Bagus di layar saat ini?")) {
+        batalEditWip();
         wipList = [];
-        localStorage.setItem("assy_wip_list_v1", JSON.stringify(wipList));
         renderWipAll();
       }
     }
 
+    function formatRincianBoxHtml(boxes, fallbackQty) {
+      const list =
+        boxes && boxes.length > 0
+          ? boxes
+          : [{ label: String(fallbackQty), val: fallbackQty }];
+
+      const posCount = list.filter((b) => b.val >= 0).length;
+      const details = list
+        .map((b, i) => {
+          if (b.val < 0) return `<span style="color:var(--red); font-weight:700;">[Diambil: ${formatNum(b.val)}]</span>`;
+          return `[Box ${i + 1}: <b>${formatNum(b.val)}</b>]`;
+        })
+        .join(" ");
+
+      return `📦 <b>Aktual ${posCount} Input Box:</b> ${details}`;
+    }
+
     /********************************************************************
-     * 5. RENDER REKAP WIP & GENERATE LAPORAN WA RAPI
+     * 6. INTEGRASI PENUH KE FIREBASE CLOUD FIRESTORE ("wipassembly")
+     ********************************************************************/
+    function showCloudBanner(htmlText, isError = false) {
+      const banner = document.getElementById("cloudStatusBanner");
+      banner.style.display = "block";
+      if (isError) {
+        banner.style.background = "var(--red-bg)";
+        banner.style.color = "var(--red)";
+        banner.style.border = "1px solid #ffcdd2";
+      } else {
+        banner.style.background = "var(--sky-bg)";
+        banner.style.color = "var(--sky)";
+        banner.style.border = "1px solid #81d4fa";
+      }
+      banner.innerHTML = htmlText;
+    }
+
+    async function simpanDaftarWipKeCloud() {
+      if (wipList.length === 0) {
+        alert("Daftar Sisa Barang Bagus masih kosong. Silakan input data terlebih dahulu sebelum menyimpan ke Cloud.");
+        return;
+      }
+
+      const isoDate = document.getElementById("wipDate").value;
+      const shift = document.getElementById("wipShift").value;
+      const plant = document.getElementById("wipPlant").value;
+      const waktuSimpan = new Date().toLocaleString("id-ID", {
+        day: "2-digit", month: "short", year: "numeric",
+        hour: "2-digit", minute: "2-digit", second: "2-digit"
+      });
+
+      const recordId = `WIP_${isoDate}_${shift.replace(/\s+/g, "")}_${plant.replace(/\s+/g, "")}_${Date.now()}`;
+
+      const snapshotRecord = {
+        recordId,
+        isoDate,
+        tanggalFormatted: formatTanggalLaporan(isoDate),
+        shift,
+        plant,
+        savedAt: waktuSimpan,
+        totalItems: wipList.length,
+        totalQtyAll: wipList.reduce((acc, it) => acc + (Number(it.qty) || 0), 0),
+        items: JSON.parse(JSON.stringify(wipList))
+      };
+
+      cloudArchive.unshift(snapshotRecord);
+      localStorage.setItem("assy_wip_cloud_archive_v1", JSON.stringify(cloudArchive));
+      updateCloudCounterUI();
+
+      const btnSave = document.getElementById("btnSaveCloud");
+      btnSave.disabled = true;
+      btnSave.textContent = "⏳ Menyimpan ke Firebase...";
+      showCloudBanner(`⏳ Mengirim data ke Cloud Firestore (<b>${getActiveProjectId()}</b>)...`);
+
+      try {
+        const url = `${getFirestoreBaseUrl()}/${COLLECTION_WIP_AUDIT}?documentId=${encodeURIComponent(recordId)}`;
+        const res = await fetch(url, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fields: {
+              recordId: { stringValue: snapshotRecord.recordId },
+              isoDate: { stringValue: snapshotRecord.isoDate },
+              tanggalFormatted: { stringValue: snapshotRecord.tanggalFormatted },
+              shift: { stringValue: snapshotRecord.shift },
+              plant: { stringValue: snapshotRecord.plant },
+              savedAt: { stringValue: snapshotRecord.savedAt },
+              totalItems: { integerValue: String(snapshotRecord.totalItems) },
+              totalQtyAll: { integerValue: String(snapshotRecord.totalQtyAll) },
+              payloadJson: { stringValue: JSON.stringify(snapshotRecord.items) }
+            }
+          })
+        });
+
+        if (res.ok) {
+          showCloudBanner(
+            `✅ <b>BERHASIL TERSIMPAN DI FIREBASE (${getActiveProjectId()})!</b><br>Tanggal: ${snapshotRecord.tanggalFormatted} • ${shift.toUpperCase()} • ${plant.toUpperCase()} (${snapshotRecord.totalItems} Item / ${formatNum(snapshotRecord.totalQtyAll)} PCS).`
+          );
+        } else {
+          const errJson = await res.json().catch(() => ({}));
+          const errMsg = errJson.error?.message || `HTTP ${res.status}`;
+          showCloudBanner(
+            `⚠️ <b>Tersimpan di Arsip HP, namun ditolak oleh Firebase (${errMsg}).</b><br>👉 Pastikan di Firebase Console (<b>${getActiveProjectId()}</b>) &rarr; tab <b>Rules</b>, Anda sudah mengubah <code>allow read, write: if false;</code> menjadi <code>allow read, write: if true;</code> lalu klik <b>Publish</b>.`,
+            true
+          );
+        }
+      } catch (err) {
+        showCloudBanner(
+          `⚠️ <b>Tersimpan di Arsip HP (Offline).</b> Gagal terhubung ke internet/Firebase: ${err.message}`,
+          true
+        );
+      } finally {
+        btnSave.disabled = false;
+        btnSave.textContent = "☁️ Simpan ke Cloud (Firebase)";
+      }
+    }
+
+    async function sinkronTarikDariFirebase(showAlert = false) {
+      const pid = getActiveProjectId();
+      const badge = document.getElementById("firebaseConnBadge");
+
+      try {
+        const url = `${getFirestoreBaseUrl()}/${COLLECTION_WIP_AUDIT}?pageSize=100`;
+        const res = await fetch(url);
+        if (!res.ok) {
+          if (badge) {
+            badge.textContent = `⚠️ Cek Rules Firebase (${pid})`;
+            badge.style.background = "var(--orange-bg)";
+            badge.style.color = "var(--orange)";
+          }
+          if (showAlert) {
+            alert(
+              `Gagal menarik data dari Firebase (${pid}).\nPastikan di Firebase Console -> Firestore -> Rules, Anda sudah mengubah "if false;" menjadi "if true;" lalu klik Publish.`
+            );
+          }
+          return;
+        }
+
+        const data = await res.json();
+        const docs = data.documents || [];
+
+        docs.forEach((doc) => {
+          const f = doc.fields || {};
+          const recId = f.recordId?.stringValue;
+          if (!recId) return;
+
+          const exists = cloudArchive.some((r) => r.recordId === recId);
+          if (!exists) {
+            const items = JSON.parse(f.payloadJson?.stringValue || "[]");
+            cloudArchive.push({
+              recordId: recId,
+              isoDate: f.isoDate?.stringValue || "",
+              tanggalFormatted: f.tanggalFormatted?.stringValue || "",
+              shift: f.shift?.stringValue || "",
+              plant: f.plant?.stringValue || "",
+              savedAt: f.savedAt?.stringValue || "",
+              totalItems: items.length,
+              totalQtyAll: items.reduce((acc, it) => acc + (Number(it.qty) || 0), 0),
+              items
+            });
+          }
+        });
+
+        cloudArchive.sort((a, b) => (b.recordId || "").localeCompare(a.recordId || ""));
+        localStorage.setItem("assy_wip_cloud_archive_v1", JSON.stringify(cloudArchive));
+        updateCloudCounterUI();
+        renderCloudArchiveList();
+
+        if (badge) {
+          badge.textContent = `🟢 Terhubung: ${pid} (${cloudArchive.length} Data)`;
+          badge.style.background = "var(--emerald-bg)";
+          badge.style.color = "var(--emerald)";
+        }
+
+        if (showAlert) {
+          alert(`✅ Berhasil sinkronisasi dengan Firebase (${pid})!\nTotal riwayat tersimpan: ${cloudArchive.length} rekaman.`);
+        }
+      } catch (e) {
+        if (showAlert) {
+          alert("Gagal menghubungi server Firebase: " + e.message);
+        }
+      }
+    }
+
+    async function simpanMasterKeFirebase() {
+      try {
+        const url = `${getFirestoreBaseUrl()}/${COLLECTION_MASTER}/master_katalog_utama`;
+        await fetch(url, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            fields: {
+              updatedAt: { stringValue: new Date().toISOString() },
+              catalogJson: { stringValue: JSON.stringify(catalog) }
+            }
+          })
+        });
+      } catch (e) {}
+    }
+
+    async function tarikMasterDariFirebase() {
+      try {
+        const url = `${getFirestoreBaseUrl()}/${COLLECTION_MASTER}/master_katalog_utama`;
+        const res = await fetch(url);
+        if (!res.ok) return;
+        const doc = await res.json();
+        const rawJson = doc.fields?.catalogJson?.stringValue;
+        if (rawJson) {
+          const remoteCatalog = JSON.parse(rawJson);
+          if (Array.isArray(remoteCatalog) && remoteCatalog.length > 0) {
+            catalog = deduplicateCatalogList([...catalog, ...remoteCatalog]);
+            localStorage.setItem("assy_catalog_v3", JSON.stringify(catalog));
+            document.getElementById("masterCount").textContent = catalog.length;
+          }
+        }
+      } catch (e) {}
+    }
+
+    function bukaModalCloud() {
+      document.getElementById("firebaseProjectIdInput").value = getActiveProjectId();
+      renderCloudArchiveList();
+      toggleModal("cloudModal", true);
+      sinkronTarikDariFirebase(false);
+    }
+
+    function simpanKonfigurasiFirebase() {
+      const pid = document.getElementById("firebaseProjectIdInput").value.trim() || DEFAULT_FIREBASE_PROJECT_ID;
+      localStorage.setItem("assy_firebase_project_id", pid);
+      sinkronTarikDariFirebase(true);
+    }
+
+    function resetFilterCloud() {
+      document.getElementById("cloudFilterDate").value = "";
+      document.getElementById("cloudFilterKeyword").value = "";
+      renderCloudArchiveList();
+    }
+
+    function renderCloudArchiveList() {
+      const filterDate = document.getElementById("cloudFilterDate").value;
+      const keyword = document.getElementById("cloudFilterKeyword").value.toLowerCase().trim();
+      const container = document.getElementById("cloudArchiveContainer");
+
+      const filtered = cloudArchive.filter((rec) => {
+        const matchDate = !filterDate || rec.isoDate === filterDate;
+        if (!matchDate) return false;
+        if (!keyword) return true;
+
+        const headerStr = `${rec.tanggalFormatted} ${rec.shift} ${rec.plant}`.toLowerCase();
+        const itemMatch = (rec.items || []).some((it) =>
+          `${it.group} ${it.part} ${it.note || ""}`.toLowerCase().includes(keyword)
+        );
+        return headerStr.includes(keyword) || itemMatch;
+      });
+
+      document.getElementById("cloudFoundCount").textContent = filtered.length;
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div style="text-align:center; padding:24px 12px; color:var(--text-muted); font-size:0.82rem; border:1px dashed var(--border); border-radius:10px;">
+            Belum ada riwayat tersimpan yang cocok di Firebase (<b>${getActiveProjectId()}</b>). Klik tombol <b>"☁️ Simpan ke Cloud (Firebase)"</b> setelah menginput Daftar Sisa Barang Bagus.
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = filtered
+        .map((rec) => {
+          const matchedItems = keyword
+            ? rec.items.filter((it) => `${it.group} ${it.part} ${it.note || ""}`.toLowerCase().includes(keyword))
+            : rec.items;
+
+          const itemsHtml = matchedItems
+            .map((it) => {
+              const boxList =
+                it.boxes && it.boxes.length > 0
+                  ? it.boxes
+                  : [{ label: String(it.qty), val: it.qty }];
+              const boxStr = boxList
+                .map((b, i) => (b.val < 0 ? `[Diambil: ${formatNum(b.val)}]` : `[Box ${i + 1}: ${formatNum(b.val)}]`))
+                .join(" ");
+
+              return `
+                <div style="padding:6px 0; border-bottom:1px solid #f1f5f9; font-size:0.78rem;">
+                  <div style="display:flex; justify-content:space-between; font-weight:700;">
+                    <span style="color:var(--navy);">${it.group} &mdash; ${it.part} ${it.note ? `(${it.note})` : ""}</span>
+                    <span style="color:var(--emerald);">${formatNum(it.qty)} PCS</span>
+                  </div>
+                  <div style="font-size:0.71rem; color:var(--text-muted); margin-top:2px;">
+                    📦 Rincian Box: ${boxStr}
+                  </div>
+                </div>`;
+            })
+            .join("");
+
+          return `
+            <div class="cloud-record-card">
+              <div class="cloud-record-top">
+                <div>
+                  <div style="font-family:'Montserrat',sans-serif; font-weight:800; font-size:0.88rem; color:var(--navy);">
+                    📅 ${rec.tanggalFormatted} &bull; ${rec.shift.toUpperCase()} (${rec.plant.toUpperCase()})
+                  </div>
+                  <div style="font-size:0.71rem; color:var(--text-muted); margin-top:2px;">
+                    ⏱️ Disimpan: ${rec.savedAt} | Total: <b>${rec.items.length} Item (${formatNum(rec.totalQtyAll)} PCS)</b>
+                  </div>
+                </div>
+                <div style="display:flex; gap:6px;">
+                  <button class="btn btn-sky" style="padding:6px 10px; font-size:0.72rem;" onclick="tarikRekamanCloudKeLayar('${rec.recordId}')">
+                    📥 Tarik ke Layar
+                  </button>
+                  <button class="btn btn-danger" onclick="hapusRekamanCloud('${rec.recordId}')">✕</button>
+                </div>
+              </div>
+              <div style="margin-top:8px;">
+                ${itemsHtml}
+              </div>
+            </div>`;
+        })
+        .join("");
+    }
+
+    function tarikRekamanCloudKeLayar(recordId) {
+      const rec = cloudArchive.find((r) => r.recordId === recordId);
+      if (!rec) return;
+
+      if (wipList.length > 0) {
+        if (!confirm("Data di layar saat ini akan digantikan dengan data dari Cloud. Lanjutkan?")) {
+          return;
+        }
+      }
+
+      document.getElementById("wipDate").value = rec.isoDate || new Date().toISOString().slice(0, 10);
+      document.getElementById("wipShift").value = rec.shift || "shift 1";
+      document.getElementById("wipPlant").value = rec.plant || "plant alpha";
+      wipList = JSON.parse(JSON.stringify(rec.items || []));
+
+      switchMode("wip");
+      renderWipAll();
+      toggleModal("cloudModal", false);
+
+      showCloudBanner(
+        `📥 <b>Data Cloud Berhasil Ditarik ke Layar:</b> Tanggal ${rec.tanggalFormatted} (${rec.shift.toUpperCase()} - ${rec.plant.toUpperCase()}).`
+      );
+    }
+
+    async function hapusRekamanCloud(recordId) {
+      if (!confirm("Hapus rekaman riwayat ini dari Cloud Firebase & Perangkat?")) return;
+      cloudArchive = cloudArchive.filter((r) => r.recordId !== recordId);
+      localStorage.setItem("assy_wip_cloud_archive_v1", JSON.stringify(cloudArchive));
+      updateCloudCounterUI();
+      renderCloudArchiveList();
+
+      try {
+        const url = `${getFirestoreBaseUrl()}/${COLLECTION_WIP_AUDIT}/${encodeURIComponent(recordId)}`;
+        await fetch(url, { method: "DELETE" });
+      } catch (e) {}
+    }
+
+    function exportSemuaCloudKeExcel() {
+      if (cloudArchive.length === 0) {
+        alert("Belum ada riwayat Cloud untuk diekspor.");
+        return;
+      }
+
+      const rows = [
+        ["Waktu Simpan Cloud", "Tanggal Produksi", "Shift", "Plant", "Kelompok Produk", "Komponen & Kode", "Keterangan", "Total Qty (PCS)", "Jumlah Box Aktual", "Rincian Aktual Per Box (Bukti Audit)"]
+      ];
+
+      cloudArchive.forEach((rec) => {
+        (rec.items || []).forEach((it) => {
+          const boxList = it.boxes && it.boxes.length > 0 ? it.boxes : [{ label: String(it.qty), val: it.qty }];
+          const posCount = boxList.filter((b) => b.val >= 0).length;
+          const rincianText = boxList
+            .map((b, i) => (b.val < 0 ? `Diambil: ${b.val}` : `Box ${i + 1}: ${b.val}`))
+            .join(" | ");
+
+          rows.push([
+            rec.savedAt,
+            rec.tanggalFormatted,
+            rec.shift.toUpperCase(),
+            rec.plant.toUpperCase(),
+            it.group,
+            it.part,
+            it.note || "-",
+            it.qty,
+            posCount,
+            rincianText
+          ]);
+        });
+      });
+
+      const ws = XLSX.utils.aoa_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Audit_WIP_Cloud");
+      XLSX.writeFile(wb, `Audit_Selisih_WIP_Assy_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    }
+
+    function updateCloudCounterUI() {
+      document.getElementById("cloudCountHeader").textContent = cloudArchive.length;
+    }
+
+    /********************************************************************
+     * 7. RENDER REKAP WIP & GENERATE LAPORAN WA
      ********************************************************************/
     function renderWipAll() {
       const container = document.getElementById("wipGroupedContainer");
@@ -1037,7 +2086,7 @@
 
       const groupEntries = Object.entries(grouped);
       if (groupEntries.length === 0) {
-        container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted); font-size:0.84rem;">Belum ada data. Pilih item di sebelah kiri atau klik <b>"⚡ Muat Contoh (05-06 Nov)"</b> di kanan atas.</div>`;
+        container.innerHTML = `<div style="text-align:center; padding:22px 12px; color:var(--text-muted); font-size:0.82rem;">Daftar kosong & siap digunakan. Ketik kode/nama part pada <b>Smart Search</b> di sebelah kiri, atau klik <b>"📥 Tarik Data Cloud"</b> untuk melihat riwayat sebelumnya.</div>`;
       } else {
         container.innerHTML = groupEntries
           .map(
@@ -1045,19 +2094,27 @@
             <div class="group-card">
               <div class="group-header">
                 <span class="group-name">${gName}</span>
-                <span style="font-size:0.72rem; color:var(--text-muted); font-weight:700;">${items.length} Komponen</span>
+                <span style="font-size:0.72rem; color:var(--text-muted); font-weight:700;">${items.length} Item</span>
               </div>
               ${items
                 .map(
                   (it) => `
                   <div class="part-row">
-                    <div>
-                      <span class="part-label">${it.part}</span>
-                      ${it.note ? `<span class="part-note">${it.note}</span>` : ""}
+                    <div style="flex:1;">
+                      <div>
+                        <span class="part-label">${it.part}</span>
+                        ${it.note ? `<span class="part-note">${it.note}</span>` : ""}
+                      </div>
+                      <div class="box-breakdown-info">
+                        ${formatRincianBoxHtml(it.boxes, it.qty)}
+                      </div>
                     </div>
-                    <div style="display:flex; align-items:center; gap:8px;">
+                    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:5px;">
                       <span class="part-qty">${formatNum(it.qty)}</span>
-                      <button class="btn btn-danger" onclick="hapusItemWip(${it.id})">✕</button>
+                      <div style="display:flex; gap:4px;">
+                        <button class="btn btn-edit" onclick="mulaiEditWip(${it.id})">✏️ Edit</button>
+                        <button class="btn btn-danger" onclick="hapusItemWip(${it.id})">✕</button>
+                      </div>
                     </div>
                   </div>`
                 )
@@ -1067,70 +2124,28 @@
           .join("");
       }
 
-      // Generate Format WhatsApp yang Diperbagus
-      const tgl = document.getElementById("wipDate").value.trim().toUpperCase();
+      const tgl = formatTanggalLaporan(document.getElementById("wipDate").value);
       const shift = document.getElementById("wipShift").value;
       const plant = document.getElementById("wipPlant").value;
 
-      let wa = `📊 *LAPORAN SISA BARANG BAGUS (WIP ASSY)*\n`;
-      wa += `📅 Tanggal : ${tgl}\n`;
-      wa += `⏰ Shift   : ${shift}\n`;
-      wa += `🏭 Plant   : ${plant}\n`;
+      let wa = `*SISA BARANG BAGUS ASSY TGL ${tgl} ${shift} (${plant})*\n`;
       wa += `━━━━━━━━━━━━━━━━━━━━\n\n`;
 
-      groupEntries.forEach(([gName, items], idx) => {
-        wa += `🔹 *${idx + 1}. ${gName.toUpperCase()}*\n`;
+      groupEntries.forEach(([gName, items]) => {
+        wa += `*${gName}*\n`;
         items.forEach((it) => {
-          const noteStr = it.note ? ` _(${it.note})_` : "";
+          const noteStr = it.note ? ` (${it.note})` : "";
           wa += `• ${it.part} => *${formatNum(it.qty)}*${noteStr}\n`;
         });
         wa += `\n`;
       });
 
-      wa += `━━━━━━━━━━━━━━━━━━━━\n`;
-      wa += `✅ _Data terhitung otomatis via Smart WIP Assy_`;
-      waBox.value = wa;
+      waBox.value = wa.trim();
     }
 
     /********************************************************************
-     * 6. MODE 2: SPA AWAL SHIFT (KEBUTUHAN + ASSY + GUDANG)
+     * 8. MODE 2: SPA AWAL SHIFT (AUTO KALKULATOR + FITUR EDIT)
      ********************************************************************/
-    function renderSpaSearchList() {
-      const q = document.getElementById("spaSearchInput").value.toLowerCase().trim();
-      const box = document.getElementById("spaSearchResults");
-      const filtered = catalog.filter((c) =>
-        `${c.group} ${c.part} ${c.keywords}`.toLowerCase().includes(q)
-      );
-
-      box.innerHTML = filtered
-        .slice(0, 12)
-        .map(
-          (c) => `
-          <div class="quick-item" onclick="pilihItemSpa('${c.group}', '${c.part}')">
-            <div>
-              <div class="quick-item-left">${c.part}</div>
-              <div class="quick-item-sub">${c.group}</div>
-            </div>
-            <span class="quick-item-badge">Pilih</span>
-          </div>`
-        )
-        .join("");
-    }
-
-    function pilihItemSpa(group, part) {
-      document.getElementById("spaGroup").value = group;
-      document.getElementById("spaPart").value = part;
-
-      // Jika di Sisa WIP ada item yang sama, otomatis isikan ke kolom Stok Assy!
-      const foundWip = wipList.find(
-        (w) => w.group.toLowerCase() === group.toLowerCase() && w.part.toLowerCase() === part.toLowerCase()
-      );
-      if (foundWip) {
-        document.getElementById("spaQtyAssy").value = foundWip.qty;
-      }
-      document.getElementById("spaQtyGudang").focus();
-    }
-
     function hitungTargetSpaPreview() {
       const base = Number(document.getElementById("spaBaseTarget").value) || 0;
       const totalWithBuffer = Math.round(base * 1.05);
@@ -1140,44 +2155,193 @@
           : `Target + 5% Buffer: 0 pcs`;
     }
 
+    function tambahBoxSpa(targetType, multiplier = 1) {
+      const inputId = targetType === "assy" ? "spaCalcAssyInput" : "spaCalcGudangInput";
+      const inputEl = document.getElementById(inputId);
+      const raw = inputEl.value.trim();
+      if (!raw) return;
+
+      const hasil = evaluateMathExpression(raw);
+      if (hasil === 0 && raw !== "0") return;
+
+      const finalVal = multiplier < 0 ? -Math.abs(hasil) : hasil;
+      const finalLabel = multiplier < 0 ? `-${raw.replace(/^-/, "")}` : raw;
+
+      if (targetType === "assy") {
+        currentSpaAssyBoxes.push({ label: finalLabel, val: finalVal });
+      } else {
+        currentSpaGudangBoxes.push({ label: finalLabel, val: finalVal });
+      }
+
+      inputEl.value = "";
+      renderSpaCalcBoxes();
+      inputEl.focus();
+    }
+
+    function hapusBoxSpaChip(targetType, idx) {
+      if (targetType === "assy") {
+        currentSpaAssyBoxes.splice(idx, 1);
+      } else {
+        currentSpaGudangBoxes.splice(idx, 1);
+      }
+      renderSpaCalcBoxes();
+    }
+
+    function renderSpaCalcBoxes() {
+      const assyTotal = Math.max(0, currentSpaAssyBoxes.reduce((a, b) => a + b.val, 0));
+      const assyPosCount = currentSpaAssyBoxes.filter((b) => b.val >= 0).length;
+      document.getElementById("spaAssySum").textContent = formatNum(assyTotal);
+      document.getElementById("spaAssyBoxCount").textContent = assyPosCount;
+      document.getElementById("spaAssyChips").innerHTML = currentSpaAssyBoxes
+        .map((b, i) => {
+          const isNeg = b.val < 0;
+          return `
+            <span class="box-chip ${isNeg ? "minus-chip" : ""}">
+              ${isNeg ? "Kurang: " : `Box ${i + 1}: `}${formatNum(b.val)}
+              <button type="button" onclick="hapusBoxSpaChip('assy', ${i})">&times;</button>
+            </span>`;
+        })
+        .join("");
+
+      const gudangTotal = Math.max(0, currentSpaGudangBoxes.reduce((a, b) => a + b.val, 0));
+      const gudangPosCount = currentSpaGudangBoxes.filter((b) => b.val >= 0).length;
+      document.getElementById("spaGudangSum").textContent = formatNum(gudangTotal);
+      document.getElementById("spaGudangBoxCount").textContent = gudangPosCount;
+      document.getElementById("spaGudangChips").innerHTML = currentSpaGudangBoxes
+        .map((b, i) => {
+          const isNeg = b.val < 0;
+          return `
+            <span class="box-chip ${isNeg ? "minus-chip" : ""}">
+              ${isNeg ? "Kurang: " : `Box ${i + 1}: `}${formatNum(b.val)}
+              <button type="button" onclick="hapusBoxSpaChip('gudang', ${i})">&times;</button>
+            </span>`;
+        })
+        .join("");
+    }
+
     function simpanItemSpa() {
       const group = document.getElementById("spaGroup").value.trim();
       const lineInfo = document.getElementById("spaLineInfo").value.trim();
       const baseTarget = Number(document.getElementById("spaBaseTarget").value) || 0;
       const part = document.getElementById("spaPart").value.trim();
       const note = document.getElementById("spaNote").value.trim();
-      const assy = Number(document.getElementById("spaQtyAssy").value) || 0;
-      const gudang = Number(document.getElementById("spaQtyGudang").value) || 0;
+
+      if (document.getElementById("spaCalcAssyInput").value.trim()) {
+        tambahBoxSpa("assy", 1);
+      }
+      if (document.getElementById("spaCalcGudangInput").value.trim()) {
+        tambahBoxSpa("gudang", 1);
+      }
 
       if (!group || !part) {
         alert("Mohon isi Nama Produk Utama dan Komponen.");
         return;
       }
 
-      spaList.push({
-        id: Date.now() + Math.random(),
-        group,
-        lineInfo,
-        baseTarget,
-        targetBuffer: Math.round(baseTarget * 1.05),
-        part,
-        note,
-        assy,
-        gudang,
-        total: assy + gudang
-      });
+      const assy = Math.max(0, currentSpaAssyBoxes.reduce((a, b) => a + b.val, 0));
+      const gudang = Math.max(0, currentSpaGudangBoxes.reduce((a, b) => a + b.val, 0));
 
-      localStorage.setItem("assy_spa_list_v1", JSON.stringify(spaList));
+      if (editingSpaId !== null) {
+        const idx = spaList.findIndex((x) => x.id === editingSpaId);
+        if (idx !== -1) {
+          spaList[idx].group = group;
+          spaList[idx].lineInfo = lineInfo;
+          spaList[idx].baseTarget = baseTarget;
+          spaList[idx].targetBuffer = Math.round(baseTarget * 1.05);
+          spaList[idx].part = part;
+          spaList[idx].note = note;
+          spaList[idx].assy = assy;
+          spaList[idx].gudang = gudang;
+          spaList[idx].total = assy + gudang;
+          spaList[idx].assyBoxes = JSON.parse(JSON.stringify(currentSpaAssyBoxes));
+          spaList[idx].gudangBoxes = JSON.parse(JSON.stringify(currentSpaGudangBoxes));
+        }
+        batalEditSpa();
+      } else {
+        spaList.push({
+          id: Date.now() + Math.random(),
+          group,
+          lineInfo,
+          baseTarget,
+          targetBuffer: Math.round(baseTarget * 1.05),
+          part,
+          note,
+          assy,
+          gudang,
+          total: assy + gudang,
+          assyBoxes: JSON.parse(JSON.stringify(currentSpaAssyBoxes)),
+          gudangBoxes: JSON.parse(JSON.stringify(currentSpaGudangBoxes))
+        });
+      }
+
       document.getElementById("spaPart").value = "";
       document.getElementById("spaNote").value = "";
-      document.getElementById("spaQtyAssy").value = 0;
-      document.getElementById("spaQtyGudang").value = 0;
+      currentSpaAssyBoxes = [];
+      currentSpaGudangBoxes = [];
+      renderSpaCalcBoxes();
       renderSpaAll();
+    }
+
+    function mulaiEditSpa(id) {
+      const item = spaList.find((x) => x.id === id);
+      if (!item) return;
+
+      editingSpaId = item.id;
+      document.getElementById("spaGroup").value = item.group;
+      document.getElementById("spaLineInfo").value = item.lineInfo || "";
+      document.getElementById("spaBaseTarget").value = item.baseTarget || "";
+      hitungTargetSpaPreview();
+
+      document.getElementById("spaPart").value = item.part;
+      document.getElementById("spaNote").value = item.note || "";
+
+      currentSpaAssyBoxes =
+        item.assyBoxes && item.assyBoxes.length > 0
+          ? JSON.parse(JSON.stringify(item.assyBoxes))
+          : item.assy > 0
+          ? [{ label: String(item.assy), val: item.assy }]
+          : [];
+
+      currentSpaGudangBoxes =
+        item.gudangBoxes && item.gudangBoxes.length > 0
+          ? JSON.parse(JSON.stringify(item.gudangBoxes))
+          : item.gudang > 0
+          ? [{ label: String(item.gudang), val: item.gudang }]
+          : [];
+
+      renderSpaCalcBoxes();
+
+      document.getElementById("spaInputCard").classList.add("editing-mode");
+      document.getElementById("spaEditBanner").style.display = "flex";
+      document.getElementById("spaEditBannerText").innerHTML =
+        `✏️ <b>MODE EDIT SPA: ${item.group} — ${item.part}</b>`;
+      const btnSubmit = document.getElementById("btnSubmitSpa");
+      btnSubmit.textContent = "💾 UPDATE DATA SPA";
+      btnSubmit.style.background = "var(--orange)";
+
+      document.getElementById("spaInputCard").scrollIntoView({ behavior: "smooth" });
+    }
+
+    function batalEditSpa() {
+      editingSpaId = null;
+      currentSpaAssyBoxes = [];
+      currentSpaGudangBoxes = [];
+      document.getElementById("spaPart").value = "";
+      document.getElementById("spaNote").value = "";
+      document.getElementById("spaCalcAssyInput").value = "";
+      document.getElementById("spaCalcGudangInput").value = "";
+      renderSpaCalcBoxes();
+
+      document.getElementById("spaInputCard").classList.remove("editing-mode");
+      document.getElementById("spaEditBanner").style.display = "none";
+      const btnSubmit = document.getElementById("btnSubmitSpa");
+      btnSubmit.textContent = "➕ SIMPAN KE LAPORAN SPA";
+      btnSubmit.style.background = "var(--purple)";
     }
 
     function tarikWipKeSpa() {
       if (wipList.length === 0) {
-        alert("Daftar Sisa Barang Bagus masih kosong.");
+        alert("Daftar Sisa Barang Bagus di layar masih kosong. Silakan input WIP atau tarik dari Cloud terlebih dahulu.");
         return;
       }
       wipList.forEach((w) => {
@@ -1187,8 +2351,13 @@
             s.part.toLowerCase() === w.part.toLowerCase() &&
             (s.note || "").toLowerCase() === (w.note || "").toLowerCase()
         );
+        const copiedBoxes = w.boxes
+          ? JSON.parse(JSON.stringify(w.boxes))
+          : [{ label: String(w.qty), val: w.qty }];
+
         if (exists) {
           exists.assy = w.qty;
+          exists.assyBoxes = copiedBoxes;
           exists.total = exists.assy + exists.gudang;
         } else {
           spaList.push({
@@ -1201,25 +2370,27 @@
             note: w.note || "",
             assy: w.qty,
             gudang: 0,
-            total: w.qty
+            total: w.qty,
+            assyBoxes: copiedBoxes,
+            gudangBoxes: []
           });
         }
       });
-      localStorage.setItem("assy_spa_list_v1", JSON.stringify(spaList));
       switchMode("spa");
       renderSpaAll();
     }
 
     function hapusItemSpa(id) {
+      if (editingSpaId === id) batalEditSpa();
       spaList = spaList.filter((x) => x.id !== id);
-      localStorage.setItem("assy_spa_list_v1", JSON.stringify(spaList));
       renderSpaAll();
     }
 
     function hapusSemuaSpa() {
-      if (confirm("Kosongkan seluruh data SPA saat ini?")) {
+      if (spaList.length === 0) return;
+      if (confirm("Kosongkan seluruh data SPA di layar saat ini?")) {
+        batalEditSpa();
         spaList = [];
-        localStorage.setItem("assy_spa_list_v1", JSON.stringify(spaList));
         renderSpaAll();
       }
     }
@@ -1248,14 +2419,14 @@
 
       const entries = Object.entries(grouped);
       if (entries.length === 0) {
-        container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted); font-size:0.84rem;">Belum ada data SPA. Klik <b>"⚡ Muat Contoh (05-06 Nov)"</b> di atas atau tarik dari Sisa WIP.</div>`;
+        container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted); font-size:0.82rem;">Daftar SPA kosong & siap digunakan. Silakan input komponen atau klik <b>"📥 Ambil Stok Assy dari WIP"</b>.</div>`;
       } else {
         container.innerHTML = entries
           .map(([gName, gData], idx) => {
             const targetInfo =
               gData.baseTarget > 0
                 ? `<div style="font-size:0.75rem; color:var(--purple); font-weight:700; margin-bottom:6px;">
-                     🎯 Kebutuhan: ${gData.lineInfo || "-"} @${formatNum(gData.baseTarget)} + 5% &rArr; <b>${formatNum(gData.targetBuffer)} pcs</b>
+                     🎯 Kebutuhan: ${gData.lineInfo || "-"} @${formatNum(gData.baseTarget)} + 5% &rArr; <b>${formatNum(gData.targetBuffer)}</b>
                    </div>`
                 : "";
 
@@ -1266,162 +2437,95 @@
                 </div>
                 ${targetInfo}
                 ${gData.items
-                  .map(
-                    (it) => `
+                  .map((it) => {
+                    const assyCount = it.assyBoxes ? it.assyBoxes.filter((b) => b.val >= 0).length : (it.assy > 0 ? 1 : 0);
+                    const gudangCount = it.gudangBoxes ? it.gudangBoxes.filter((b) => b.val >= 0).length : (it.gudang > 0 ? 1 : 0);
+                    return `
                     <div class="part-row">
-                      <div>
-                        <span class="part-label">${it.part}</span>
-                        ${it.note ? `<span class="part-note">${it.note}</span>` : ""}
-                        <div style="font-size:0.72rem; color:var(--text-muted);">
-                          Assy: <b>${formatNum(it.assy)}</b> | Gudang: <b>${formatNum(it.gudang)}</b>
+                      <div style="flex:1;">
+                        <div>
+                          <span class="part-label">${it.part}</span>
+                          ${it.note ? `<span class="part-note">${it.note}</span>` : ""}
+                        </div>
+                        <div class="box-breakdown-info">
+                          Assy: <b>${formatNum(it.assy)}</b> (${assyCount} Box) | Gudang: <b>${formatNum(it.gudang)}</b> (${gudangCount} Box)
                         </div>
                       </div>
-                      <div style="display:flex; align-items:center; gap:8px;">
+                      <div style="display:flex; flex-direction:column; align-items:flex-end; gap:5px;">
                         <span class="part-qty">${formatNum(it.total)}</span>
-                        <button class="btn btn-danger" onclick="hapusItemSpa(${it.id})">✕</button>
+                        <div style="display:flex; gap:4px;">
+                          <button class="btn btn-edit" onclick="mulaiEditSpa(${it.id})">✏️ Edit</button>
+                          <button class="btn btn-danger" onclick="hapusItemSpa(${it.id})">✕</button>
+                        </div>
                       </div>
-                    </div>`
-                  )
+                    </div>`;
+                  })
                   .join("")}
               </div>`;
           })
           .join("");
       }
 
-      // Generate Format WhatsApp SPA yang Diperbagus
-      const tgl = document.getElementById("spaDate").value.trim().toUpperCase();
+      const tgl = formatTanggalLaporan(document.getElementById("spaDate").value);
       const plant = document.getElementById("spaPlant").value;
 
-      let wa = `📋 *LAPORAN SPA & KETERSEDIAAN KOMPONEN ASSY*\n`;
-      wa += `📅 Tanggal : ${tgl}\n`;
-      wa += `🏭 Plant   : ${plant}\n`;
+      let wa = `*SPA UNTUK TGL ${tgl} (${plant})*\n`;
       wa += `━━━━━━━━━━━━━━━━━━━━\n\n`;
 
       entries.forEach(([gName, gData], idx) => {
-        wa += `📦 *${idx + 1}) ${gName.toUpperCase()}*\n`;
+        wa += `*${idx + 1}) ${gName}*\n`;
         if (gData.baseTarget > 0) {
-          wa += `🎯 *Kebutuhan:* ${gData.lineInfo ? gData.lineInfo + " " : ""}@${formatNum(gData.baseTarget)} + 5%\n`;
-          wa += `   Target => *${formatNum(gData.targetBuffer)} pcs*\n\n`;
+          wa += `Kebutuhan untuk\n`;
+          wa += `${gData.lineInfo ? gData.lineInfo + " " : ""}@${formatNum(gData.baseTarget)} + 5%\n`;
+          wa += `=> *${formatNum(gData.targetBuffer)}*\n\n`;
         }
-        wa += `*Ketersediaan Barang:*\n`;
+        wa += `Ketersediaan barang :\n`;
 
         gData.items.forEach((it) => {
-          const noteHeader = it.note ? ` _(${it.note})_` : "";
-          const isHold = (it.note || "").toLowerCase().includes("hold");
-          let statusIcon = "";
-          if (isHold) {
-            statusIcon = " ⏸️";
-          } else if (gData.targetBuffer > 0) {
-            statusIcon = it.total >= gData.targetBuffer ? " ✅" : " ⚠️";
-          }
-
+          const noteHeader = it.note ? ` ${it.note}` : "";
           if (it.gudang > 0) {
             wa += `• *${it.part}*${noteHeader}\n`;
-            wa += `  ├ Assy: ${formatNum(it.assy)} | Gudang: ${formatNum(it.gudang)}\n`;
-            wa += `  └ *Total => ${formatNum(it.total)}*${statusIcon}\n`;
+            wa += `  => ${formatNum(it.assy)} (Assy)\n`;
+            wa += `  => ${formatNum(it.gudang)} (Gudang)\n`;
+            wa += `  Total => *${formatNum(it.total)}*\n`;
           } else {
-            wa += `• *${it.part}* => *${formatNum(it.total)}*${noteHeader}${statusIcon}\n`;
+            const noteSuffix = it.note ? ` (${it.note})` : "";
+            wa += `• ${it.part} => *${formatNum(it.total)}*${noteSuffix}\n`;
           }
         });
         wa += `\n`;
       });
 
-      wa += `━━━━━━━━━━━━━━━━━━━━\n`;
-      wa += `✅ _Generated by Smart WIP & SPA Calculator_`;
-      waBox.value = wa;
+      waBox.value = wa.trim();
     }
 
     /********************************************************************
-     * 7. MUAT DATA CONTOH PERSIS DARI LAPORAN USER (05 & 06 NOV 2026)
+     * 9. FITUR LANGSUNG SHARE KE WHATSAPP TANPA COPAS
      ********************************************************************/
-    function muatDataContohUser() {
-      wipList = [
-        // 8604 CV Wardah
-        { id: 101, group: "8604 CV Wardah", part: "Cover(004)", note: "", qty: 72420 },
-        { id: 102, group: "8604 CV Wardah", part: "Rod(006)", note: "", qty: 36532 },
-        { id: 103, group: "8604 CV Wardah", part: "Wiper(040)", note: "", qty: 82621 },
-        { id: 104, group: "8604 CV Wardah", part: "Aplikator(0013)", note: "", qty: 59583 },
-        // 8604 OMG
-        { id: 105, group: "8604 OMG", part: "Base(002)", note: "", qty: 4508 },
-        { id: 106, group: "8604 OMG", part: "Inbs(003)", note: "", qty: 2810 },
-        { id: 107, group: "8604 OMG", part: "Inbs(003)", note: "cvty 12,13,16", qty: 0 },
-        { id: 108, group: "8604 OMG", part: "Inbs(003)", note: "cvty 1,2,3,4,5...10,11,14,15", qty: 277 },
-        { id: 109, group: "8604 OMG", part: "Inbs(003)", note: "cvty 8", qty: 8791 },
-        // 8603 OMG
-        { id: 110, group: "8603 OMG", part: "Base(002)", note: "", qty: 4059 },
-        { id: 111, group: "8603 OMG", part: "Base(011)", note: "", qty: 3145 },
-        { id: 112, group: "8603 OMG", part: "Base(013)", note: "", qty: 68072 },
-        { id: 113, group: "8603 OMG", part: "Inbs(004)", note: "", qty: 7845 },
-        { id: 114, group: "8603 OMG", part: "Inbs(009)", note: "", qty: 74770 },
-        { id: 115, group: "8603 OMG", part: "Inbs(024)", note: "", qty: 91325 },
-        { id: 116, group: "8603 OMG", part: "Inbs(034)", note: "", qty: 6143 },
-        // 4022 caramel
-        { id: 117, group: "4022 caramel", part: "Cover(040)", note: "", qty: 6244 },
-        { id: 118, group: "4022 caramel", part: "Hish(0014)", note: "", qty: 9104 },
-        { id: 119, group: "4022 caramel", part: "Base(042)", note: "", qty: 3928 },
-        { id: 120, group: "4022 caramel", part: "Inbs(074)", note: "", qty: 4533 },
-        // 1E02 pasang magnet
-        { id: 121, group: "1E02 pasang magnet", part: "Incv(001)", note: "", qty: 3456 },
-        { id: 122, group: "1E02 pasang magnet", part: "Inbs(002)", note: "", qty: 7984 },
-        { id: 123, group: "1E02 pasang magnet", part: "STEL ring(071)", note: "", qty: 5388 },
-        { id: 124, group: "1E02 pasang magnet", part: "Magnet(0026)", note: "", qty: 6480 },
-        // 1E03 Nars
-        { id: 125, group: "1E03 Nars", part: "Metal base(0203)", note: "", qty: 1376 },
-        { id: 126, group: "1E03 Nars", part: "Adapter(002)", note: "", qty: 17640 },
-        { id: 127, group: "1E03 Nars", part: "Magnet(014)", note: "", qty: 24045 },
-        { id: 128, group: "1E03 Nars", part: "Pemberat(083)", note: "", qty: 4684 },
-        { id: 129, group: "1E03 Nars", part: "Mech(023)", note: "ss", qty: 6325 },
-        { id: 130, group: "1E03 Nars", part: "Inbs modif+adapter+pemberat+magnet", note: "", qty: 1107 }
-      ];
-
-      spaList = [
-        // 1) 8603 OMG
-        { id: 201, group: "8603 OMG", lineInfo: "6 line / 3 shift", baseTarget: 118800, targetBuffer: 124740, part: "Base(002)", note: "", assy: 4059, gudang: 342920, total: 346979 },
-        { id: 202, group: "8603 OMG", lineInfo: "6 line / 3 shift", baseTarget: 118800, targetBuffer: 124740, part: "Base(011)", note: "", assy: 3145, gudang: 301607, total: 304752 },
-        { id: 203, group: "8603 OMG", lineInfo: "6 line / 3 shift", baseTarget: 118800, targetBuffer: 124740, part: "Inbs(004)", note: "", assy: 126910, gudang: 0, total: 126910 },
-        { id: 204, group: "8603 OMG", lineInfo: "6 line / 3 shift", baseTarget: 118800, targetBuffer: 124740, part: "Inbs(004)", note: "Ng hold (tinggi total over)", assy: 0, gudang: 42510, total: 42510 },
-        { id: 205, group: "8603 OMG", lineInfo: "6 line / 3 shift", baseTarget: 118800, targetBuffer: 124740, part: "Inbs(009)", note: "", assy: 10917, gudang: 64090, total: 75007 },
-        { id: 206, group: "8603 OMG", lineInfo: "6 line / 3 shift", baseTarget: 118800, targetBuffer: 124740, part: "Inbs(034)", note: "JN200", assy: 6143, gudang: 134485, total: 140628 },
-        { id: 207, group: "8603 OMG", lineInfo: "6 line / 3 shift", baseTarget: 118800, targetBuffer: 124740, part: "Base(013)", note: "mold 3", assy: 150874, gudang: 118267, total: 269141 },
-        { id: 208, group: "8603 OMG", lineInfo: "6 line / 3 shift", baseTarget: 118800, targetBuffer: 124740, part: "Inbs(024)", note: "mold 3", assy: 91325, gudang: 174895, total: 266220 },
-        // 2) 8604 Wardah
-        { id: 209, group: "8604 Wardah", lineInfo: "2 line / 2 shift", baseTarget: 45100, targetBuffer: 47355, part: "Base(002)", note: "", assy: 55919, gudang: 102069, total: 157988 },
-        { id: 210, group: "8604 Wardah", lineInfo: "2 line / 2 shift", baseTarget: 45100, targetBuffer: 47355, part: "Inbs(003)", note: "", assy: 59165, gudang: 321181, total: 380346 },
-        { id: 211, group: "8604 Wardah", lineInfo: "2 line / 2 shift", baseTarget: 45100, targetBuffer: 47355, part: "Inbs(003)", note: "Ng hold gate panjang (CV 1-5,10,11,14,15: 277 | CV 8)", assy: 9068, gudang: 48776, total: 57844 },
-        // 3) 4022 CV caramel
-        { id: 212, group: "4022 CV caramel", lineInfo: "1 line", baseTarget: 10800, targetBuffer: 11340, part: "Cover(040)", note: "", assy: 13588, gudang: 0, total: 13588 },
-        { id: 213, group: "4022 CV caramel", lineInfo: "1 line", baseTarget: 10800, targetBuffer: 11340, part: "Hish(0014)", note: "", assy: 13904, gudang: 0, total: 13904 },
-        // 4) 4022 base caramel
-        { id: 214, group: "4022 base caramel", lineInfo: "1 line", baseTarget: 7200, targetBuffer: 7560, part: "Base(042)", note: "tunggu barang dari Beta", assy: 1116, gudang: 0, total: 1116 },
-        { id: 215, group: "4022 base caramel", lineInfo: "1 line", baseTarget: 7200, targetBuffer: 7560, part: "Inbs(074)", note: "tunggu barang dari Beta", assy: 1756, gudang: 0, total: 1756 },
-        // 5) 1E02 pasang magnet
-        { id: 216, group: "1E02 pasang magnet", lineInfo: "", baseTarget: 0, targetBuffer: 0, part: "Incv(001)", note: "", assy: 3758, gudang: 0, total: 3758 },
-        { id: 217, group: "1E02 pasang magnet", lineInfo: "", baseTarget: 0, targetBuffer: 0, part: "Ring(071)", note: "", assy: 3444, gudang: 0, total: 3444 },
-        { id: 218, group: "1E02 pasang magnet", lineInfo: "", baseTarget: 0, targetBuffer: 0, part: "Inbs(002)", note: "", assy: 7984, gudang: 0, total: 7984 },
-        { id: 219, group: "1E02 pasang magnet", lineInfo: "", baseTarget: 0, targetBuffer: 0, part: "Magnet(0026)", note: "", assy: 6480, gudang: 0, total: 6480 }
-      ];
-
-      localStorage.setItem("assy_wip_list_v1", JSON.stringify(wipList));
-      localStorage.setItem("assy_spa_list_v1", JSON.stringify(spaList));
-      renderWipAll();
-      renderSpaAll();
-      alert("Data contoh tanggal 05 & 06 November 2026 berhasil dimuat!");
+    function kirimLangsungWA(elementId) {
+      const text = document.getElementById(elementId).value.trim();
+      if (!text) {
+        alert("Laporan masih kosong.");
+        return;
+      }
+      const waUrl = "https://api.whatsapp.com/send?text=" + encodeURIComponent(text);
+      window.open(waUrl, "_blank");
     }
 
-    /********************************************************************
-     * 8. SALIN TEKS WA & PENGATURAN KATALOG MASTER
-     ********************************************************************/
     function copyWaText(elementId) {
       const el = document.getElementById(elementId);
       el.select();
       navigator.clipboard.writeText(el.value).then(() => {
-        alert("✅ Laporan WhatsApp berhasil disalin! Siap ditempel (Paste) ke grup WA.");
+        alert("✅ Teks laporan berhasil disalin!");
       });
     }
 
+    /********************************************************************
+     * 10. PENGATURAN MASTER KATALOG (BLOKIR DUPLIKAT & SYNC FIREBASE)
+     ********************************************************************/
     function toggleModal(id, show) {
       document.getElementById(id).style.display = show ? "flex" : "none";
-      if (show) renderMasterModalList();
+      if (show && id === "masterModal") renderMasterModalList();
     }
 
     function renderMasterModalList() {
@@ -1430,7 +2534,7 @@
       box.innerHTML = catalog
         .map(
           (c, i) => `
-          <div style="display:flex; justify-content:space-between; padding:6px 4px; border-bottom:1px solid #f1f5f9;">
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 4px; border-bottom:1px solid #f1f5f9;">
             <span><b>${c.group}</b> &mdash; ${c.part}</span>
             <button class="btn btn-danger" onclick="hapusKatalog(${i})">Hapus</button>
           </div>`
@@ -1441,24 +2545,29 @@
     function tambahKatalogManual() {
       const g = document.getElementById("newCatGroup").value.trim();
       const p = document.getElementById("newCatPart").value.trim();
-      if (!g || !p) return;
+      if (!g || !p) {
+        alert("Mohon isi Nama Produk dan Part terlebih dahulu.");
+        return;
+      }
+
+      if (isCatalogDuplicate(g, p)) {
+        alert(`⚠️ TIDAK DAPAT DISIMPAN (DUPLIKAT):\nProduk "${g}" dengan Part "${p}" sudah terdaftar di dalam Master Katalog!`);
+        return;
+      }
+
       catalog.push({ group: g, part: p, keywords: `${g} ${p}`.toLowerCase() });
-      localStorage.setItem("assy_catalog_v1", JSON.stringify(catalog));
+      localStorage.setItem("assy_catalog_v3", JSON.stringify(catalog));
       document.getElementById("newCatGroup").value = "";
       document.getElementById("newCatPart").value = "";
       renderMasterModalList();
-      renderProductChips();
-      renderSmartSearchList();
-      renderSpaSearchList();
+      simpanMasterKeFirebase();
     }
 
     function hapusKatalog(idx) {
       catalog.splice(idx, 1);
-      localStorage.setItem("assy_catalog_v1", JSON.stringify(catalog));
+      localStorage.setItem("assy_catalog_v3", JSON.stringify(catalog));
       renderMasterModalList();
-      renderProductChips();
-      renderSmartSearchList();
-      renderSpaSearchList();
+      simpanMasterKeFirebase();
     }
 
     function uploadMasterExcel(event) {
@@ -1470,38 +2579,51 @@
         const wb = XLSX.read(data, { type: "array" });
         const ws = wb.Sheets[wb.SheetNames[0]];
         const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "" });
-        let count = 0;
+        let addedCount = 0;
+        let skippedDupCount = 0;
+
         rows.forEach((r, idx) => {
           if (idx === 0 && String(r[0]).toLowerCase().includes("produk")) return;
           const g = String(r[0] || "").trim();
           const p = String(r[1] || "").trim();
           if (g && p) {
-            catalog.push({ group: g, part: p, keywords: `${g} ${p}`.toLowerCase() });
-            count++;
+            if (isCatalogDuplicate(g, p)) {
+              skippedDupCount++;
+            } else {
+              catalog.push({ group: g, part: p, keywords: `${g} ${p}`.toLowerCase() });
+              addedCount++;
+            }
           }
         });
-        localStorage.setItem("assy_catalog_v1", JSON.stringify(catalog));
+
+        localStorage.setItem("assy_catalog_v3", JSON.stringify(catalog));
         renderMasterModalList();
-        renderProductChips();
-        renderSmartSearchList();
-        renderSpaSearchList();
-        alert(`Berhasil menambahkan ${count} item ke Master Katalog!`);
+        simpanMasterKeFirebase();
+        alert(`Upload Selesai & Disinkronkan ke Firebase!\n• Berhasil ditambah: ${addedCount} item baru\n• Ditolak karena duplikat: ${skippedDupCount} item`);
+        event.target.value = "";
       };
       reader.readAsArrayBuffer(file);
     }
 
-    // Inisialisasi awal saat aplikasi dibuka
     window.addEventListener("DOMContentLoaded", () => {
-      document.getElementById("masterCount").textContent = catalog.length;
-      renderProductChips();
-      renderSmartSearchList();
-      renderSpaSearchList();
-      if (wipList.length === 0 && spaList.length === 0) {
-        muatDataContohUser();
-      } else {
-        renderWipAll();
-        renderSpaAll();
+      if (!localStorage.getItem("assy_firebase_project_id")) {
+        localStorage.setItem("assy_firebase_project_id", DEFAULT_FIREBASE_PROJECT_ID);
       }
+
+      const todayIso = new Date().toISOString().slice(0, 10);
+      document.getElementById("wipDate").value = todayIso;
+      document.getElementById("spaDate").value = todayIso;
+
+      document.getElementById("masterCount").textContent = catalog.length;
+      updateCloudCounterUI();
+
+      wipList = [];
+      spaList = [];
+      renderWipAll();
+      renderSpaAll();
+
+      sinkronTarikDariFirebase(false);
+      tarikMasterDariFirebase();
     });
   </script>
 </body>
