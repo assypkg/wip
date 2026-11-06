@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>SMART WIP SCANNER - V8</title>
+  <title>SMART WIP SCANNER - V8.3</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -89,7 +89,7 @@
     <div class="header-top">
       <div>
         <div class="app-title">SMART WIP SCANNER</div>
-        <div class="app-subtitle">V8 &bull; Verifikasi Kode & Qty</div>
+        <div class="app-subtitle">V8.3 &bull; Retry Otomatis + Fallback Gemini</div>
       </div>
       <button class="btn-settings" onclick="toggleModal('settingsModal', true)">
         📂 Master WIP (<span id="masterCountHeader">0</span>) & API
@@ -301,62 +301,173 @@
       }; reader.readAsDataURL(file);
     }
 
+    // V8.3: retry transient server errors, then try documented stable fallback models.
+    const GEMINI_MODELS_V83 = ["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash"];
+
+    function waitMs(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    async function requestGeminiWithFallback(apiKey, base64Content, prompt, statusEl, isSilentAuto) {
+      let lastError = null;
+
+      for (let modelIndex = 0; modelIndex < GEMINI_MODELS_V83.length; modelIndex++) {
+        const model = GEMINI_MODELS_V83[modelIndex];
+        const maxAttempts = 2;
+
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+          try {
+            if (!isSilentAuto && statusEl) {
+              statusEl.className = "scan-status loading";
+              statusEl.textContent = modelIndex === 0
+                ? `⏳ Menghubungi ${model} (percobaan ${attempt}/${maxAttempts})...`
+                : `⏳ Model utama sibuk. Mencoba model cadangan ${model}...`;
+            }
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 45000);
+            let response;
+
+            try {
+              response = await fetch(
+                `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`,
+                {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  signal: controller.signal,
+                  body: JSON.stringify({
+                    contents: [{
+                      parts: [
+                        { text: prompt },
+                        { inline_data: { mime_type: "image/jpeg", data: base64Content } }
+                      ]
+                    }],
+                    generationConfig: {
+                      responseMimeType: "application/json"
+                    }
+                  })
+                }
+              );
+            } finally {
+              clearTimeout(timeoutId);
+            }
+
+            if (response.ok) {
+              const result = await response.json();
+              return { result, model };
+            }
+
+            const errorText = await response.text();
+            const error = new Error(`Gemini HTTP ${response.status}: ${errorText.slice(0, 1200)}`);
+            error.status = response.status;
+            error.retryAfter = response.headers.get("Retry-After");
+            lastError = error;
+
+            // Quota/rate-limit and credential/configuration errors should not be retried
+            // against other models because they usually apply to the whole API project/key.
+            if ([400, 401, 403, 429].includes(response.status)) {
+              if (response.status === 429) {
+                const waitHint = error.retryAfter ? ` Coba lagi setelah ${error.retryAfter} detik.` : " Periksa kuota dan batas penggunaan API.";
+                throw new Error(`Gemini HTTP 429: Batas penggunaan/kuota tercapai.${waitHint} Detail: ${errorText.slice(0, 700)}`);
+              }
+              throw error;
+            }
+
+            // 404 means this model may not be available to this API project; try next model.
+            if (response.status === 404) break;
+
+            // Retry temporary server-side errors (including HTTP 503).
+            if (response.status >= 500 && response.status <= 599) {
+              if (attempt < maxAttempts) {
+                await waitMs(1200 * attempt);
+                continue;
+              }
+              break;
+            }
+
+            throw error;
+          } catch (err) {
+            lastError = err;
+            if (err.name === "AbortError") {
+              lastError = new Error(`Permintaan ke ${model} melewati batas waktu 45 detik.`);
+              if (attempt < maxAttempts) {
+                await waitMs(1200 * attempt);
+                continue;
+              }
+              break;
+            }
+
+            if ([400, 401, 403, 429].includes(err.status)) throw err;
+
+            // Network errors have no HTTP status; retry once before falling back.
+            if (typeof err.status === "undefined" || err.status === 0) {
+              if (attempt < maxAttempts) {
+                await waitMs(1200 * attempt);
+                continue;
+              }
+              break;
+            }
+
+            // A 404 or exhausted 5xx moves to the next fallback model.
+            if (err.status === 404 || (err.status >= 500 && err.status <= 599)) break;
+            throw err;
+          }
+        }
+      }
+
+      throw new Error(
+        `Semua model Gemini gagal dihubungi. Sistem sudah mencoba ${GEMINI_MODELS_V83.join(", ")} dengan retry otomatis. ` +
+        `Coba beberapa saat lagi. Detail terakhir: ${lastError ? lastError.message : "Tidak ada respons dari server."}`
+      );
+    }
+
     async function processBonImageDataUrl(base64DataUrl, isSilentAuto) {
       if (isScanningNow) return; isScanningNow = true;
       const statusEl = document.getElementById("scanStatus"); const hudText = document.getElementById("hudStatusText");
       const apiKey = localStorage.getItem("wip_gemini_api_key") || "";
 
       hudText.textContent = "⏳ Membaca teks...";
-      if (!isSilentAuto) { statusEl.className = "scan-status loading"; statusEl.innerHTML = "⏳ <b>Sedang memindai gambar...</b> Mohon tunggu sebentar."; }
+      if (!isSilentAuto) { statusEl.className = "scan-status loading"; statusEl.innerHTML = "⏳ <b>Menyiapkan pemindaian...</b> Mohon tunggu sebentar."; }
 
       try {
         if (apiKey) {
           const base64Content = base64DataUrl.split(",")[1];
           const prompt = `Baca foto BON PRODUKSI PT KEMAS INDAH MAJU. Fokus hanya pada dua kotak tabel: (1) baris KODE di kiri atas, (2) kolom JUMLAH/QTY di kanan. Jangan ambil angka dari Job Order, Nomor Lot, No Box, cap QC, atau keterangan. Kode item memiliki format WI-C diikuti 4 digit, tanda hubung, lalu 3 digit, contoh WI-C8603-013. Tulisan tangan mungkin memakai titik atau spasi sebagai pemisah. JANGAN menebak digit yang tidak jelas. Jika ambigu kembalikan string kosong untuk field itu. Quantity harus jumlah pcs dari kolom JUMLAH/QTY, bukan No Box. Kembalikan JSON murni: {"kode":"WI-C8603-013","qty":"832","nama":"","lot":""}. Nama dan lot boleh kosong.`;
-          
-          const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`, {
-            method: "POST", headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              contents: [{ parts: [{ text: prompt }, { inline_data: { mime_type: "image/jpeg", data: base64Content } }] }],
-              generationConfig: {
-                responseMimeType: "application/json"
-              }
-            })
-          });
 
-          if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`Gemini HTTP ${response.status}: ${errorText.slice(0, 1200)}`);
-          }
+          const responseData = await requestGeminiWithFallback(apiKey, base64Content, prompt, statusEl, isSilentAuto);
+          const result = responseData.result;
+          const usedModel = responseData.model;
+          const parts = result.candidates?.[0]?.content?.parts || [];
+          let rawJson = parts.map(part => part.text || "").join("").trim();
 
-          const result = await response.json();
-          let rawJson = result.candidates?.[0]?.content?.parts?.[0]?.text || "{}";
-          
           const jsonMatch = rawJson.match(/\{[\s\S]*\}/);
-          if (jsonMatch) {
-            rawJson = jsonMatch[0];
-          } else {
-            rawJson = "{}";
+          rawJson = jsonMatch ? jsonMatch[0] : "{}";
+
+          if (rawJson === "{}" && result.promptFeedback?.blockReason) {
+            throw new Error(`Gambar ditolak oleh filter Gemini: ${result.promptFeedback.blockReason}. Coba foto ulang dengan bon terlihat jelas.`);
           }
-          
+
           const parsed = JSON.parse(rawJson);
-          
+
           if (parsed.kode || parsed.qty) {
             terapkanHasilScanMurni(parsed);
+            if (!isSilentAuto) {
+              statusEl.textContent += ` Model AI: ${usedModel}.`;
+            }
           } else if (!isSilentAuto) {
             statusEl.className = "scan-status error";
-            statusEl.innerHTML = "⚠️ Bon tidak terbaca. Pastikan pencahayaan cukup dan tulisan Kode & Qty terlihat jelas.";
+            statusEl.textContent = "⚠️ Bon tidak terbaca. Pastikan pencahayaan cukup dan tulisan Kode & Qty terlihat jelas.";
           }
         } else {
           if (!isSilentAuto) {
             statusEl.className = "scan-status error";
-            statusEl.innerHTML = "⚠️ Gemini API Key belum diisi di menu Pengaturan pojok kanan atas.";
+            statusEl.textContent = "⚠️ Gemini API Key belum diisi di menu Pengaturan pojok kanan atas.";
           }
         }
       } catch (err) {
         if (!isSilentAuto) {
           statusEl.className = "scan-status error";
-          statusEl.innerHTML = `⚠️ Error: ${err.message}`;
+          statusEl.textContent = `⚠️ ${err.message}`;
         }
       } finally {
         isScanningNow = false; hudText.textContent = "Siap scan";
