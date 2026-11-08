@@ -2971,12 +2971,16 @@
       let pageToken = "";
       for (let page = 0; page < 20; page++) {
         const url = new URL(`${getFirestoreBaseUrl()}/${COLLECTION_WIP_AUDIT}`);
+        // Firestore REST API menolak parameter cache-buster tidak resmi seperti _t.
         url.searchParams.set("pageSize", "100");
-        url.searchParams.set("_t", String(Date.now()));
         if (pageToken) url.searchParams.set("pageToken", pageToken);
         const res = await fetch(url.toString(), { cache: "no-store" });
         if (res.status === 404) return docs;
-        if (!res.ok) throw new Error(`Gagal membaca Cloud WIP (HTTP ${res.status})`);
+        if (!res.ok) {
+          let detail = "";
+          try { const data = await res.json(); detail = data.error?.message || ""; } catch (e) {}
+          throw new Error(`Gagal membaca Cloud WIP (HTTP ${res.status})${detail ? ": " + detail : ""}`);
+        }
         const data = await res.json();
         docs.push(...(data.documents || []));
         pageToken = data.nextPageToken || "";
@@ -3022,7 +3026,8 @@
         try { const data = await res.json(); detail = data.error?.message || ""; } catch (e) {}
         throw new Error(`Firestore PATCH gagal (HTTP ${res.status})${detail ? ": " + detail : ""}`);
       }
-      const verify = await fetch(`${getFirestoreBaseUrl()}/${COLLECTION_WIP_AUDIT}/${encodeURIComponent(docId)}?_t=${Date.now()}`, { cache: "no-store" });
+      // GET dokumen juga tidak boleh memakai query parameter _t yang tidak didukung Firestore.
+      const verify = await fetch(`${getFirestoreBaseUrl()}/${COLLECTION_WIP_AUDIT}/${encodeURIComponent(docId)}`, { cache: "no-store" });
       if (!verify.ok) throw new Error("Data tersimpan tetapi verifikasi baca ulang Cloud gagal.");
       const saved = await verify.json();
       const fields = saved.fields || {};
