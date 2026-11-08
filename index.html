@@ -2180,7 +2180,9 @@
 
     function wipRecordKey(record) {
       const norm = value => String(value || "").trim().toLowerCase().replace(/\\s+/g, " ");
-      return [norm(record?.isoDate), norm(record?.shift), norm(record?.plant)].join("|");
+      const parts = [norm(record?.isoDate), norm(record?.shift), norm(record?.plant)];
+      if (parts.some(part => !part)) return `legacy|${record?.recordId || record?.docId || "unknown"}`;
+      return parts.join("|");
     }
 
     function wipStableDocumentId(isoDate, shift, plant) {
