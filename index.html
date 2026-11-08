@@ -1286,8 +1286,12 @@
           <button class="btn btn-outline" style="flex:1;" onclick="copyWaText('waPreviewFg')">
             📋 Salin Teks
           </button>
+          <button class="btn btn-edit" onclick="buatUlangWaFg()">↻ Format Otomatis</button>
         </div>
-        <textarea id="waPreviewFg" class="wa-preview" readonly></textarea>
+        <p style="font-size:0.73rem; color:var(--text-muted); margin:-3px 0 8px;">
+          Laporan Finish Good dapat diedit langsung. Perubahan manual dipertahankan saat daftar FG atau WIP diperbarui. Gunakan Format Otomatis untuk menyusun ulang.
+        </p>
+        <textarea id="waPreviewFg" class="wa-preview" oninput="waFgManuallyEdited=true; simpanDraftLokal();" placeholder="Laporan Finish Good akan tampil di sini dan dapat diedit..."></textarea>
       </div>
     </section>
   </main>
@@ -1810,6 +1814,7 @@
     let editingCatalogIndex = null;
     let waWipManuallyEdited = false;
     let waSpaManuallyEdited = false;
+    let waFgManuallyEdited = false;
 
     let currentSpaAssyBoxes = [];
     let currentSpaGudangBoxes = [];
@@ -2034,6 +2039,8 @@
             fgBoxA: document.getElementById("fgBoxA")?.value || "",
             fgBoxB: document.getElementById("fgBoxB")?.value || "",
             mergeWipToggle: document.getElementById("mergeWipToggle")?.checked ?? true,
+            waPreviewFg: document.getElementById("waPreviewFg")?.value || "",
+            waFgManuallyEdited,
 
             spaDate: document.getElementById("spaDate")?.value || "",
             spaPlant: document.getElementById("spaPlant")?.value || "plant alpha",
@@ -2095,6 +2102,8 @@
         if (f.fgBoxA !== undefined) document.getElementById("fgBoxA").value = f.fgBoxA;
         if (f.fgBoxB !== undefined) document.getElementById("fgBoxB").value = f.fgBoxB;
         if (f.mergeWipToggle !== undefined) document.getElementById("mergeWipToggle").checked = f.mergeWipToggle;
+        if (f.waFgManuallyEdited !== undefined) waFgManuallyEdited = !!f.waFgManuallyEdited;
+        if (f.waPreviewFg !== undefined) document.getElementById("waPreviewFg").value = f.waPreviewFg;
 
         if (f.spaDate) document.getElementById("spaDate").value = f.spaDate;
         if (f.spaPlant) document.getElementById("spaPlant").value = f.spaPlant;
@@ -2710,7 +2719,7 @@
 
     function resetSemuaDataFg() {
       if (!confirm("RESET ALL DATA FINISH GOOD?\n\nSemua daftar FG, input operator/hasil box, dan laporan WhatsApp FG akan dikosongkan. Data WIP, Master Katalog, riwayat Cloud, dan data SPA TIDAK dihapus.")) return;
-      editingFgId = null; fgList = [];
+      editingFgId = null; fgList = []; waFgManuallyEdited = false;
       ["fgLeader", "fgProductJo", "fgNote", "fgBoxA", "fgBoxB"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
       document.getElementById("fgEditBanner").style.display = "none";
       document.getElementById("fgInputCard").classList.remove("editing-mode");
@@ -2846,7 +2855,13 @@
       }
 
       wa += `Terima kasih`;
-      waBox.value = wa.trim();
+      if (!waFgManuallyEdited) waBox.value = wa.trim();
+    }
+
+    function buatUlangWaFg() {
+      waFgManuallyEdited = false;
+      renderFgAll();
+      simpanDraftLokal();
     }
 
     /********************************************************************
