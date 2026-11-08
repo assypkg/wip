@@ -3217,6 +3217,10 @@
         return false;
       } finally {
         masterSyncBusy = false;
+        if (masterSyncQueued && masterSyncReady && !masterSyncConflict) {
+          masterSyncQueued = false;
+          setTimeout(() => simpanMasterKeFirebase(), 0);
+        }
       }
     }
 
@@ -4023,8 +4027,8 @@
       renderMasterModalList();
       simpanMasterKeFirebase();
       alert(isEdit
-        ? `Master berhasil diperbarui:\n${g} — ${p}`
-        : `Kode baru berhasil ditambahkan ke Master:\n${g} — ${p}`);
+        ? `Perubahan master tersimpan di perangkat:\n${g} — ${p}\n\nPeriksa status Cloud pada bagian atas Master Katalog untuk memastikan sinkronisasi berhasil.`
+        : `Kode baru tersimpan di perangkat:\n${g} — ${p}\n\nPeriksa status Cloud pada bagian atas Master Katalog untuk memastikan sinkronisasi berhasil.`);
     }
 
     function hapusKatalog(idx) {
@@ -4036,7 +4040,7 @@
       document.getElementById("masterCount").textContent = catalog.length;
       renderMasterModalList();
       simpanMasterKeFirebase();
-      if (removed) alert(`Master dihapus:\n${removed.group} — ${removed.part}`);
+      if (removed) alert(`Master dihapus dari perangkat:\n${removed.group} — ${removed.part}\n\nPeriksa status Cloud untuk memastikan perubahan sudah tersinkron.`);
     }
 
     function uploadMasterExcel(event) {
@@ -4068,7 +4072,7 @@
         localStorage.setItem("assy_catalog_v3", JSON.stringify(catalog));
         renderMasterModalList();
         simpanMasterKeFirebase();
-        alert(`Upload Selesai!\n• Berhasil ditambah: ${addedCount} item baru\n• Ditolak karena duplikat: ${skippedDupCount} item`);
+        alert(`Upload selesai di perangkat!\n• Ditambahkan: ${addedCount} item baru\n• Ditolak karena duplikat: ${skippedDupCount} item\n\nPeriksa status Cloud untuk memastikan seluruh perubahan sudah tersinkron.`);
         event.target.value = "";
       };
       reader.readAsArrayBuffer(file);
