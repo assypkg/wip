@@ -639,14 +639,30 @@
       font-size: 0.72rem;
     }
 
-    /* TOOLBAR CLOUD DI ATAS DAFTAR WIP */
+    /* TOOLBAR WIP: GRID RAPI DAN KONSISTEN */
     .wip-action-toolbar {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
       margin-bottom: 12px;
-      padding-bottom: 10px;
-      border-bottom: 1px solid #f1f5f9;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e8edf3;
+    }
+    .wip-action-toolbar .btn {
+      width: 100%; min-height: 46px; padding: 10px 8px;
+      line-height: 1.25; white-space: normal; text-align: center; font-size: 0.76rem;
+    }
+    .sheet-reset-btn {
+      flex: 0 0 auto; min-height: 36px; padding: 8px 11px;
+      border: 1px solid #ffc4c9; border-radius: 8px;
+      background: #fff0f1; color: #b42332; font-size: 0.72rem;
+      font-weight: 800; white-space: nowrap;
+    }
+    .sheet-reset-btn:active { transform: scale(0.98); }
+    @media (max-width: 420px) {
+      .wip-action-toolbar { gap: 7px; }
+      .wip-action-toolbar .btn { min-height: 48px; font-size: 0.70rem; padding: 8px 5px; }
+      .sheet-reset-btn { font-size: 0.66rem; padding: 7px 8px; }
     }
 
     /* GROUPED REPORT DISPLAY & RINCIAN BOX */
@@ -874,7 +890,10 @@
       <div class="card" id="wipInputCard">
         <div class="card-header">
           <span class="card-title" id="wipFormTitle">1. Input Sisa Barang Bagus (WIP)</span>
-          <span style="font-size:0.71rem; font-weight:700; color:var(--emerald);">🔒 Auto-Save Draft Aktif</span>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:0.71rem; font-weight:700; color:var(--emerald);">🔒 Auto-Save Draft Aktif</span>
+            <button type="button" class="sheet-reset-btn" onclick="resetSemuaDataWip()">🗑️ Reset All WIP</button>
+          </div>
         </div>
 
         <!-- BANNER SAAT MODE EDIT AKTIF -->
@@ -1037,15 +1056,8 @@
           <button class="btn btn-sky-outline" onclick="bukaModalCloud()">
             📥 Tarik Cloud
           </button>
-          <button class="btn btn-emerald" style="width:auto; padding:9px 12px; font-size:0.75rem;" onclick="switchMode('fg')">
-            🏆 Gabung ke Finish Good
-          </button>
-          <button class="btn btn-purple" onclick="tarikWipKeSpa()">
-            🔄 Tarik ke SPA
-          </button>
-          <button class="btn btn-danger" onclick="hapusSemuaWip()">
-            🗑️ Reset
-          </button>
+          <button class="btn btn-emerald" onclick="switchMode('fg')">🏆 Gabung ke Finish Good</button>
+          <button class="btn btn-purple" onclick="tarikWipKeSpa()">🔄 Tarik ke SPA</button>
         </div>
 
         <div id="cloudStatusBanner" style="display:none; margin-bottom:10px; padding:9px 11px; border-radius:8px; font-size:0.75rem; font-weight:700; line-height:1.45;"></div>
@@ -1084,9 +1096,10 @@
       <div class="card" id="fgInputCard">
         <div class="card-header">
           <span class="card-title" id="fgFormTitle">1. Input Hasil Produksi (Finish Good)</span>
-          <button type="button" class="btn btn-outline" style="padding:5px 10px; font-size:0.7rem;" onclick="copySpekFgTerakhir()">
-            ⚡ Samakan Spek Terakhir
-          </button>
+          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; justify-content:flex-end;">
+            <button type="button" class="btn btn-outline" style="padding:7px 9px; font-size:0.68rem;" onclick="copySpekFgTerakhir()">⚡ Samakan Spek</button>
+            <button type="button" class="sheet-reset-btn" onclick="resetSemuaDataFg()">🗑️ Reset All FG</button>
+          </div>
         </div>
 
         <!-- BANNER SAAT MODE EDIT FG AKTIF -->
@@ -1269,7 +1282,10 @@
       <div class="card" id="spaInputCard">
         <div class="card-header">
           <span class="card-title" id="spaFormTitle">1. Input SPA & Ketersediaan</span>
-          <button class="btn btn-outline" onclick="tarikWipKeSpa()">📥 Ambil Stok Assy dari WIP</button>
+          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; justify-content:flex-end;">
+            <button class="btn btn-outline" style="padding:7px 9px; font-size:0.68rem;" onclick="tarikWipKeSpa()">📥 Ambil Stok WIP</button>
+            <button type="button" class="sheet-reset-btn" onclick="resetSemuaDataSpa()">🗑️ Reset All SPA</button>
+          </div>
         </div>
 
         <div id="spaEditBanner" class="edit-banner">
@@ -2457,12 +2473,20 @@
     function hapusSemuaWip() {
       if (wipList.length === 0 && currentBoxes.length === 0) return;
       if (confirm("Kosongkan semua daftar Sisa Barang Bagus di layar saat ini?")) {
-        batalEditWip();
-        wipList = [];
-        renderWipAll();
-        renderFgAll();
-        simpanDraftLokal();
+        batalEditWip(); wipList = []; renderWipAll(); renderFgAll(); simpanDraftLokal();
       }
+    }
+
+    function resetSemuaDataWip() {
+      if (!confirm("RESET ALL DATA WIP?\n\nSemua daftar WIP, rincian box, input yang belum disimpan, dan laporan WhatsApp WIP akan dikosongkan. Master Katalog, riwayat Cloud, data Finish Good, dan data SPA TIDAK dihapus.")) return;
+      editingWipId = null; currentBoxes = []; wipList = []; waWipManuallyEdited = false;
+      ["selectedGroup", "selectedPart", "selectedNote", "calcBoxInput", "smartSearchInput"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+      document.getElementById("wipEditBanner").style.display = "none";
+      document.getElementById("wipInputCard").classList.remove("editing-mode");
+      document.getElementById("btnSubmitWip").textContent = "✅ SIMPAN KE DAFTAR WIP";
+      document.getElementById("btnSubmitWip").style.background = "var(--emerald)";
+      tutupModalEditWipVisual(); updateLiveFormulaPreview("wip"); renderCurrentBoxes();
+      renderWipAll(); renderFgAll(); simpanDraftLokal();
     }
 
     function formatRincianBoxHtml(boxes, fallbackQty) {
@@ -2650,11 +2674,19 @@
     function hapusSemuaFg() {
       if (fgList.length === 0) return;
       if (confirm("Kosongkan daftar Hasil Produksi Finish Good di layar saat ini?")) {
-        batalEditFg();
-        fgList = [];
-        renderFgAll();
-        simpanDraftLokal();
+        batalEditFg(); fgList = []; renderFgAll(); simpanDraftLokal();
       }
+    }
+
+    function resetSemuaDataFg() {
+      if (!confirm("RESET ALL DATA FINISH GOOD?\n\nSemua daftar FG, input operator/hasil box, dan laporan WhatsApp FG akan dikosongkan. Data WIP, Master Katalog, riwayat Cloud, dan data SPA TIDAK dihapus.")) return;
+      editingFgId = null; fgList = [];
+      ["fgLeader", "fgProductJo", "fgNote", "fgBoxA", "fgBoxB"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+      document.getElementById("fgEditBanner").style.display = "none";
+      document.getElementById("fgInputCard").classList.remove("editing-mode");
+      document.getElementById("btnSubmitFg").textContent = "✅ TAMBAHKAN KE LAPORAN FINISH GOOD";
+      document.getElementById("btnSubmitFg").style.background = "var(--emerald)";
+      hitungPreviewFg(); renderFgAll(); simpanDraftLokal();
     }
 
     function muatContohFg() {
@@ -3777,11 +3809,20 @@
     function hapusSemuaSpa() {
       if (spaList.length === 0) return;
       if (confirm("Kosongkan seluruh data SPA di layar saat ini?")) {
-        batalEditSpa();
-        spaList = [];
-        renderSpaAll();
-        simpanDraftLokal();
+        batalEditSpa(); spaList = []; renderSpaAll(); simpanDraftLokal();
       }
+    }
+
+    function resetSemuaDataSpa() {
+      if (!confirm("RESET ALL DATA SPA?\n\nSemua daftar SPA, rincian box Assy/Gudang, dan input yang belum disimpan akan dikosongkan. Data WIP, Finish Good, Master Katalog, dan riwayat Cloud TIDAK dihapus.")) return;
+      editingSpaId = null; spaList = []; currentSpaAssyBoxes = []; currentSpaGudangBoxes = [];
+      ["spaGroup", "spaLineInfo", "spaBaseTarget", "spaPart", "spaNote", "spaCalcAssyInput", "spaCalcGudangInput", "spaSearchInput"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+      document.getElementById("spaEditBanner").style.display = "none";
+      document.getElementById("spaInputCard").classList.remove("editing-mode");
+      document.getElementById("btnSubmitSpa").textContent = "➕ SIMPAN KE LAPORAN SPA";
+      document.getElementById("btnSubmitSpa").style.background = "var(--purple)";
+      hitungTargetSpaPreview(); updateLiveFormulaPreview("spa_assy"); updateLiveFormulaPreview("spa_gudang");
+      renderSpaCalcBoxes(); renderSpaAll(); simpanDraftLokal();
     }
 
     function renderSpaAll() {
