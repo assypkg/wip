@@ -4108,7 +4108,7 @@
         const baseTime=localStorage.getItem(MASTER_PRODUK_FG_UPDATE_KEY),baseRaw=localStorage.getItem(MASTER_PRODUK_FG_BASE_KEY),base=baseRaw?JSON.parse(baseRaw):null;
         const localChanged=base?JSON.stringify(normalisasiMasterProdukFg(masterProdukFg))!==JSON.stringify(normalisasiMasterProdukFg(base)):false;
         const normalized=normalisasiMasterProdukFg(remote);
-        if(!baseTime||!base){if(localChanged&&JSON.stringify(normalisasiMasterProdukFg(masterProdukFg))!==JSON.stringify(normalized))localStorage.setItem(MASTER_PRODUK_FG_BACKUP_KEY,JSON.stringify({savedAt:new Date().toISOString(),products:masterProdukFg}));masterProdukFg=normalized;}
+        if(!baseTime||!base){if((masterProdukFg.length>0||localChanged)&&JSON.stringify(normalisasiMasterProdukFg(masterProdukFg))!==JSON.stringify(normalized))localStorage.setItem(MASTER_PRODUK_FG_BACKUP_KEY,JSON.stringify({savedAt:new Date().toISOString(),products:masterProdukFg,reason:"Backup lokal sebelum mengikuti Master Produk Cloud"}));masterProdukFg=normalized;}
         else if(doc.updateTime!==baseTime){if(localChanged){masterProdukFgConflict=true;localStorage.setItem(MASTER_PRODUK_FG_BACKUP_KEY,JSON.stringify({savedAt:new Date().toISOString(),products:masterProdukFg}));setStatusMasterProdukFg("conflict","Lokal dan Cloud sama-sama berubah. Data lokal diamankan; tidak ada yang ditimpa.");return false;}masterProdukFg=normalized;}
         localStorage.setItem(MASTER_PRODUK_FG_BASE_KEY,JSON.stringify(normalized));localStorage.setItem(MASTER_PRODUK_FG_UPDATE_KEY,doc.updateTime||"");
         masterProdukFgReady=true;masterProdukFgConflict=false;simpanMasterProdukFgLokal();setStatusMasterProdukFg("success","Sinkron dan terverifikasi • "+masterProdukFg.length+" produk.");return true;
