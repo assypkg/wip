@@ -2178,18 +2178,30 @@
     }
     catalog = deduplicateCatalogList(catalog);
 
+    function wipRecordKey(record) {
+      const norm = value => String(value || "").trim().toLowerCase().replace(/\\s+/g, " ");
+      return [norm(record?.isoDate), norm(record?.shift), norm(record?.plant)].join("|");
+    }
+
+    function wipStableDocumentId(isoDate, shift, plant) {
+      const slug = value => String(value || "").trim().toUpperCase().replace(/[^A-Z0-9]+/g, "_").replace(/^_+|_+$/g, "");
+      return `WIP_${slug(isoDate)}_${slug(shift)}_${slug(plant)}`;
+    }
+
     function cleanAndDeduplicateCloudArchive(list) {
       const deletedSet = new Set(deletedCloudIds);
       const map = new Map();
-      list.forEach((item) => {
+      (Array.isArray(list) ? list : []).forEach(item => {
         if (!item || !item.recordId) return;
         if (deletedSet.has(item.recordId) || (item.docId && deletedSet.has(item.docId))) return;
-        if (!map.has(item.recordId)) {
-          map.set(item.recordId, item);
-        }
+        const key = wipRecordKey(item) || item.recordId;
+        const previous = map.get(key);
+        const currentTime = Date.parse(item.cloudUpdateTime || item.savedAt || "") || 0;
+        const previousTime = previous ? (Date.parse(previous.cloudUpdateTime || previous.savedAt || "") || 0) : -1;
+        if (!previous || currentTime >= previousTime) map.set(key, item);
       });
       const result = Array.from(map.values());
-      result.sort((a, b) => (b.recordId || "").localeCompare(a.recordId || ""));
+      result.sort((a, b) => (b.isoDate || "").localeCompare(a.isoDate || "") || (b.savedAt || "").localeCompare(a.savedAt || ""));
       return result;
     }
     cloudArchive = cleanAndDeduplicateCloudArchive(cloudArchive);
@@ -2934,6 +2946,7 @@
      ********************************************************************/
     function showCloudBanner(htmlText) {
       const banner = document.getElementById("cloudStatusBanner");
+      if (!banner) return;
       banner.style.display = "block";
       banner.style.background = "var(--emerald-bg)";
       banner.style.color = "var(--emerald)";
@@ -2941,28 +2954,83 @@
       banner.innerHTML = htmlText;
     }
 
-    async function pushSingleRecordToFirestore(snapshotRecord) {
-      const docId = snapshotRecord.docId || snapshotRecord.recordId;
+    function showCloudErrorBanner(message) {
+      const banner = document.getElementById("cloudStatusBanner");
+      if (!banner) return;
+      banner.style.display = "block";
+      banner.style.background = "#fef2f2";
+      banner.style.color = "#b91c1c";
+      banner.style.border = "1px solid #fecaca";
+      banner.textContent = "❌ " + message;
+    }
+
+    async function ambilSemuaDokumenWipCloud() {
+      const docs = [];
+      let pageToken = "";
+      for (let page = 0; page < 20; page++) {
+        const url = new URL(`${getFirestoreBaseUrl()}/${COLLECTION_WIP_AUDIT}`);
+        url.searchParams.set("pageSize", "100");
+        url.searchParams.set("_t", String(Date.now()));
+        if (pageToken) url.searchParams.set("pageToken", pageToken);
+        const res = await fetch(url.toString(), { cache: "no-store" });
+        if (res.status === 404) return docs;
+        if (!res.ok) throw new Error(`Gagal membaca Cloud WIP (HTTP ${res.status})`);
+        const data = await res.json();
+        docs.push(...(data.documents || []));
+        pageToken = data.nextPageToken || "";
+        if (!pageToken) break;
+      }
+      return docs;
+    }
+
+    async function hapusDokumenWipCloudTerverifikasi(docId) {
       const url = `${getFirestoreBaseUrl()}/${COLLECTION_WIP_AUDIT}/${encodeURIComponent(docId)}`;
-      const res = await fetch(url, {
-        method: "PATCH",
-        cache: "no-store",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fields: {
-            recordId: { stringValue: snapshotRecord.recordId },
-            isoDate: { stringValue: snapshotRecord.isoDate },
-            tanggalFormatted: { stringValue: snapshotRecord.tanggalFormatted },
-            shift: { stringValue: snapshotRecord.shift },
-            plant: { stringValue: snapshotRecord.plant },
-            savedAt: { stringValue: snapshotRecord.savedAt },
-            totalItems: { integerValue: String(snapshotRecord.totalItems) },
-            totalQtyAll: { integerValue: String(snapshotRecord.totalQtyAll) },
-            payloadJson: { stringValue: JSON.stringify(snapshotRecord.items) }
-          }
-        })
-      });
-      return res.ok;
+      const res = await fetch(url, { method: "DELETE", cache: "no-store" });
+      if (res.status !== 200 && res.status !== 404) {
+        let detail = "";
+        try { const data = await res.json(); detail = data.error?.message || ""; } catch (e) {}
+        throw new Error(`Gagal menghapus dokumen ${docId} (HTTP ${res.status})${detail ? ": " + detail : ""}`);
+      }
+      const verify = await fetch(url, { cache: "no-store" });
+      if (verify.status !== 404) throw new Error(`Dokumen ${docId} belum terverifikasi terhapus dari Cloud.`);
+      return true;
+    }
+
+    async function pushSingleRecordToFirestore(snapshotRecord, updateTime = null) {
+      const docId = snapshotRecord.docId || snapshotRecord.recordId;
+      const url = new URL(`${getFirestoreBaseUrl()}/${COLLECTION_WIP_AUDIT}/${encodeURIComponent(docId)}`);
+      if (updateTime) url.searchParams.set("currentDocument.updateTime", updateTime);
+      else url.searchParams.set("currentDocument.exists", "false");
+      const body = { fields: {
+        recordId: { stringValue: snapshotRecord.recordId },
+        isoDate: { stringValue: snapshotRecord.isoDate },
+        tanggalFormatted: { stringValue: snapshotRecord.tanggalFormatted },
+        shift: { stringValue: snapshotRecord.shift },
+        plant: { stringValue: snapshotRecord.plant },
+        savedAt: { stringValue: snapshotRecord.savedAt },
+        totalItems: { integerValue: String(snapshotRecord.totalItems) },
+        totalQtyAll: { integerValue: String(snapshotRecord.totalQtyAll) },
+        payloadJson: { stringValue: JSON.stringify(snapshotRecord.items) }
+      }};
+      const res = await fetch(url.toString(), { method: "PATCH", cache: "no-store",
+        headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+      if (res.status === 409 || res.status === 412) throw new Error("Konflik penyimpanan: data Cloud berubah dari perangkat lain. Tarik Cloud lalu simpan ulang.");
+      if (!res.ok) {
+        let detail = "";
+        try { const data = await res.json(); detail = data.error?.message || ""; } catch (e) {}
+        throw new Error(`Firestore PATCH gagal (HTTP ${res.status})${detail ? ": " + detail : ""}`);
+      }
+      const verify = await fetch(`${getFirestoreBaseUrl()}/${COLLECTION_WIP_AUDIT}/${encodeURIComponent(docId)}?_t=${Date.now()}`, { cache: "no-store" });
+      if (!verify.ok) throw new Error("Data tersimpan tetapi verifikasi baca ulang Cloud gagal.");
+      const saved = await verify.json();
+      const fields = saved.fields || {};
+      if (fields.payloadJson?.stringValue !== JSON.stringify(snapshotRecord.items) ||
+          fields.isoDate?.stringValue !== snapshotRecord.isoDate ||
+          fields.shift?.stringValue !== snapshotRecord.shift ||
+          fields.plant?.stringValue !== snapshotRecord.plant) {
+        throw new Error("Verifikasi Cloud tidak cocok dengan data yang dikirim.");
+      }
+      return { docId, updateTime: saved.updateTime || null };
     }
 
     async function simpanDaftarWipKeCloud() {
@@ -2970,161 +3038,140 @@
         alert("Daftar Sisa Barang Bagus masih kosong. Silakan input data terlebih dahulu sebelum menyimpan ke Cloud.");
         return;
       }
-
       const isoDate = document.getElementById("wipDate").value;
       const shift = document.getElementById("wipShift").value;
       const plant = document.getElementById("wipPlant").value;
+      if (!isoDate || !shift || !plant) { alert("Tanggal, shift, dan plant wajib diisi."); return; }
       const waktuSimpan = new Date().toLocaleString("id-ID", {
-        day: "2-digit", month: "short", year: "numeric",
-        hour: "2-digit", minute: "2-digit", second: "2-digit"
+        day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", second: "2-digit"
       });
-
-      const recordId = `WIP_${isoDate}_${shift.replace(/\s+/g, "")}_${plant.replace(/\s+/g, "")}_${Date.now()}`;
-
-      const snapshotRecord = {
-        recordId,
-        docId: recordId,
-        isoDate,
-        tanggalFormatted: formatTanggalLaporan(isoDate),
-        shift,
-        plant,
-        savedAt: waktuSimpan,
-        totalItems: wipList.length,
-        totalQtyAll: wipList.reduce((acc, it) => acc + (Number(it.qty) || 0), 0),
-        items: JSON.parse(JSON.stringify(wipList)),
-        pendingUpload: true
-      };
-
-      cloudArchive.unshift(snapshotRecord);
-      cloudArchive = cleanAndDeduplicateCloudArchive(cloudArchive);
-      localStorage.setItem("assy_wip_cloud_archive_v1", JSON.stringify(cloudArchive));
-      updateCloudCounterUI();
-
+      const key = wipRecordKey({ isoDate, shift, plant });
       const btnSave = document.getElementById("btnSaveCloud");
       btnSave.disabled = true;
-      btnSave.textContent = "⏳ Menyimpan...";
-
+      btnSave.textContent = "⏳ Memeriksa Cloud...";
       try {
-        const ok = await pushSingleRecordToFirestore(snapshotRecord);
-        if (ok) {
-          snapshotRecord.pendingUpload = false;
-          localStorage.setItem("assy_wip_cloud_archive_v1", JSON.stringify(cloudArchive));
+        const docs = await ambilSemuaDokumenWipCloud();
+        const matches = docs.filter(doc => {
+          const f = doc.fields || {};
+          return wipRecordKey({ isoDate: f.isoDate?.stringValue, shift: f.shift?.stringValue, plant: f.plant?.stringValue }) === key;
+        });
+        matches.sort((a, b) => String(b.updateTime || "").localeCompare(String(a.updateTime || "")));
+        const canonical = matches[0] || null;
+        const stableId = canonical ? (canonical.name || "").split("/").pop() : wipStableDocumentId(isoDate, shift, plant);
+        const snapshotRecord = {
+          recordId: stableId, docId: stableId, isoDate,
+          tanggalFormatted: formatTanggalLaporan(isoDate), shift, plant, savedAt: waktuSimpan,
+          totalItems: wipList.length,
+          totalQtyAll: wipList.reduce((acc, it) => acc + (Number(it.qty) || 0), 0),
+          items: JSON.parse(JSON.stringify(wipList)), pendingUpload: true
+        };
+        const saved = await pushSingleRecordToFirestore(snapshotRecord, canonical?.updateTime || null);
+        snapshotRecord.pendingUpload = false;
+        snapshotRecord.cloudUpdateTime = saved.updateTime;
+        for (const duplicate of matches.slice(1)) {
+          const duplicateId = (duplicate.name || "").split("/").pop();
+          if (duplicateId && duplicateId !== stableId) await hapusDokumenWipCloudTerverifikasi(duplicateId);
         }
-      } catch (err) {}
-
-      btnSave.disabled = false;
-      btnSave.textContent = "☁️ Simpan ke Cloud";
-      showCloudBanner(
-        `✅ <b>BERHASIL DISIMPAN KE CLOUD (${getActiveProjectId()})!</b><br>Tanggal: ${snapshotRecord.tanggalFormatted} • ${shift.toUpperCase()} • ${plant.toUpperCase()} (${snapshotRecord.totalItems} Item / ${formatNum(snapshotRecord.totalQtyAll)} PCS).`
-      );
+        deletedCloudIds = deletedCloudIds.filter(id => id !== stableId);
+        localStorage.setItem("assy_deleted_cloud_ids_v1", JSON.stringify(deletedCloudIds));
+        cloudArchive = cloudArchive.filter(item => wipRecordKey(item) !== key);
+        cloudArchive.unshift(snapshotRecord);
+        cloudArchive = cleanAndDeduplicateCloudArchive(cloudArchive);
+        localStorage.setItem("assy_wip_cloud_archive_v1", JSON.stringify(cloudArchive));
+        updateCloudCounterUI();
+        renderCloudArchiveList();
+        showCloudBanner(`<b>BERHASIL DISIMPAN & DIVERIFIKASI DI CLOUD</b><br>${snapshotRecord.tanggalFormatted} • ${shift.toUpperCase()} • ${plant.toUpperCase()}<br>${snapshotRecord.totalItems} item / ${formatNum(snapshotRecord.totalQtyAll)} pcs. Satu dokumen diperbarui; duplikat lama dibersihkan.`);
+      } catch (err) {
+        showCloudErrorBanner(err.message || "Penyimpanan Cloud gagal. Data lokal/Cloud tidak dinyatakan berhasil.");
+        alert("Penyimpanan Cloud WIP gagal: " + (err.message || "Kesalahan tidak diketahui."));
+      } finally {
+        btnSave.disabled = false;
+        btnSave.textContent = "☁️ Simpan ke Cloud";
+      }
     }
 
     async function sinkronTarikDariFirebase(showAlert = false) {
       const pid = getActiveProjectId();
       const badge = document.getElementById("firebaseConnBadge");
-      const deletedSet = new Set(deletedCloudIds);
-
       try {
-        const url = `${getFirestoreBaseUrl()}/${COLLECTION_WIP_AUDIT}?pageSize=100&_t=${Date.now()}`;
-        const res = await fetch(url, { cache: "no-store" });
-
-        if (res.ok) {
-          const data = await res.json();
-          const docs = data.documents || [];
-          const remoteRecords = [];
-          const remoteIds = new Set();
-
-          for (const doc of docs) {
-            const actualDocId = (doc.name || "").split("/").pop();
-            const f = doc.fields || {};
-            const recId = f.recordId?.stringValue || actualDocId;
-            if (!recId) continue;
-
-            if (deletedSet.has(recId) || deletedSet.has(actualDocId)) {
-              fetch(`${getFirestoreBaseUrl()}/${COLLECTION_WIP_AUDIT}/${encodeURIComponent(actualDocId)}`, {
-                method: "DELETE",
-                cache: "no-store"
-              }).catch(() => {});
-              continue;
-            }
-
-            remoteIds.add(recId);
-            const items = JSON.parse(f.payloadJson?.stringValue || "[]");
-            remoteRecords.push({
-              recordId: recId,
-              docId: actualDocId,
-              isoDate: f.isoDate?.stringValue || "",
-              tanggalFormatted: f.tanggalFormatted?.stringValue || "",
-              shift: f.shift?.stringValue || "",
-              plant: f.plant?.stringValue || "",
-              savedAt: f.savedAt?.stringValue || "",
-              totalItems: items.length,
-              totalQtyAll: items.reduce((acc, it) => acc + (Number(it.qty) || 0), 0),
-              items,
-              pendingUpload: false
-            });
+        const docs = await ambilSemuaDokumenWipCloud();
+        const deletedSet = new Set(deletedCloudIds);
+        const groups = new Map();
+        for (const doc of docs) {
+          const actualDocId = (doc.name || "").split("/").pop();
+          const f = doc.fields || {};
+          const recId = f.recordId?.stringValue || actualDocId;
+          if (!recId) continue;
+          if (deletedSet.has(recId) || deletedSet.has(actualDocId)) {
+            await hapusDokumenWipCloudTerverifikasi(actualDocId);
+            continue;
           }
-
-          for (const localRec of cloudArchive) {
-            if (
-              localRec.pendingUpload === true &&
-              !deletedSet.has(localRec.recordId) &&
-              !remoteIds.has(localRec.recordId)
-            ) {
-              const pushed = await pushSingleRecordToFirestore(localRec);
-              if (pushed) localRec.pendingUpload = false;
-              remoteRecords.push(localRec);
-            }
-          }
-
-          cloudArchive = cleanAndDeduplicateCloudArchive(remoteRecords);
+          const items = JSON.parse(f.payloadJson?.stringValue || "[]");
+          const record = {
+            recordId: recId, docId: actualDocId,
+            isoDate: f.isoDate?.stringValue || "",
+            tanggalFormatted: f.tanggalFormatted?.stringValue || "",
+            shift: f.shift?.stringValue || "",
+            plant: f.plant?.stringValue || "",
+            savedAt: f.savedAt?.stringValue || "",
+            cloudUpdateTime: doc.updateTime || "",
+            totalItems: items.length,
+            totalQtyAll: items.reduce((acc, it) => acc + (Number(it.qty) || 0), 0),
+            items, pendingUpload: false
+          };
+          const key = wipRecordKey(record);
+          if (!groups.has(key)) groups.set(key, []);
+          groups.get(key).push({ record, doc });
         }
-      } catch (e) {
-        cloudArchive = cleanAndDeduplicateCloudArchive(cloudArchive);
-      }
-
-      localStorage.setItem("assy_wip_cloud_archive_v1", JSON.stringify(cloudArchive));
-      updateCloudCounterUI();
-      renderCloudArchiveList();
-
-      if (badge) {
-        badge.textContent = `🟢 Cloud Aktif: ${pid} (${cloudArchive.length} Data)`;
-        badge.style.background = "var(--emerald-bg)";
-        badge.style.color = "var(--emerald)";
-      }
-
-      if (showAlert) {
-        alert(`✅ Sinkronisasi Cloud (${pid}) Selesai!\nTotal riwayat aktif: ${cloudArchive.length} rekaman.`);
+        const remoteRecords = [];
+        for (const entries of groups.values()) {
+          entries.sort((a, b) => String(b.doc.updateTime || "").localeCompare(String(a.doc.updateTime || "")));
+          remoteRecords.push(entries[0].record);
+          for (const duplicate of entries.slice(1)) {
+            const duplicateId = (duplicate.doc.name || "").split("/").pop();
+            if (duplicateId) await hapusDokumenWipCloudTerverifikasi(duplicateId);
+          }
+        }
+        cloudArchive = cleanAndDeduplicateCloudArchive(remoteRecords);
+        localStorage.setItem("assy_wip_cloud_archive_v1", JSON.stringify(cloudArchive));
+        updateCloudCounterUI();
+        renderCloudArchiveList();
+        if (badge) {
+          badge.textContent = `🟢 Cloud Aktif: ${pid} (${cloudArchive.length} Data)`;
+          badge.style.background = "var(--emerald-bg)";
+          badge.style.color = "var(--emerald)";
+        }
+        if (showAlert) alert(`Sinkronisasi Cloud berhasil diverifikasi. Total riwayat aktif: ${cloudArchive.length} rekaman.`);
+      } catch (err) {
+        showCloudErrorBanner(err.message || "Sinkronisasi Cloud gagal.");
+        if (showAlert) alert("Sinkronisasi Cloud gagal: " + (err.message || "Kesalahan tidak diketahui."));
       }
     }
 
     async function hapusRekamanCloud(recordId) {
       if (!confirm("Hapus permanen rekaman riwayat ini dari Cloud Firebase & Perangkat?")) return;
-
-      const targetRec = cloudArchive.find((r) => r.recordId === recordId);
-      const docIdToDelete = targetRec?.docId || recordId;
-
-      if (!deletedCloudIds.includes(recordId)) deletedCloudIds.push(recordId);
-      if (docIdToDelete && !deletedCloudIds.includes(docIdToDelete)) deletedCloudIds.push(docIdToDelete);
-      localStorage.setItem("assy_deleted_cloud_ids_v1", JSON.stringify(deletedCloudIds));
-
-      cloudArchive = cloudArchive.filter((r) => r.recordId !== recordId && r.docId !== docIdToDelete);
-      localStorage.setItem("assy_wip_cloud_archive_v1", JSON.stringify(cloudArchive));
-      updateCloudCounterUI();
-      renderCloudArchiveList();
-
+      const targetRec = cloudArchive.find(r => r.recordId === recordId || r.docId === recordId);
+      if (!targetRec) { alert("Rekaman tidak ditemukan di daftar lokal. Tarik Cloud terlebih dahulu."); return; }
       try {
-        await fetch(`${getFirestoreBaseUrl()}/${COLLECTION_WIP_AUDIT}/${encodeURIComponent(docIdToDelete)}`, {
-          method: "DELETE",
-          cache: "no-store"
-        });
-        if (docIdToDelete !== recordId) {
-          await fetch(`${getFirestoreBaseUrl()}/${COLLECTION_WIP_AUDIT}/${encodeURIComponent(recordId)}`, {
-            method: "DELETE",
-            cache: "no-store"
-          });
-        }
-      } catch (e) {}
+        const docs = await ambilSemuaDokumenWipCloud();
+        const key = wipRecordKey(targetRec);
+        const matchingIds = docs.filter(doc => {
+          const f = doc.fields || {};
+          return wipRecordKey({isoDate:f.isoDate?.stringValue,shift:f.shift?.stringValue,plant:f.plant?.stringValue}) === key;
+        }).map(doc => (doc.name || "").split("/").pop()).filter(Boolean);
+        const ids = Array.from(new Set([targetRec.docId, targetRec.recordId, recordId, ...matchingIds].filter(Boolean)));
+        for (const id of ids) await hapusDokumenWipCloudTerverifikasi(id);
+        for (const id of ids) if (!deletedCloudIds.includes(id)) deletedCloudIds.push(id);
+        localStorage.setItem("assy_deleted_cloud_ids_v1", JSON.stringify(deletedCloudIds));
+        cloudArchive = cloudArchive.filter(item => wipRecordKey(item) !== key);
+        localStorage.setItem("assy_wip_cloud_archive_v1", JSON.stringify(cloudArchive));
+        updateCloudCounterUI();
+        renderCloudArchiveList();
+        showCloudBanner("Rekaman WIP berhasil dihapus dan diverifikasi pada Cloud serta perangkat ini.");
+      } catch (err) {
+        showCloudErrorBanner(err.message || "Penghapusan Cloud gagal. Data lokal dipertahankan.");
+        alert("Penghapusan Cloud gagal: " + (err.message || "Kesalahan tidak diketahui."));
+      }
     }
 
     function normalisasiMaster(list) {
