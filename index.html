@@ -558,11 +558,28 @@
       background: #388e3c;
     }
 
+    /* RINCIAN BOX KALKULATOR: TAMPILKAN 3 BARIS, SISANYA SCROLL */
     .box-chips-container {
       display: flex;
       flex-wrap: wrap;
+      align-content: flex-start;
       gap: 6px;
       margin-top: 10px;
+      max-height: 118px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 2px 5px 5px 1px;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+      scrollbar-color: #94a3b8 #edf2f7;
+      -webkit-overflow-scrolling: touch;
+    }
+    .box-chips-container::-webkit-scrollbar { width: 6px; }
+    .box-chips-container::-webkit-scrollbar-track { background: #edf2f7; border-radius: 8px; }
+    .box-chips-container::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 8px; }
+    .box-chips-container .box-chip { flex: 0 0 auto; }
+    @media (max-width: 420px) {
+      .box-chips-container { max-height: 118px; gap: 5px; }
     }
 
     .box-chip {
