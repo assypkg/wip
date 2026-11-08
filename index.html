@@ -1168,8 +1168,10 @@
           </div>
           <div style="grid-column: 1 / -1;">
             <label>Nama Produk</label>
-            <input type="text" id="fgProductName" list="fgProductMasterList" placeholder="Pilih / cari nama produk Finish Good..." oninput="simpanDraftLokal()" />
-            <datalist id="fgProductMasterList"></datalist>
+            <div class="fg-product-search-wrap" style="position:relative;">
+              <input type="text" id="fgProductName" placeholder="Ketik kode atau nama produk FG..." autocomplete="off" oninput="onFgProductSearchType()" onfocus="onFgProductSearchType()" onkeydown="onFgProductSearchKey(event)" aria-controls="fgProductSuggestions" aria-expanded="false" />
+              <div class="quick-results" id="fgProductSuggestions" role="listbox" aria-label="Saran nama produk Finish Good"></div>
+            </div>
             <div style="font-size:0.68rem; color:var(--text-muted); margin-top:3px;">Pilih dari Master Produk FG atau ketik nama produk.</div>
           </div>
           <div style="grid-column: 1 / -1;">
@@ -4200,6 +4202,66 @@
     }
 
     function bukaMasterProdukFg(){toggleModal("masterProdukFgModal",true);renderMasterProdukFg();if(!masterProdukFgReady)tarikMasterProdukFgCloud();}
+    function tutupFgProductSuggestions() {
+      const box = document.getElementById("fgProductSuggestions");
+      const input = document.getElementById("fgProductName");
+      if (box) { box.style.display = "none"; box.innerHTML = ""; }
+      if (input) input.setAttribute("aria-expanded", "false");
+    }
+
+    function onFgProductSearchType() {
+      const input = document.getElementById("fgProductName");
+      const box = document.getElementById("fgProductSuggestions");
+      if (!input || !box) return;
+      const q = input.value.trim().toLocaleLowerCase("id-ID");
+      const products = normalisasiMasterProdukFg(masterProdukFg);
+      const matches = products.filter(name => !q || name.toLocaleLowerCase("id-ID").includes(q)).slice(0, 30);
+      box.innerHTML = "";
+      if (!matches.length) {
+        const empty = document.createElement("div");
+        empty.style.cssText = "padding:12px;color:var(--text-muted);font-size:.8rem;";
+        empty.textContent = "Produk tidak ditemukan di Master FG. Periksa atau tambahkan melalui Master Produk FG.";
+        box.appendChild(empty);
+      } else {
+        matches.forEach(name => {
+          const item = document.createElement("div");
+          item.className = "quick-item";
+          item.setAttribute("role", "option");
+          item.tabIndex = -1;
+          const label = document.createElement("span");
+          label.className = "quick-item-left";
+          label.style.overflowWrap = "anywhere";
+          label.textContent = name;
+          item.appendChild(label);
+          item.addEventListener("pointerdown", e => e.preventDefault());
+          item.addEventListener("click", () => {
+            input.value = name;
+            tutupFgProductSuggestions();
+            simpanDraftLokal();
+          });
+          box.appendChild(item);
+        });
+      }
+      box.style.display = "block";
+      input.setAttribute("aria-expanded", "true");
+    }
+
+    function onFgProductSearchKey(event) {
+      if (event.key === "Escape") { tutupFgProductSuggestions(); return; }
+      if (event.key === "Enter") {
+        const box = document.getElementById("fgProductSuggestions");
+        const first = box?.querySelector(".quick-item");
+        if (box?.style.display === "block" && first) {
+          event.preventDefault();
+          first.click();
+        }
+      }
+    }
+
+    document.addEventListener("pointerdown", event => {
+      if (!event.target.closest(".fg-product-search-wrap")) tutupFgProductSuggestions();
+    });
+
     function renderMasterProdukFg(){
       const list=document.getElementById("masterProdukFgList"),info=document.getElementById("masterProdukFgInfo");if(!list||!info)return;
       const q=(document.getElementById("masterProdukFgSearch")?.value||"").trim().toLowerCase(),items=masterProdukFg.map((name,index)=>({name,index})).filter(x=>!q||x.name.toLowerCase().includes(q));
