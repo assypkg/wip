@@ -1612,7 +1612,11 @@
         <button class="btn btn-primary" style="grid-column: 1 / -1;" onclick="tambahKatalogManual()">+ Tambah ke Master</button>
       </div>
 
-      <div id="masterModalList" style="max-height:240px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:8px; font-size:0.78rem;"></div>
+      <div style="margin:10px 0 7px;">
+        <input type="search" id="masterSearchInput" placeholder="🔎 Cari produk / kode part..." oninput="renderMasterModalList()" style="width:100%;" />
+        <div id="masterSearchInfo" style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Cari berdasarkan nama produk, nama part, atau kode.</div>
+      </div>
+      <div id="masterModalList" style="max-height:300px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:8px; font-size:0.78rem;"></div>
     </div>
   </div>
 
@@ -3696,18 +3700,32 @@
     function renderMasterModalList() {
       document.getElementById("masterCount").textContent = catalog.length;
       const box = document.getElementById("masterModalList");
-      box.innerHTML = catalog
-        .map(
-          (c, i) => `
-          <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 4px; border-bottom:1px solid #f1f5f9;">
-            <span style="flex:1; min-width:0;"><b>${c.group}</b> &mdash; ${c.part}</span>
-            <div style="display:flex; gap:4px;">
-              <button class="btn btn-edit" onclick="mulaiEditKatalog(${i})">Edit</button>
-              <button class="btn btn-danger" onclick="hapusKatalog(${i})">Hapus</button>
-            </div>
-          </div>`
-        )
-        .join("");
+      const info = document.getElementById("masterSearchInfo");
+      const query = (document.getElementById("masterSearchInput")?.value || "").trim().toLowerCase();
+      const collator = new Intl.Collator("id", { numeric: true, sensitivity: "base" });
+      const sorted = catalog
+        .map((item, index) => ({ item, index }))
+        .filter(({ item }) => !query || `${item.group} ${item.part}`.toLowerCase().includes(query))
+        .sort((a, b) => collator.compare(a.item.group, b.item.group) || collator.compare(a.item.part, b.item.part));
+
+      if (info) info.textContent = query
+        ? `Ditemukan ${sorted.length} dari ${catalog.length} data master.`
+        : `Total ${catalog.length} data • Diurutkan berdasarkan produk dan kode part.`;
+
+      if (!sorted.length) {
+        box.innerHTML = `<div style="padding:16px 8px; text-align:center; color:var(--text-muted);">Tidak ada produk atau kode part yang cocok dengan "${query.replace(/[&<>"']/g, "")}".</div>`;
+        return;
+      }
+
+      box.innerHTML = sorted.map(({ item: c, index: i }) => `
+        <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; padding:7px 4px; border-bottom:1px solid #f1f5f9;">
+          <span style="flex:1; min-width:0; overflow-wrap:anywhere;"><b>${c.group}</b> &mdash; ${c.part}</span>
+          <div style="display:flex; gap:4px; flex-shrink:0;">
+            <button class="btn btn-edit" onclick="mulaiEditKatalog(${i})">Edit</button>
+            <button class="btn btn-danger" onclick="hapusKatalog(${i})">Hapus</button>
+          </div>
+        </div>`
+      ).join("");
     }
 
     function mulaiEditKatalog(idx) {
@@ -3747,7 +3765,8 @@
         return;
       }
 
-      if (editingCatalogIndex !== null) {
+      const isEdit = editingCatalogIndex !== null;
+      if (isEdit) {
         catalog[editingCatalogIndex] = { group: g, part: p, keywords: `${g} ${p}`.toLowerCase() };
         batalEditKatalog();
       } else {
@@ -3759,16 +3778,21 @@
       document.getElementById("masterCount").textContent = catalog.length;
       renderMasterModalList();
       simpanMasterKeFirebase();
+      alert(isEdit
+        ? `Master berhasil diperbarui:\n${g} — ${p}`
+        : `Kode baru berhasil ditambahkan ke Master:\n${g} — ${p}`);
     }
 
     function hapusKatalog(idx) {
       if (editingCatalogIndex === idx) batalEditKatalog();
       else if (editingCatalogIndex !== null && idx < editingCatalogIndex) editingCatalogIndex--;
+      const removed = catalog[idx];
       catalog.splice(idx, 1);
       localStorage.setItem("assy_catalog_v3", JSON.stringify(catalog));
       document.getElementById("masterCount").textContent = catalog.length;
       renderMasterModalList();
       simpanMasterKeFirebase();
+      if (removed) alert(`Master dihapus:\n${removed.group} — ${removed.part}`);
     }
 
     function uploadMasterExcel(event) {
