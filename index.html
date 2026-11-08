@@ -1164,17 +1164,12 @@
             <input type="text" id="fgDuration" value="15.00-23.00" placeholder="Contoh: 15.00-23.00" oninput="simpanDraftLokal()" />
           </div>
           <div style="grid-column: 1 / -1;">
-            <label>Nama Produk & Nomor Job Order (JO)</label>
-            <input
-              type="text"
-              id="fgProductJo"
-              placeholder="Contoh: 8603 - BS(A) PROJECT NEW YORK - OMG LIP CREAM (JD26-0771)"
-              list="fgProductHistoryList"
-              oninput="simpanDraftLokal()"
-            />
-            <datalist id="fgProductHistoryList">
-              <option value="8603 - BS(A) PROJECT NEW YORK - OMG LIP CREAM (JD26-0771)"></option>
-            </datalist>
+            <label>Nama Produk</label>
+            <input type="text" id="fgProductName" placeholder="Contoh: 8603 - BS(A) PROJECT NEW YORK - OMG LIP CREAM" oninput="simpanDraftLokal()" />
+          </div>
+          <div style="grid-column: 1 / -1;">
+            <label>Nomor Job Order (JO)</label>
+            <input type="text" id="fgJobOrder" placeholder="Contoh: JD26-0771" oninput="simpanDraftLokal()" />
           </div>
           <div>
             <label>Catatan Proses / Lem (Opsional)</label>
@@ -2032,7 +2027,8 @@
             fgPlant: document.getElementById("fgPlant")?.value || "PLANT ALPHA",
             fgLeader: document.getElementById("fgLeader")?.value || "",
             fgDuration: document.getElementById("fgDuration")?.value || "15.00-23.00",
-            fgProductJo: document.getElementById("fgProductJo")?.value || "",
+            fgProductName: document.getElementById("fgProductName")?.value || "",
+            fgJobOrder: document.getElementById("fgJobOrder")?.value || "",
             fgNote: document.getElementById("fgNote")?.value || "Pakai lem shadowless UV glue",
             fgTarget: document.getElementById("fgTarget")?.value || "19800",
             fgPcsPerBox: document.getElementById("fgPcsPerBox")?.value || "550",
@@ -2095,7 +2091,14 @@
         if (f.fgPlant) document.getElementById("fgPlant").value = f.fgPlant;
         if (f.fgLeader !== undefined) document.getElementById("fgLeader").value = f.fgLeader;
         if (f.fgDuration !== undefined) document.getElementById("fgDuration").value = f.fgDuration;
-        if (f.fgProductJo !== undefined) document.getElementById("fgProductJo").value = f.fgProductJo;
+        if (f.fgProductName !== undefined || f.fgJobOrder !== undefined) {
+          document.getElementById("fgProductName").value = f.fgProductName || "";
+          document.getElementById("fgJobOrder").value = f.fgJobOrder || "";
+        } else if (f.fgProductJo !== undefined) {
+          const legacyFg = pisahProdukDanJo(f.fgProductJo);
+          document.getElementById("fgProductName").value = legacyFg.productName;
+          document.getElementById("fgJobOrder").value = legacyFg.jobOrder;
+        }
         if (f.fgNote !== undefined) document.getElementById("fgNote").value = f.fgNote;
         if (f.fgTarget !== undefined) document.getElementById("fgTarget").value = f.fgTarget;
         if (f.fgPcsPerBox !== undefined) document.getElementById("fgPcsPerBox").value = f.fgPcsPerBox;
@@ -2597,7 +2600,9 @@
         return;
       }
       const last = fgList[fgList.length - 1];
-      document.getElementById("fgProductJo").value = last.productJo;
+      const lastProduct = last.productName !== undefined ? { productName: last.productName, jobOrder: last.jobOrder || "" } : pisahProdukDanJo(last.productJo);
+      document.getElementById("fgProductName").value = lastProduct.productName;
+      document.getElementById("fgJobOrder").value = lastProduct.jobOrder;
       document.getElementById("fgNote").value = last.note;
       document.getElementById("fgDuration").value = last.duration;
       document.getElementById("fgTarget").value = last.target;
@@ -2607,9 +2612,17 @@
       document.getElementById("fgLeader").focus();
     }
 
+    function pisahProdukDanJo(value) {
+      const raw = String(value || "").trim();
+      const match = raw.match(new RegExp("^(.*?)\\s*\\(([^()]*)\\)\\s*$"));
+      return match ? { productName: match[1].trim(), jobOrder: match[2].trim() } : { productName: raw, jobOrder: "" };
+    }
+
     function simpanItemFg() {
       const leader = document.getElementById("fgLeader").value.trim().toUpperCase();
-      const productJo = document.getElementById("fgProductJo").value.trim().toUpperCase();
+      const productName = document.getElementById("fgProductName").value.trim().toUpperCase();
+      const jobOrder = document.getElementById("fgJobOrder").value.trim().toUpperCase();
+      const productJo = jobOrder ? `${productName} (${jobOrder})` : productName;
       const note = document.getElementById("fgNote").value.trim();
       const duration = document.getElementById("fgDuration").value.trim();
       const target = Number(document.getElementById("fgTarget").value) || 0;
@@ -2617,8 +2630,8 @@
       const boxA = Number(document.getElementById("fgBoxA").value) || 0;
       const boxB = Number(document.getElementById("fgBoxB").value) || 0;
 
-      if (!leader || !productJo) {
-        alert("Mohon isi Nama Leader/Operator dan Nama Produk & Job Order.");
+      if (!leader || !productName || !jobOrder) {
+        alert("Mohon isi Nama Leader/Operator, Nama Produk, dan Nomor Job Order.");
         return;
       }
 
@@ -2635,6 +2648,8 @@
       const record = {
         id: editingFgId !== null ? editingFgId : Date.now() + Math.random(),
         leader,
+        productName,
+        jobOrder,
         productJo,
         note,
         duration,
@@ -2670,7 +2685,9 @@
 
       editingFgId = item.id;
       document.getElementById("fgLeader").value = item.leader;
-      document.getElementById("fgProductJo").value = item.productJo;
+      const itemProduct = item.productName !== undefined ? { productName: item.productName, jobOrder: item.jobOrder || "" } : pisahProdukDanJo(item.productJo);
+      document.getElementById("fgProductName").value = itemProduct.productName;
+      document.getElementById("fgJobOrder").value = itemProduct.jobOrder;
       document.getElementById("fgNote").value = item.note || "";
       document.getElementById("fgDuration").value = item.duration;
       document.getElementById("fgTarget").value = item.target;
@@ -2720,7 +2737,7 @@
     function resetSemuaDataFg() {
       if (!confirm("RESET ALL DATA FINISH GOOD?\n\nSemua daftar FG, input operator/hasil box, dan laporan WhatsApp FG akan dikosongkan. Data WIP, Master Katalog, riwayat Cloud, dan data SPA TIDAK dihapus.")) return;
       editingFgId = null; fgList = []; waFgManuallyEdited = false;
-      ["fgLeader", "fgProductJo", "fgNote", "fgBoxA", "fgBoxB"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+      ["fgLeader", "fgProductName", "fgJobOrder", "fgNote", "fgBoxA", "fgBoxB"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
       document.getElementById("fgEditBanner").style.display = "none";
       document.getElementById("fgInputCard").classList.remove("editing-mode");
       document.getElementById("btnSubmitFg").textContent = "✅ TAMBAHKAN KE LAPORAN FINISH GOOD";
@@ -2738,6 +2755,8 @@
         {
           id: 501,
           leader: "ISTIANAH",
+          productName: "8603 - BS(A) PROJECT NEW YORK - OMG LIP CREAM",
+          jobOrder: "JD26-0771",
           productJo: "8603 - BS(A) PROJECT NEW YORK - OMG LIP CREAM (JD26-0771)",
           note: "Pakai lem shadowless UV glue",
           duration: "15.00-23.00",
@@ -2753,6 +2772,8 @@
         {
           id: 502,
           leader: "ANA NESYIA",
+          productName: "8603 - BS(A) PROJECT NEW YORK - OMG LIP CREAM",
+          jobOrder: "JD26-0771",
           productJo: "8603 - BS(A) PROJECT NEW YORK - OMG LIP CREAM (JD26-0771)",
           note: "Pakai lem shadowless UV glue",
           duration: "15.00-23.00",
@@ -2797,7 +2818,8 @@
                   <button class="btn btn-danger" onclick="hapusItemFg(${it.id})">✕</button>
                 </div>
               </div>
-              <div style="font-size:0.8rem; font-weight:700; color:var(--text-main);">${it.productJo}</div>
+              <div style="font-size:0.8rem; font-weight:700; color:var(--text-main);">${it.productName || pisahProdukDanJo(it.productJo).productName}</div>
+              <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">JO: <b>${it.jobOrder || pisahProdukDanJo(it.productJo).jobOrder || "-"}</b></div>
               ${it.note ? `<div style="font-size:0.74rem; color:var(--purple); font-weight:700; margin-top:2px;">*${it.note}*</div>` : ""}
               <div style="font-size:0.74rem; color:var(--text-muted); margin-top:4px;">
                 DURASI: <b>${it.duration}</b> &nbsp;|&nbsp; TARGET: <b>${formatNum(it.target)}</b>
@@ -2821,7 +2843,9 @@
 
       fgList.forEach((it, idx) => {
         wa += `${idx + 1}. ${it.leader}\n`;
-        wa += `${it.productJo}\n`;
+        const produkLaporan = it.productName !== undefined ? { productName: it.productName, jobOrder: it.jobOrder || "" } : pisahProdukDanJo(it.productJo);
+        wa += `${produkLaporan.productName}\n`;
+        wa += `JO: ${produkLaporan.jobOrder || "-"}\n`;
         if (it.note) {
           wa += `*${it.note}*\n`;
         }
