@@ -772,7 +772,10 @@
       padding: 18px;
       max-height: 92vh;
       overflow-y: auto;
+      overscroll-behavior: contain;
     }
+    #wipEditModal .modal-card { max-width: 760px; max-height: 94vh; }
+    #wipEditModalContent #wipInputCard { margin-bottom: 0; box-shadow: none; }
 
     .cloud-record-card {
       border: 1.5px solid var(--border);
@@ -1061,8 +1064,13 @@
           <button class="btn btn-outline" style="flex:1;" onclick="copyWaText('waPreviewWip')">
             📋 Salin Teks
           </button>
+          <button class="btn btn-edit" onclick="buatUlangWaWip()">↻ Format Otomatis</button>
         </div>
-        <textarea id="waPreviewWip" class="wa-preview" readonly></textarea>
+        <p style="font-size:0.73rem; color:var(--text-muted); margin:-3px 0 8px;">
+          Laporan dapat diedit langsung. Contoh: <b>Inbs(003)=&gt; 1.349 (pakai barang tanggal 9)</b>.
+          Perubahan manual dipertahankan saat daftar WIP diperbarui. Gunakan Format Otomatis untuk menyusun ulang.
+        </p>
+        <textarea id="waPreviewWip" class="wa-preview" oninput="waWipManuallyEdited=true; simpanDraftLokal();" placeholder="Laporan WIP akan tampil di sini dan dapat diedit..."></textarea>
       </div>
     </section>
   </main>
@@ -1508,6 +1516,19 @@
   </main>
 
   <!-- =========================================================
+       MODAL EDIT WIP: FORM EDIT DIBUKA DI JENDELA TERPISAH
+       ========================================================= -->
+  <div id="wipEditModal" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="card-header">
+        <span class="card-title">✏️ Edit Rincian Sisa Barang Bagus (WIP)</span>
+        <button class="btn btn-danger" onclick="batalEditWip()">✕ Tutup</button>
+      </div>
+      <div id="wipEditModalContent"></div>
+    </div>
+  </div>
+
+  <!-- =========================================================
        MODAL 1: RIWAYAT CLOUD & AUDIT SELISIH GUDANG (ANTI DUPLIKAT)
        ========================================================= -->
   <div id="cloudModal" class="modal-backdrop">
@@ -1728,6 +1749,9 @@
     let currentBoxes = [];
     let editingWipId = null;
     let editingFgId = null;
+    let wipEditPlaceholder = null;
+    let editingCatalogIndex = null;
+    let waWipManuallyEdited = false;
 
     let currentSpaAssyBoxes = [];
     let currentSpaGudangBoxes = [];
@@ -2381,7 +2405,7 @@
       btnSubmit.textContent = "💾 UPDATE DATA WIP";
       btnSubmit.style.background = "var(--orange)";
 
-      document.getElementById("wipInputCard").scrollIntoView({ behavior: "smooth" });
+      bukaModalEditWip();
     }
 
     function batalEditWip() {
@@ -2399,6 +2423,7 @@
       const btnSubmit = document.getElementById("btnSubmitWip");
       btnSubmit.textContent = "✅ SIMPAN KE DAFTAR WIP";
       btnSubmit.style.background = "var(--emerald)";
+      tutupModalEditWipVisual();
       simpanDraftLokal();
     }
 
@@ -3218,7 +3243,12 @@
         wa += `\n`;
       });
 
-      waBox.value = wa.trim();
+      if (!waWipManuallyEdited) waBox.value = wa.trim();
+    }
+
+    function buatUlangWaWip() {
+      waWipManuallyEdited = false;
+      renderWipAll();
     }
 
     /********************************************************************
@@ -3615,9 +3645,53 @@
      * 11. PENGATURAN MASTER KATALOG (BLOKIR DUPLIKAT & SYNC FIREBASE)
      ********************************************************************/
     function toggleModal(id, show) {
-      document.getElementById(id).style.display = show ? "flex" : "none";
+      const modal = document.getElementById(id);
+      if (!modal) return;
+      modal.style.display = show ? "flex" : "none";
       if (show && id === "masterModal") renderMasterModalList();
     }
+
+    function bukaModalEditWip() {
+      const card = document.getElementById("wipInputCard");
+      const target = document.getElementById("wipEditModalContent");
+      if (!card || !target) return;
+      if (!wipEditPlaceholder && card.parentNode !== target) {
+        wipEditPlaceholder = document.createComment("Posisi asli form WIP");
+        card.parentNode.insertBefore(wipEditPlaceholder, card);
+      }
+      target.appendChild(card);
+      toggleModal("wipEditModal", true);
+    }
+
+    function tutupModalEditWipVisual() {
+      const card = document.getElementById("wipInputCard");
+      if (card && wipEditPlaceholder && wipEditPlaceholder.parentNode) {
+        wipEditPlaceholder.parentNode.insertBefore(card, wipEditPlaceholder);
+        wipEditPlaceholder.remove();
+      }
+      wipEditPlaceholder = null;
+      toggleModal("wipEditModal", false);
+    }
+
+    function tutupSemuaModalDenganEsc() {
+      const openModals = Array.from(document.querySelectorAll(".modal-backdrop"))
+        .filter((modal) => getComputedStyle(modal).display !== "none");
+      openModals.forEach((modal) => {
+        if (modal.id === "wipEditModal") batalEditWip();
+        else toggleModal(modal.id, false);
+      });
+    }
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") tutupSemuaModalDenganEsc();
+    });
+
+    document.addEventListener("click", (event) => {
+      const backdrop = event.target;
+      if (!backdrop.classList || !backdrop.classList.contains("modal-backdrop")) return;
+      if (backdrop.id === "wipEditModal") batalEditWip();
+      else toggleModal(backdrop.id, false);
+    });
 
     function renderMasterModalList() {
       document.getElementById("masterCount").textContent = catalog.length;
@@ -3626,11 +3700,33 @@
         .map(
           (c, i) => `
           <div style="display:flex; justify-content:space-between; align-items:center; padding:6px 4px; border-bottom:1px solid #f1f5f9;">
-            <span><b>${c.group}</b> &mdash; ${c.part}</span>
-            <button class="btn btn-danger" onclick="hapusKatalog(${i})">Hapus</button>
+            <span style="flex:1; min-width:0;"><b>${c.group}</b> &mdash; ${c.part}</span>
+            <div style="display:flex; gap:4px;">
+              <button class="btn btn-edit" onclick="mulaiEditKatalog(${i})">Edit</button>
+              <button class="btn btn-danger" onclick="hapusKatalog(${i})">Hapus</button>
+            </div>
           </div>`
         )
         .join("");
+    }
+
+    function mulaiEditKatalog(idx) {
+      const item = catalog[idx];
+      if (!item) return;
+      editingCatalogIndex = idx;
+      document.getElementById("newCatGroup").value = item.group;
+      document.getElementById("newCatPart").value = item.part;
+      const btn = document.querySelector("#masterModal .form-row-responsive .btn-primary");
+      if (btn) btn.textContent = "💾 Simpan Perubahan Master";
+      document.getElementById("newCatGroup").focus();
+    }
+
+    function batalEditKatalog() {
+      editingCatalogIndex = null;
+      document.getElementById("newCatGroup").value = "";
+      document.getElementById("newCatPart").value = "";
+      const btn = document.querySelector("#masterModal .form-row-responsive .btn-primary");
+      if (btn) btn.textContent = "+ Tambah ke Master";
     }
 
     function tambahKatalogManual() {
@@ -3641,22 +3737,36 @@
         return;
       }
 
-      if (isCatalogDuplicate(g, p)) {
+      const duplicate = catalog.some((item, idx) =>
+        idx !== editingCatalogIndex &&
+        item.group.trim().toLowerCase() === g.toLowerCase() &&
+        item.part.trim().toLowerCase() === p.toLowerCase()
+      );
+      if (duplicate) {
         alert(`⚠️ TIDAK DAPAT DISIMPAN (DUPLIKAT):\nProduk "${g}" dengan Part "${p}" sudah terdaftar di dalam Master Katalog!`);
         return;
       }
 
-      catalog.push({ group: g, part: p, keywords: `${g} ${p}`.toLowerCase() });
+      if (editingCatalogIndex !== null) {
+        catalog[editingCatalogIndex] = { group: g, part: p, keywords: `${g} ${p}`.toLowerCase() };
+        batalEditKatalog();
+      } else {
+        catalog.push({ group: g, part: p, keywords: `${g} ${p}`.toLowerCase() });
+        document.getElementById("newCatGroup").value = "";
+        document.getElementById("newCatPart").value = "";
+      }
       localStorage.setItem("assy_catalog_v3", JSON.stringify(catalog));
-      document.getElementById("newCatGroup").value = "";
-      document.getElementById("newCatPart").value = "";
+      document.getElementById("masterCount").textContent = catalog.length;
       renderMasterModalList();
       simpanMasterKeFirebase();
     }
 
     function hapusKatalog(idx) {
+      if (editingCatalogIndex === idx) batalEditKatalog();
+      else if (editingCatalogIndex !== null && idx < editingCatalogIndex) editingCatalogIndex--;
       catalog.splice(idx, 1);
       localStorage.setItem("assy_catalog_v3", JSON.stringify(catalog));
+      document.getElementById("masterCount").textContent = catalog.length;
       renderMasterModalList();
       simpanMasterKeFirebase();
     }
