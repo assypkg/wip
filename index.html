@@ -3037,10 +3037,17 @@
     }
 
     async function bacaMasterCloud() {
-      const url = `${getFirestoreBaseUrl()}/${COLLECTION_MASTER}/master_katalog_utama?_t=${Date.now()}`;
+      const url = `${getFirestoreBaseUrl()}/${COLLECTION_MASTER}/master_katalog_utama`;
       const res = await fetch(url, { cache: "no-store" });
       if (res.status === 404) return { exists: false, doc: null };
-      if (!res.ok) throw new Error(`Firestore GET gagal (HTTP ${res.status})`);
+      if (!res.ok) {
+        let detail = "";
+        try {
+          const errorBody = await res.json();
+          detail = errorBody.error?.message || errorBody.message || "";
+        } catch (e) {}
+        throw new Error(`Firestore GET gagal (HTTP ${res.status})${detail ? `: ${detail}` : ""}`);
+      }
       const doc = await res.json();
       let remoteCatalog;
       try {
