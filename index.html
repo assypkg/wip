@@ -2817,7 +2817,7 @@
       const shift = document.getElementById("fgShift").value;
       const plant = document.getElementById("fgPlant").value;
 
-      let wa = `*LAPORAN HASIL PRODUKSI ${plant} JAM ${jam} TANGGAL ${tgl} (${shift})*\n\n`;
+      let wa = `*LAPORAN HASIL PRODUKSI ${plant} JAM ${jam} TANGGAL ${tgl} (${shift})*\n━━━━━━━━━━━━━━━━━━━━\n\n`;
 
       fgList.forEach((it, idx) => {
         wa += `${idx + 1}. ${it.leader}\n`;
