@@ -2465,23 +2465,11 @@
       }
     }
 
-    function formatRincianBoxHtml(boxes, fallbackQty) {
-      const list =
-        boxes && boxes.length > 0
-          ? boxes
-          : [{ label: String(fallbackQty), val: fallbackQty }];
-
-      const posCount = list.filter((b) => b.val >= 0).length;
-      let posIdx = 0;
-      const details = list
-        .map((b) => {
-          if (b.val < 0) return `<span style="color:var(--red); font-weight:700;">[Diambil: ${formatNum(b.val)}]</span>`;
-          posIdx++;
-          return `[Box ${posIdx}: <b>${formatNum(b.val)}</b>]`;
-        })
-        .join(" ");
-
-      return `📦 <b>Aktual ${posCount} Input Box:</b> ${details}`;
+    function hitungJumlahInputBox(boxes, fallbackQty) {
+      const list = Array.isArray(boxes) && boxes.length
+        ? boxes
+        : [{ val: Number(fallbackQty) || 0 }];
+      return list.filter(box => Number(box.val) >= 0).length;
     }
 
     /********************************************************************
@@ -3462,18 +3450,18 @@
               ${items
                 .map(
                   (it) => `
-                  <div class="part-row">
-                    <div style="flex:1;">
+                  <div class="part-row" style="align-items:center;">
+                    <div style="flex:1; min-width:0;">
                       <div>
                         <span class="part-label">${it.part}</span>
                         ${it.note ? `<span class="part-note">${it.note}</span>` : ""}
                       </div>
-                      <div class="box-breakdown-info">
-                        ${formatRincianBoxHtml(it.boxes, it.qty)}
-                      </div>
                     </div>
-                    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:5px;">
-                      <span class="part-qty">${formatNum(it.qty)}</span>
+                    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:7px; flex-shrink:0;">
+                      <div style="display:flex; align-items:baseline; justify-content:flex-end; gap:5px; white-space:nowrap;">
+                        <span style="font-size:0.78rem; font-weight:700; color:var(--text-muted);">${hitungJumlahInputBox(it.boxes, it.qty)} Box</span>
+                        <span style="font-size:0.95rem; font-weight:800; color:var(--emerald);">${formatNum(it.qty)} pcs</span>
+                      </div>
                       <div style="display:flex; gap:4px;">
                         <button class="btn btn-edit" onclick="mulaiEditWip(${it.id})">✏️ Edit</button>
                         <button class="btn btn-danger" onclick="hapusItemWip(${it.id})">✕</button>
