@@ -1140,6 +1140,7 @@
             <select id="fgShift" onchange="onFgShiftChange()">
               <option value="SHIFT 1">SHIFT 1</option>
               <option value="SHIFT 2" selected>SHIFT 2</option>
+              <option value="SHIFT 2 (21.00-06.00)">SHIFT 2 (21.00-06.00)</option>
               <option value="SHIFT 3">SHIFT 3</option>
             </select>
           </div>
@@ -2554,6 +2555,9 @@
       } else if (shift === "SHIFT 2") {
         timeEl.value = "23.00";
         durEl.value = "15.00-23.00";
+      } else if (shift === "SHIFT 2 (21.00-06.00)") {
+        timeEl.value = "06.00";
+        durEl.value = "21.00-06.00";
       } else if (shift === "SHIFT 3") {
         timeEl.value = "07.00";
         durEl.value = "23.00-07.00";
