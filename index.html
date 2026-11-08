@@ -4081,6 +4081,8 @@
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "hidden") {
         simpanDraftLokal();
+      } else if (document.visibilityState === "visible" && masterSyncReady && !masterSyncBusy) {
+        tarikMasterDariFirebase();
       }
     });
 
