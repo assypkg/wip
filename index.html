@@ -1542,8 +1542,12 @@
           <button class="btn btn-outline" style="flex:1;" onclick="copyWaText('waPreviewSpa')">
             📋 Salin Teks
           </button>
+          <button class="btn btn-edit" onclick="buatUlangWaSpa()">↻ Format Otomatis</button>
         </div>
-        <textarea id="waPreviewSpa" class="wa-preview" readonly></textarea>
+        <p style="font-size:0.73rem; color:var(--text-muted); margin:-3px 0 8px;">
+          Laporan SPA dapat diedit langsung. Perubahan manual dipertahankan saat daftar SPA diperbarui. Gunakan Format Otomatis untuk menyusun ulang.
+        </p>
+        <textarea id="waPreviewSpa" class="wa-preview" oninput="waSpaManuallyEdited=true; simpanDraftLokal();" placeholder="Laporan SPA akan tampil di sini dan dapat diedit..."></textarea>
       </div>
     </section>
   </main>
@@ -1804,6 +1808,7 @@
     let wipEditPlaceholder = null;
     let editingCatalogIndex = null;
     let waWipManuallyEdited = false;
+    let waSpaManuallyEdited = false;
 
     let currentSpaAssyBoxes = [];
     let currentSpaGudangBoxes = [];
@@ -2035,7 +2040,9 @@
             spaLineInfo: document.getElementById("spaLineInfo")?.value || "",
             spaBaseTarget: document.getElementById("spaBaseTarget")?.value || "",
             spaPart: document.getElementById("spaPart")?.value || "",
-            spaNote: document.getElementById("spaNote")?.value || ""
+            spaNote: document.getElementById("spaNote")?.value || "",
+            waPreviewSpa: document.getElementById("waPreviewSpa")?.value || "",
+            waSpaManuallyEdited
           }
         };
         localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draftObj));
@@ -2095,6 +2102,8 @@
         if (f.spaBaseTarget !== undefined) document.getElementById("spaBaseTarget").value = f.spaBaseTarget;
         if (f.spaPart !== undefined) document.getElementById("spaPart").value = f.spaPart;
         if (f.spaNote !== undefined) document.getElementById("spaNote").value = f.spaNote;
+        if (f.waSpaManuallyEdited !== undefined) waSpaManuallyEdited = !!f.waSpaManuallyEdited;
+        if (f.waPreviewSpa !== undefined) document.getElementById("waPreviewSpa").value = f.waPreviewSpa;
 
         if (draft.activeTabMode) {
           switchMode(draft.activeTabMode);
@@ -3549,7 +3558,7 @@
       const shift = document.getElementById("wipShift").value;
       const plant = document.getElementById("wipPlant").value;
 
-      let wa = `*SISA BARANG BAGUS ASSY TGL ${tgl} ${shift} (${plant})*\n\n`;
+      let wa = `*SISA BARANG BAGUS ASSY TGL ${tgl} ${shift} (${plant})*\n━━━━━━━━━━━━━━━━━━━━\n\n`;
 
       groupEntries.forEach(([gName, items]) => {
         wa += `${gName}\n`;
@@ -3943,7 +3952,13 @@
         wa += `\n`;
       });
 
-      waBox.value = wa.trim();
+      if (!waSpaManuallyEdited) waBox.value = wa.trim();
+    }
+
+    function buatUlangWaSpa() {
+      waSpaManuallyEdited = false;
+      renderSpaAll();
+      simpanDraftLokal();
     }
 
     /********************************************************************
