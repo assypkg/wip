@@ -861,7 +861,10 @@
           ☁️ Cloud (<span id="cloudCountHeader">0</span>)
         </button>
         <button class="btn-header" onclick="toggleModal('masterModal', true)">
-          📂 Master (<span id="masterCount">0</span>)
+          📂 Master WIP (<span id="masterCount">0</span>)
+        </button>
+        <button class="btn-header" onclick="bukaMasterProdukFg()">
+          🏷️ Master Produk FG (<span id="masterProdukFgCount">0</span>)
         </button>
       </div>
     </div>
@@ -1165,7 +1168,9 @@
           </div>
           <div style="grid-column: 1 / -1;">
             <label>Nama Produk</label>
-            <input type="text" id="fgProductName" placeholder="Contoh: 8603 - BS(A) PROJECT NEW YORK - OMG LIP CREAM" oninput="simpanDraftLokal()" />
+            <input type="text" id="fgProductName" list="fgProductMasterList" placeholder="Pilih / cari nama produk Finish Good..." oninput="simpanDraftLokal()" />
+            <datalist id="fgProductMasterList"></datalist>
+            <div style="font-size:0.68rem; color:var(--text-muted); margin-top:3px;">Pilih dari Master Produk FG atau ketik nama produk.</div>
           </div>
           <div style="grid-column: 1 / -1;">
             <label>Nomor Job Order (JO)</label>
@@ -1666,6 +1671,34 @@
   </div>
 
   <!-- =========================================================
+       MODAL MASTER PRODUK FINISH GOOD
+       ========================================================= -->
+  <div id="masterProdukFgModal" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="card-header">
+        <span class="card-title">🏷️ Master Produk Finish Good</span>
+        <button class="btn btn-danger" onclick="toggleModal('masterProdukFgModal', false)">✕ Tutup</button>
+      </div>
+      <div id="masterProdukFgCloudStatus" role="status" aria-live="polite" style="padding:9px 10px; margin:0 0 12px; border:1px solid var(--border); border-radius:9px; font-size:0.76rem; line-height:1.45;">☁️ Memeriksa Master Produk Cloud...</div>
+      <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px;">
+        <button class="btn btn-outline" type="button" onclick="tarikMasterProdukFgCloud()">↻ Sinkronkan</button>
+        <button class="btn btn-outline" type="button" id="btnBackupMasterProdukFg" onclick="downloadBackupMasterProdukFg()" style="display:none;">Unduh Backup Lokal</button>
+      </div>
+      <div style="display:grid; gap:8px; margin-bottom:12px;">
+        <label for="masterProdukFgInput">Nama Produk</label>
+        <input type="text" id="masterProdukFgInput" placeholder="Contoh: 8603 - BS(A) PROJECT NEW YORK - OMG LIP CREAM" />
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button class="btn btn-primary" id="btnSimpanMasterProdukFg" type="button" onclick="simpanItemMasterProdukFg()">+ Tambah Produk</button>
+          <button class="btn btn-outline" id="btnBatalEditMasterProdukFg" type="button" onclick="batalEditMasterProdukFg()" style="display:none;">Batal Edit</button>
+        </div>
+      </div>
+      <input type="search" id="masterProdukFgSearch" placeholder="🔎 Cari nama produk..." oninput="renderMasterProdukFg()" style="width:100%; margin-bottom:8px;" />
+      <div id="masterProdukFgInfo" style="font-size:0.7rem; color:var(--text-muted); margin-bottom:6px;"></div>
+      <div id="masterProdukFgList" style="max-height:300px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:8px; font-size:0.78rem;"></div>
+    </div>
+  </div>
+
+  <!-- =========================================================
        MODAL 3: PANDUAN INSTALL APLIKASI
        ========================================================= -->
   <div id="installGuideModal" class="modal-backdrop">
@@ -1790,6 +1823,15 @@
     const MASTER_BASE_CATALOG_KEY = "assy_master_cloud_base_v1";
     const MASTER_BASE_UPDATE_KEY = "assy_master_cloud_update_time_v1";
     const MASTER_RECOVERY_KEY = "assy_master_local_recovery_v1";
+    const MASTER_PRODUK_FG_KEY = "assy_master_produk_fg_v1";
+    const MASTER_PRODUK_FG_BASE_KEY = "assy_master_produk_fg_cloud_base_v1";
+    const MASTER_PRODUK_FG_UPDATE_KEY = "assy_master_produk_fg_cloud_update_v1";
+    const MASTER_PRODUK_FG_BACKUP_KEY = "assy_master_produk_fg_backup_v1";
+    let masterProdukFg = JSON.parse(localStorage.getItem(MASTER_PRODUK_FG_KEY) || "[]");
+    let masterProdukFgReady = false;
+    let masterProdukFgBusy = false;
+    let masterProdukFgConflict = false;
+    let editingMasterProdukFg = null;
     let masterSyncReady = false;
     let masterSyncBusy = false;
     let masterSyncConflict = false;
@@ -2843,9 +2885,7 @@
 
       fgList.forEach((it, idx) => {
         wa += `${idx + 1}. ${it.leader}\n`;
-        const produkLaporan = it.productName !== undefined ? { productName: it.productName, jobOrder: it.jobOrder || "" } : pisahProdukDanJo(it.productJo);
-        wa += `${produkLaporan.productName}\n`;
-        wa += `JO: ${produkLaporan.jobOrder || "-"}\n`;
+        wa += `${it.productJo || [it.productName, it.jobOrder ? `(${it.jobOrder})` : ""].filter(Boolean).join(" ")}\n`;
         if (it.note) {
           wa += `*${it.note}*\n`;
         }
@@ -4028,11 +4068,95 @@
     /********************************************************************
      * 11. PENGATURAN MASTER KATALOG (BLOKIR DUPLIKAT & SYNC FIREBASE)
      ********************************************************************/
+    function normalisasiMasterProdukFg(list) {
+      const seen = new Set();
+      return (Array.isArray(list) ? list : []).map(x => String(x || "").trim().replace(/\s+/g, " ")).filter(name => {
+        const key = name.toLocaleLowerCase("id");
+        if (!name || seen.has(key)) return false;
+        seen.add(key); return true;
+      }).sort((a,b) => new Intl.Collator("id",{numeric:true,sensitivity:"base"}).compare(a,b));
+    }
+
+    function simpanMasterProdukFgLokal() {
+      masterProdukFg = normalisasiMasterProdukFg(masterProdukFg);
+      localStorage.setItem(MASTER_PRODUK_FG_KEY,JSON.stringify(masterProdukFg));
+      const count=document.getElementById("masterProdukFgCount"); if(count)count.textContent=masterProdukFg.length;
+      const dl=document.getElementById("fgProductMasterList");
+      if(dl)dl.innerHTML=masterProdukFg.map(name=>'<option value="'+name.replace(/[&<>"]/g,"")+'"></option>').join("");
+      renderMasterProdukFg();
+    }
+
+    function setStatusMasterProdukFg(type,message) {
+      const box=document.getElementById("masterProdukFgCloudStatus"); if(!box)return;
+      const styles={syncing:["#eff6ff","#1d4ed8","⏳"],success:["#ecfdf5","#166534","☁️"],warning:["#fffbeb","#92400e","⚠️"],error:["#fef2f2","#b91c1c","❌"],conflict:["#fff7ed","#9a3412","🛡️"]};
+      const s=styles[type]||styles.warning; box.style.background=s[0];box.style.color=s[1];box.style.borderColor=s[1]+"66";box.textContent=s[2]+" "+message;
+      const btn=document.getElementById("btnBackupMasterProdukFg");if(btn)btn.style.display=localStorage.getItem(MASTER_PRODUK_FG_BACKUP_KEY)?"inline-flex":"none";
+    }
+
+    async function tarikMasterProdukFgCloud() {
+      if(masterProdukFgBusy)return false; masterProdukFgBusy=true;setStatusMasterProdukFg("syncing","Memeriksa versi Master Produk di Cloud...");
+      try {
+        const url=getFirestoreBaseUrl()+"/"+COLLECTION_MASTER+"/master_produk_finishgood";
+        const res=await fetch(url,{cache:"no-store"});
+        if(res.status===404){
+          if(localStorage.getItem(MASTER_PRODUK_FG_UPDATE_KEY)){masterProdukFgConflict=true;localStorage.setItem(MASTER_PRODUK_FG_BACKUP_KEY,JSON.stringify({savedAt:new Date().toISOString(),products:masterProdukFg}));setStatusMasterProdukFg("conflict","Dokumen Cloud tidak ditemukan. Data lokal diamankan.");return false;}
+          masterProdukFgReady=true;setStatusMasterProdukFg("warning","Master Produk Cloud belum dibuat. Tambahkan produk untuk membuat data pusat.");return true;
+        }
+        if(!res.ok)throw new Error("Firestore GET gagal (HTTP "+res.status+")");
+        const doc=await res.json();let remote;try{remote=JSON.parse(doc.fields?.productsJson?.stringValue||"[]");}catch(e){throw new Error("Format Master Produk Cloud tidak valid.");}
+        if(!Array.isArray(remote))throw new Error("Struktur Master Produk Cloud tidak valid.");
+        const baseTime=localStorage.getItem(MASTER_PRODUK_FG_UPDATE_KEY),baseRaw=localStorage.getItem(MASTER_PRODUK_FG_BASE_KEY),base=baseRaw?JSON.parse(baseRaw):null;
+        const localChanged=base?JSON.stringify(normalisasiMasterProdukFg(masterProdukFg))!==JSON.stringify(normalisasiMasterProdukFg(base)):false;
+        const normalized=normalisasiMasterProdukFg(remote);
+        if(!baseTime||!base){if(localChanged&&JSON.stringify(normalisasiMasterProdukFg(masterProdukFg))!==JSON.stringify(normalized))localStorage.setItem(MASTER_PRODUK_FG_BACKUP_KEY,JSON.stringify({savedAt:new Date().toISOString(),products:masterProdukFg}));masterProdukFg=normalized;}
+        else if(doc.updateTime!==baseTime){if(localChanged){masterProdukFgConflict=true;localStorage.setItem(MASTER_PRODUK_FG_BACKUP_KEY,JSON.stringify({savedAt:new Date().toISOString(),products:masterProdukFg}));setStatusMasterProdukFg("conflict","Lokal dan Cloud sama-sama berubah. Data lokal diamankan; tidak ada yang ditimpa.");return false;}masterProdukFg=normalized;}
+        localStorage.setItem(MASTER_PRODUK_FG_BASE_KEY,JSON.stringify(normalized));localStorage.setItem(MASTER_PRODUK_FG_UPDATE_KEY,doc.updateTime||"");
+        masterProdukFgReady=true;masterProdukFgConflict=false;simpanMasterProdukFgLokal();setStatusMasterProdukFg("success","Sinkron dan terverifikasi • "+masterProdukFg.length+" produk.");return true;
+      }catch(e){masterProdukFgReady=false;setStatusMasterProdukFg("error","Tidak dapat memverifikasi Cloud: "+e.message+". Data lokal tidak diubah.");return false;}
+      finally{masterProdukFgBusy=false;}
+    }
+
+    async function simpanMasterProdukFgCloud() {
+      if(!masterProdukFgReady||masterProdukFgBusy||masterProdukFgConflict){setStatusMasterProdukFg(masterProdukFgConflict?"conflict":"warning","Lokal tersimpan, tetapi Cloud belum siap atau ada konflik. Sinkronkan sebelum mencoba lagi.");return false;}
+      masterProdukFgBusy=true;setStatusMasterProdukFg("syncing","Memverifikasi versi Cloud sebelum menyimpan...");
+      try{
+        const url=getFirestoreBaseUrl()+"/"+COLLECTION_MASTER+"/master_produk_finishgood",check=await fetch(url,{cache:"no-store"}),baseTime=localStorage.getItem(MASTER_PRODUK_FG_UPDATE_KEY);let updateTime=null;
+        if(check.status===404){if(baseTime)throw new Error("Dokumen Cloud hilang; data lokal tidak ditimpa.");}
+        else{if(!check.ok)throw new Error("Firestore GET gagal (HTTP "+check.status+")");const current=await check.json();updateTime=current.updateTime;if(!baseTime||updateTime!==baseTime){masterProdukFgConflict=true;localStorage.setItem(MASTER_PRODUK_FG_BACKUP_KEY,JSON.stringify({savedAt:new Date().toISOString(),products:masterProdukFg}));setStatusMasterProdukFg("conflict","Versi Cloud berubah. Data lokal diamankan dan penyimpanan dihentikan.");return false;}}
+        const payload={fields:{updatedAt:{stringValue:new Date().toISOString()},productsJson:{stringValue:JSON.stringify(normalisasiMasterProdukFg(masterProdukFg))}},currentDocument:updateTime?{updateTime}:{exists:false}};
+        const saved=await fetch(url,{method:"PATCH",cache:"no-store",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+        if(saved.status===409||saved.status===412)throw new Error("Konflik versi saat menyimpan (HTTP "+saved.status+")");if(!saved.ok)throw new Error("Firestore PATCH gagal (HTTP "+saved.status+")");
+        const doc=await saved.json(),snapshot=normalisasiMasterProdukFg(masterProdukFg);localStorage.setItem(MASTER_PRODUK_FG_BASE_KEY,JSON.stringify(snapshot));localStorage.setItem(MASTER_PRODUK_FG_UPDATE_KEY,doc.updateTime||"");masterProdukFgReady=true;setStatusMasterProdukFg("success","Berhasil disimpan dan diverifikasi di Cloud • "+snapshot.length+" produk.");return true;
+      }catch(e){setStatusMasterProdukFg("error","Gagal menyimpan Cloud: "+e.message+". Data lokal tetap tersedia.");return false;}
+      finally{masterProdukFgBusy=false;}
+    }
+
+    function bukaMasterProdukFg(){toggleModal("masterProdukFgModal",true);renderMasterProdukFg();if(!masterProdukFgReady)tarikMasterProdukFgCloud();}
+    function renderMasterProdukFg(){
+      const list=document.getElementById("masterProdukFgList"),info=document.getElementById("masterProdukFgInfo");if(!list||!info)return;
+      const q=(document.getElementById("masterProdukFgSearch")?.value||"").trim().toLowerCase(),items=masterProdukFg.map((name,index)=>({name,index})).filter(x=>!q||x.name.toLowerCase().includes(q));
+      info.textContent=q?"Ditemukan "+items.length+" dari "+masterProdukFg.length+" produk.":"Total "+masterProdukFg.length+" produk • Diurutkan berdasarkan nama.";
+      if(!items.length){list.innerHTML='<div style="padding:14px;text-align:center;color:var(--text-muted);">Belum ada produk yang cocok.</div>';return;}
+      list.innerHTML=items.map(x=>'<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;padding:8px 4px;border-bottom:1px solid #f1f5f9;"><span style="flex:1;min-width:0;overflow-wrap:anywhere;">'+x.name.replace(/[&<>]/g,"")+'</span><div style="display:flex;gap:4px;flex-shrink:0;"><button class="btn btn-edit" onclick="editMasterProdukFg('+x.index+')">Edit</button><button class="btn btn-danger" onclick="hapusMasterProdukFg('+x.index+')">Hapus</button></div></div>').join("");
+    }
+    function simpanItemMasterProdukFg(){
+      const input=document.getElementById("masterProdukFgInput"),name=input.value.trim().replace(/\s+/g," ");
+      if(!name){alert("Isi nama produk terlebih dahulu.");return;}
+      if(masterProdukFg.some((x,i)=>i!==editingMasterProdukFg&&x.toLowerCase()===name.toLowerCase())){alert("Produk sudah terdaftar di Master Produk Finish Good.");return;}
+      if(editingMasterProdukFg!==null)masterProdukFg[editingMasterProdukFg]=name;else masterProdukFg.push(name);
+      batalEditMasterProdukFg();simpanMasterProdukFgLokal();simpanMasterProdukFgCloud();
+    }
+    function editMasterProdukFg(index){if(!masterProdukFg[index])return;editingMasterProdukFg=index;document.getElementById("masterProdukFgInput").value=masterProdukFg[index];document.getElementById("btnSimpanMasterProdukFg").textContent="💾 Simpan Perubahan";document.getElementById("btnBatalEditMasterProdukFg").style.display="inline-flex";document.getElementById("masterProdukFgInput").focus();}
+    function batalEditMasterProdukFg(){editingMasterProdukFg=null;const input=document.getElementById("masterProdukFgInput");if(input)input.value="";const save=document.getElementById("btnSimpanMasterProdukFg");if(save)save.textContent="+ Tambah Produk";const cancel=document.getElementById("btnBatalEditMasterProdukFg");if(cancel)cancel.style.display="none";}
+    function hapusMasterProdukFg(index){const name=masterProdukFg[index];if(!name||!confirm("Hapus produk dari Master Produk Finish Good?\\n\\n"+name))return;masterProdukFg.splice(index,1);if(editingMasterProdukFg===index)batalEditMasterProdukFg();simpanMasterProdukFgLokal();simpanMasterProdukFgCloud();}
+    function downloadBackupMasterProdukFg(){const raw=localStorage.getItem(MASTER_PRODUK_FG_BACKUP_KEY);if(!raw){alert("Belum ada backup Master Produk lokal.");return;}const url=URL.createObjectURL(new Blob([raw],{type:"application/json"})),a=document.createElement("a");a.href=url;a.download="backup-master-produk-fg-"+getTodayWibIso()+".json";a.click();URL.revokeObjectURL(url);}
+
     function toggleModal(id, show) {
       const modal = document.getElementById(id);
       if (!modal) return;
       modal.style.display = show ? "flex" : "none";
       if (show && id === "masterModal") renderMasterModalList();
+      if (show && id === "masterProdukFgModal") renderMasterProdukFg();
     }
 
     function bukaModalEditWip() {
@@ -4223,6 +4347,7 @@
       getActiveProjectId();
 
       document.getElementById("masterCount").textContent = catalog.length;
+      simpanMasterProdukFgLokal();
       updateCloudCounterUI();
 
       pulihkanDraftLokalJikaHariSama();
@@ -4240,6 +4365,7 @@
 
       sinkronTarikDariFirebase(false);
       tarikMasterDariFirebase();
+      tarikMasterProdukFgCloud();
     });
   </script>
 </body>
