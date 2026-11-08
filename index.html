@@ -1598,6 +1598,14 @@
         <button class="btn btn-danger" onclick="toggleModal('masterModal', false)">✕ Tutup</button>
       </div>
 
+      <div id="masterCloudStatus" role="status" aria-live="polite" style="padding:9px 10px; margin:0 0 12px; border:1px solid var(--border); border-radius:9px; background:#f8fafc; font-size:0.76rem; line-height:1.45;">
+        ☁️ Memeriksa status Master Cloud...
+      </div>
+      <div style="display:flex; flex-wrap:wrap; gap:6px; margin:-4px 0 12px;">
+        <button class="btn btn-outline" type="button" onclick="tarikMasterDariFirebase()">↻ Sinkronkan</button>
+        <button class="btn btn-edit" type="button" id="btnUseCloudMaster" onclick="pakaiMasterCloud()" style="display:none;">Gunakan Master Cloud</button>
+        <button class="btn btn-outline" type="button" id="btnDownloadMasterRecovery" onclick="downloadMasterRecoveryBackup()" style="display:none;">Unduh Backup Lokal</button>
+      </div>
       <div style="margin-bottom:12px;">
         <label>Upload File Master Baru (.xlsx / .ods / .csv)</label>
         <input type="file" accept=".xlsx,.xls,.ods,.csv" onchange="uploadMasterExcel(event)" style="font-size:0.8rem;" />
@@ -1742,6 +1750,13 @@
     ];
 
     let catalog = JSON.parse(localStorage.getItem("assy_catalog_v3")) || DEFAULT_CATALOG;
+    const MASTER_BASE_CATALOG_KEY = "assy_master_cloud_base_v1";
+    const MASTER_BASE_UPDATE_KEY = "assy_master_cloud_update_time_v1";
+    const MASTER_RECOVERY_KEY = "assy_master_local_recovery_v1";
+    let masterSyncReady = false;
+    let masterSyncBusy = false;
+    let masterSyncConflict = false;
+    let masterSyncQueued = false;
 
     let wipList = [];
     let fgList = [];
@@ -2964,39 +2979,268 @@
       } catch (e) {}
     }
 
-    async function simpanMasterKeFirebase() {
+    function normalisasiMaster(list) {
+      const clean = (Array.isArray(list) ? list : [])
+        .filter(item => item && String(item.group || "").trim() && String(item.part || "").trim())
+        .map(item => {
+          const group = String(item.group).trim();
+          const part = String(item.part).trim();
+          return { group, part, keywords: String(item.keywords || `${group} ${part}`).toLowerCase() };
+        });
+      const unique = deduplicateCatalogList(clean);
+      const collator = new Intl.Collator("id", { numeric: true, sensitivity: "base" });
+      unique.sort((a, b) => collator.compare(a.group, b.group) || collator.compare(a.part, b.part));
+      return unique;
+    }
+
+    function masterSnapshotSama(a, b) {
+      const left = normalisasiMaster(a).map(x => `${x.group.toLowerCase()}|${x.part.toLowerCase()}`).sort();
+      const right = normalisasiMaster(b).map(x => `${x.group.toLowerCase()}|${x.part.toLowerCase()}`).sort();
+      return left.length === right.length && left.every((value, index) => value === right[index]);
+    }
+
+    function simpanMasterLokal() {
+      catalog = normalisasiMaster(catalog);
+      localStorage.setItem("assy_catalog_v3", JSON.stringify(catalog));
+      const count = document.getElementById("masterCount");
+      if (count) count.textContent = catalog.length;
+      if (document.getElementById("masterModalList")) renderMasterModalList();
+    }
+
+    function simpanMasterBaseline(remoteCatalog, updateTime) {
+      const snapshot = normalisasiMaster(remoteCatalog);
+      localStorage.setItem(MASTER_BASE_CATALOG_KEY, JSON.stringify(snapshot));
+      if (updateTime) localStorage.setItem(MASTER_BASE_UPDATE_KEY, updateTime);
+      else localStorage.removeItem(MASTER_BASE_UPDATE_KEY);
+    }
+
+    function setMasterCloudStatus(type, message) {
+      const box = document.getElementById("masterCloudStatus");
+      const useCloudBtn = document.getElementById("btnUseCloudMaster");
+      const backupBtn = document.getElementById("btnDownloadMasterRecovery");
+      const styles = {
+        syncing: ["#eff6ff", "#1d4ed8", "⏳"],
+        success: ["#ecfdf5", "#166534", "☁️"],
+        warning: ["#fffbeb", "#92400e", "⚠️"],
+        error: ["#fef2f2", "#b91c1c", "❌"],
+        conflict: ["#fff7ed", "#9a3412", "🛡️"]
+      };
+      const style = styles[type] || styles.warning;
+      if (box) {
+        box.style.background = style[0];
+        box.style.color = style[1];
+        box.style.borderColor = style[1] + "55";
+        box.textContent = `${style[2]} ${message}`;
+      }
+      if (useCloudBtn) useCloudBtn.style.display = type === "conflict" ? "inline-flex" : "none";
+      if (backupBtn) backupBtn.style.display = localStorage.getItem(MASTER_RECOVERY_KEY) ? "inline-flex" : "none";
+    }
+
+    async function bacaMasterCloud() {
+      const url = `${getFirestoreBaseUrl()}/${COLLECTION_MASTER}/master_katalog_utama?_t=${Date.now()}`;
+      const res = await fetch(url, { cache: "no-store" });
+      if (res.status === 404) return { exists: false, doc: null };
+      if (!res.ok) throw new Error(`Firestore GET gagal (HTTP ${res.status})`);
+      const doc = await res.json();
+      let remoteCatalog;
       try {
+        remoteCatalog = JSON.parse(doc.fields?.catalogJson?.stringValue || "[]");
+      } catch (e) {
+        throw new Error("Format Master Cloud tidak valid. Data lokal tidak diubah.");
+      }
+      if (!Array.isArray(remoteCatalog)) throw new Error("Struktur Master Cloud bukan daftar katalog.");
+      return { exists: true, doc, catalog: normalisasiMaster(remoteCatalog), updateTime: doc.updateTime };
+    }
+
+    function simpanBackupMasterLokal(reason) {
+      const backup = {
+        savedAt: new Date().toISOString(),
+        reason: reason || "Perbedaan data lokal dan Cloud",
+        catalog: normalisasiMaster(catalog)
+      };
+      localStorage.setItem(MASTER_RECOVERY_KEY, JSON.stringify(backup));
+    }
+
+    function downloadMasterRecoveryBackup() {
+      const raw = localStorage.getItem(MASTER_RECOVERY_KEY);
+      if (!raw) {
+        alert("Belum ada backup Master lokal.");
+        return;
+      }
+      const blob = new Blob([raw], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `backup-master-wip-${new Date().toISOString().slice(0,10)}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    async function simpanMasterKeFirebase() {
+      if (!masterSyncReady) {
+        masterSyncQueued = true;
+        setMasterCloudStatus("warning", "Perubahan disimpan di perangkat. Menunggu pemeriksaan versi Cloud sebelum dikirim.");
+        return false;
+      }
+      if (masterSyncBusy) {
+        masterSyncQueued = true;
+        return false;
+      }
+      if (masterSyncConflict) {
+        simpanBackupMasterLokal("Perubahan lokal tertahan karena versi Master Cloud berbeda.");
+        setMasterCloudStatus("conflict", "Ada perbedaan versi. Data lokal diamankan; tidak ada data yang ditimpa. Periksa Cloud atau unduh backup lokal.");
+        return false;
+      }
+
+      masterSyncBusy = true;
+      setMasterCloudStatus("syncing", "Memeriksa versi Cloud dan menyimpan perubahan...");
+      try {
+        const remote = await bacaMasterCloud();
+        const baseTime = localStorage.getItem(MASTER_BASE_UPDATE_KEY);
+
+        if (remote.exists) {
+          if (!baseTime || remote.updateTime !== baseTime) {
+            masterSyncConflict = true;
+            simpanBackupMasterLokal("Versi Cloud berubah sejak perangkat ini terakhir sinkron.");
+            setMasterCloudStatus("conflict", "Versi Cloud berubah atau perangkat belum memiliki versi dasar. Penyimpanan dihentikan agar perubahan perangkat lain tidak tertimpa.");
+            return false;
+          }
+        } else if (baseTime) {
+          masterSyncConflict = true;
+          simpanBackupMasterLokal("Dokumen Master Cloud tidak ditemukan, padahal perangkat memiliki versi sebelumnya.");
+          setMasterCloudStatus("conflict", "Dokumen Master Cloud tidak ditemukan. Data lokal diamankan dan tidak dibuat ulang otomatis.");
+          return false;
+        }
+
         const url = `${getFirestoreBaseUrl()}/${COLLECTION_MASTER}/master_katalog_utama`;
-        await fetch(url, {
+        const body = {
+          fields: {
+            updatedAt: { stringValue: new Date().toISOString() },
+            catalogJson: { stringValue: JSON.stringify(normalisasiMaster(catalog)) }
+          },
+          currentDocument: remote.exists ? { updateTime: remote.updateTime } : { exists: false }
+        };
+        const response = await fetch(url, {
           method: "PATCH",
           cache: "no-store",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            fields: {
-              updatedAt: { stringValue: new Date().toISOString() },
-              catalogJson: { stringValue: JSON.stringify(catalog) }
-            }
-          })
+          body: JSON.stringify(body)
         });
-      } catch (e) {}
+        if (response.status === 409 || response.status === 412) {
+          masterSyncConflict = true;
+          simpanBackupMasterLokal("Firestore menolak penyimpanan karena versi berubah bersamaan.");
+          setMasterCloudStatus("conflict", "Perubahan bersamaan terdeteksi. Penyimpanan ditolak untuk melindungi data perangkat lain.");
+          return false;
+        }
+        if (!response.ok) throw new Error(`Firestore PATCH gagal (HTTP ${response.status})`);
+        const savedDoc = await response.json();
+        simpanMasterBaseline(catalog, savedDoc.updateTime);
+        masterSyncConflict = false;
+        masterSyncQueued = false;
+        setMasterCloudStatus("success", `Tersimpan dan terverifikasi di Cloud • ${new Date().toLocaleString("id-ID")}`);
+        return true;
+      } catch (error) {
+        setMasterCloudStatus("error", `Gagal menyimpan ke Cloud: ${error.message}. Data lokal tetap dipertahankan.`);
+        return false;
+      } finally {
+        masterSyncBusy = false;
+        if (masterSyncQueued && masterSyncReady && !masterSyncConflict) {
+          masterSyncQueued = false;
+          setTimeout(() => simpanMasterKeFirebase(), 0);
+        }
+      }
     }
 
     async function tarikMasterDariFirebase() {
+      if (masterSyncBusy) return;
+      masterSyncBusy = true;
+      setMasterCloudStatus("syncing", "Mengambil Master Cloud dan memeriksa perbedaan versi...");
       try {
-        const url = `${getFirestoreBaseUrl()}/${COLLECTION_MASTER}/master_katalog_utama?_t=${Date.now()}`;
-        const res = await fetch(url, { cache: "no-store" });
-        if (!res.ok) return;
-        const doc = await res.json();
-        const rawJson = doc.fields?.catalogJson?.stringValue;
-        if (rawJson) {
-          const remoteCatalog = JSON.parse(rawJson);
-          if (Array.isArray(remoteCatalog) && remoteCatalog.length > 0) {
-            catalog = deduplicateCatalogList([...catalog, ...remoteCatalog]);
-            localStorage.setItem("assy_catalog_v3", JSON.stringify(catalog));
-            document.getElementById("masterCount").textContent = catalog.length;
+        const remote = await bacaMasterCloud();
+        const baseTime = localStorage.getItem(MASTER_BASE_UPDATE_KEY);
+        const baseRaw = localStorage.getItem(MASTER_BASE_CATALOG_KEY);
+        const baseCatalog = baseRaw ? JSON.parse(baseRaw) : null;
+        const localChanged = baseCatalog ? !masterSnapshotSama(catalog, baseCatalog) : false;
+
+        if (!remote.exists) {
+          if (baseTime) {
+            masterSyncConflict = true;
+            simpanBackupMasterLokal("Master Cloud terhapus atau tidak dapat ditemukan.");
+            setMasterCloudStatus("conflict", "Master Cloud tidak ditemukan, tetapi perangkat memiliki versi sebelumnya. Tidak dibuat ulang otomatis.");
+            return false;
           }
+          masterSyncReady = true;
+          setMasterCloudStatus("warning", "Belum ada Master di Cloud. Master perangkat ini akan menjadi data awal saat ada perubahan tersimpan.");
+          if (masterSyncQueued) await simpanMasterKeFirebase();
+          return true;
         }
-      } catch (e) {}
+
+        if (!baseTime || !baseCatalog) {
+          if (!masterSnapshotSama(catalog, remote.catalog)) {
+            simpanBackupMasterLokal("Backup migrasi sebelum perangkat mengikuti Master Cloud pusat.");
+          }
+          catalog = remote.catalog;
+          simpanMasterLokal();
+          simpanMasterBaseline(remote.catalog, remote.updateTime);
+          masterSyncConflict = false;
+          masterSyncReady = true;
+          setMasterCloudStatus("success", "Master Cloud berhasil dimuat. Perangkat sekarang mengikuti versi pusat.");
+          return true;
+        }
+
+        if (remote.updateTime === baseTime) {
+          masterSyncReady = true;
+          masterSyncConflict = false;
+          setMasterCloudStatus("success", `Sinkron • Versi Cloud cocok • ${catalog.length} item`);
+          if (masterSyncQueued) await simpanMasterKeFirebase();
+          return true;
+        }
+
+        if (localChanged) {
+          masterSyncConflict = true;
+          masterSyncReady = true;
+          simpanBackupMasterLokal("Konflik: perangkat lokal dan Cloud sama-sama berubah.");
+          setMasterCloudStatus("conflict", "Master lokal dan Cloud sama-sama berubah. Tidak digabung otomatis. Data lokal diamankan; pilih Gunakan Master Cloud setelah backup diperiksa.");
+          return false;
+        }
+
+        catalog = remote.catalog;
+        simpanMasterLokal();
+        simpanMasterBaseline(remote.catalog, remote.updateTime);
+        masterSyncReady = true;
+        masterSyncConflict = false;
+        setMasterCloudStatus("success", `Master terbaru berhasil ditarik dari Cloud • ${catalog.length} item`);
+        return true;
+      } catch (error) {
+        masterSyncReady = false;
+        setMasterCloudStatus("error", `Tidak dapat memverifikasi Master Cloud: ${error.message}. Data lokal tidak diubah.`);
+        return false;
+      } finally {
+        masterSyncBusy = false;
+      }
+    }
+
+    async function pakaiMasterCloud() {
+      if (!confirm("Gunakan Master Cloud sebagai data aktif pada perangkat ini? Data lokal yang berbeda akan disimpan sebagai backup terlebih dahulu.")) return;
+      if (masterSyncBusy) return;
+      masterSyncBusy = true;
+      setMasterCloudStatus("syncing", "Mengamankan data lokal dan mengambil Master Cloud...");
+      try {
+        simpanBackupMasterLokal("Backup sebelum pengguna memilih Master Cloud sebagai data aktif.");
+        const remote = await bacaMasterCloud();
+        if (!remote.exists) throw new Error("Master Cloud tidak ditemukan.");
+        catalog = remote.catalog;
+        simpanMasterLokal();
+        simpanMasterBaseline(remote.catalog, remote.updateTime);
+        masterSyncConflict = false;
+        masterSyncReady = true;
+        masterSyncQueued = false;
+        setMasterCloudStatus("success", `Master Cloud diterapkan • ${catalog.length} item • Backup lokal tersedia untuk diunduh.`);
+      } catch (error) {
+        setMasterCloudStatus("error", `Gagal menerapkan Master Cloud: ${error.message}. Data lokal tetap tersedia.`);
+      } finally {
+        masterSyncBusy = false;
+      }
     }
 
     function bukaModalCloud() {
