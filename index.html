@@ -2465,6 +2465,24 @@
       }
     }
 
+    function formatRincianBoxHtml(boxes, fallbackQty) {
+      const list = Array.isArray(boxes) && boxes.length
+        ? boxes
+        : [{ label: String(fallbackQty), val: Number(fallbackQty) || 0 }];
+
+      const posCount = list.filter(box => Number(box.val) >= 0).length;
+      let posIdx = 0;
+      const details = list.map(box => {
+        if (Number(box.val) < 0) {
+          return `<span style="color:var(--red); font-weight:700;">[Diambil: ${formatNum(box.val)}]</span>`;
+        }
+        posIdx++;
+        return `[Box ${posIdx}: <b>${formatNum(box.val)}</b>]`;
+      }).join(" ");
+
+      return `📦 <b>Aktual ${posCount} Input Box:</b> ${details}`;
+    }
+
     function hitungJumlahInputBox(boxes, fallbackQty) {
       const list = Array.isArray(boxes) && boxes.length
         ? boxes
