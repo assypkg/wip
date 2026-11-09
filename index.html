@@ -1376,7 +1376,10 @@
         <div class="form-row-responsive">
           <div>
             <label>Komponen & Kode</label>
-            <input type="text" id="spaPart" placeholder="Contoh: Base(002)" oninput="simpanDraftLokal()" />
+            <div class="spa-part-search-wrap" style="position:relative;">
+              <input type="text" id="spaPart" placeholder="Ketik kode / komponen: 9, Inbs, Base..." autocomplete="off" oninput="onSpaPartSuggestionType()" onfocus="onSpaPartSuggestionType()" onkeydown="onSpaPartSuggestionKey(event)" aria-controls="spaPartSuggestions" aria-expanded="false" />
+              <div class="quick-results" id="spaPartSuggestions" role="listbox" aria-label="Saran komponen dan kode SPA"></div>
+            </div>
           </div>
           <div>
             <label>Keterangan (Mold / Hold / Beta)</label>
@@ -2319,6 +2322,82 @@
       clearWipSearch();
       simpanDraftLokal();
     }
+
+    function tutupSpaPartSuggestions() {
+      const box = document.getElementById("spaPartSuggestions");
+      const input = document.getElementById("spaPart");
+      if (box) { box.style.display = "none"; box.innerHTML = ""; }
+      if (input) input.setAttribute("aria-expanded", "false");
+    }
+
+    function onSpaPartSuggestionType() {
+      const input = document.getElementById("spaPart");
+      const box = document.getElementById("spaPartSuggestions");
+      if (!input || !box) return;
+      const query = input.value.trim().toLocaleLowerCase("id-ID");
+      const source = Array.isArray(catalog) ? catalog : [];
+      const seen = new Set();
+      const matches = source.filter(item => {
+        const part = String(item.part || "").trim();
+        if (!part) return false;
+        const key = part.toLocaleLowerCase("id-ID");
+        if (seen.has(key)) return false;
+        seen.add(key);
+        const target = `${item.group || ""} ${part} ${item.keywords || ""}`.toLocaleLowerCase("id-ID");
+        return !query || target.includes(query);
+      }).slice(0, 40);
+      box.innerHTML = "";
+      if (!matches.length) {
+        const empty = document.createElement("div");
+        empty.style.cssText = "padding:10px 12px;font-size:.78rem;color:var(--text-muted);";
+        empty.textContent = "Komponen/kode tidak ditemukan di Master WIP. Periksa Master WIP atau isi manual.";
+        box.appendChild(empty);
+      } else {
+        matches.forEach(item => {
+          const option = document.createElement("div");
+          option.className = "quick-item";
+          option.setAttribute("role", "option");
+          option.tabIndex = -1;
+          const content = document.createElement("div");
+          const part = document.createElement("div");
+          part.className = "quick-item-left";
+          part.textContent = item.part;
+          const group = document.createElement("div");
+          group.className = "quick-item-sub";
+          group.textContent = item.group || "";
+          content.append(part, group);
+          const hint = document.createElement("span");
+          hint.className = "quick-item-badge";
+          hint.textContent = "Pilih →";
+          option.append(content, hint);
+          option.addEventListener("pointerdown", e => e.preventDefault());
+          option.addEventListener("click", () => {
+            input.value = item.part;
+            tutupSpaPartSuggestions();
+            simpanDraftLokal();
+          });
+          box.appendChild(option);
+        });
+      }
+      box.style.display = "block";
+      input.setAttribute("aria-expanded", "true");
+    }
+
+    function onSpaPartSuggestionKey(event) {
+      if (event.key === "Escape") { tutupSpaPartSuggestions(); return; }
+      if (event.key === "Enter") {
+        const box = document.getElementById("spaPartSuggestions");
+        const first = box?.querySelector(".quick-item");
+        if (box?.style.display === "block" && first) {
+          event.preventDefault();
+          first.click();
+        }
+      }
+    }
+
+    document.addEventListener("pointerdown", event => {
+      if (!event.target.closest(".spa-part-search-wrap")) tutupSpaPartSuggestions();
+    });
 
     function onSpaSearchType() {
       const inputEl = document.getElementById("spaSearchInput");
