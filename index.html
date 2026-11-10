@@ -4304,7 +4304,8 @@
           if (it.waitingBeta > 0) stockLines.push(["Menunggu kirim Plant Beta", it.waitingBeta]);
           const width = Math.max(5, ...stockLines.map(v => String(v[0]).length));
           stockLines.forEach(v => {
-            wa += "`  " + String(v[0]).padEnd(width, " ") + " : " + formatNum(v[1]).padStart(8, " ") + "`\n";
+            // Tidak memberi spasi setelah backtick pembuka agar WhatsApp mengenali inline monospace.
+            wa += "`" + String(v[0]).padEnd(width, " ") + " : " + formatNum(v[1]).padStart(8, " ") + "`\n";
           });
           if (stockLines.length > 1) wa += `  Total stok Assy + Gudang : *${formatNum(it.total)}*\n`;
         });
