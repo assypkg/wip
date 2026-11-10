@@ -3840,15 +3840,19 @@
       const shift = document.getElementById("wipShift").value;
       const plant = document.getElementById("wipPlant").value;
 
-      let wa = `*SISA BARANG BAGUS ASSY TGL ${tgl} ${shift} (${plant})*\n━━━━━━━━━━━━━━━━━━━━\n\n`;
+      let wa = `*SISA BARANG BAGUS ASSY TGL ${tgl}*\n*${String(shift).toUpperCase()} (${String(plant).toUpperCase()})*\n━━━━━━━━━━━━━━━━━━━━\n\n`;
 
       groupEntries.forEach(([gName, items]) => {
-        wa += `${gName}\n`;
+        wa += `*${gName}*\n`;
+        const maxPartLength = Math.max(...items.map((it) => String(it.part || "").length), 4);
         items.forEach((it) => {
-          const noteStr = it.note ? `(${it.note})` : "";
-          wa += `${it.part}=> ${formatNum(it.qty)}${noteStr}\n`;
+          const partText = String(it.part || "").trim();
+          const qtyText = formatNum(it.qty);
+          const noteText = it.note ? ` (${it.note})` : "";
+          const alignedPart = partText.padEnd(maxPartLength, " ");
+          wa += "`" + alignedPart + " : " + qtyText.padStart(8, " ") + "`" + noteText + "\n";
         });
-        wa += `\n`;
+        wa += "\n";
       });
 
       if (!waWipManuallyEdited) waBox.value = wa.trim();
