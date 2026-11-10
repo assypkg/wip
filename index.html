@@ -3062,13 +3062,15 @@
         wa += `\n*Sisa Barang Bagus wip Assy ${plantLower}*\n\n`;
 
         Object.entries(groupedWip).forEach(([gName, items]) => {
-          wa += `${gName}\n`;
+          wa += `*${gName}*\n`;
+          const maxPartLength = Math.max(...items.map(w => String(w.part || "").length), 4);
           items.forEach((w) => {
-            const noteStr = w.note ? `(${w.note})` : "";
-            wa += `${w.part}=> ${formatNum(w.qty)}${noteStr}\n`;
+            const partText = String(w.part || "").trim();
+            const noteStr = w.note ? ` (${w.note})` : "";
+            wa += "`" + partText.padEnd(maxPartLength, " ") + " : " + formatNum(w.qty).padStart(8, " ") + "`" + noteStr + "\n";
           });
           wa += `\n`;
-        });
+        });;
       }
 
       wa += `Terima kasih`;
@@ -4292,24 +4294,22 @@
           wa += `=> *${formatNum(gData.targetBuffer)}*\n\n`;
         }
         wa += `Ketersediaan barang :\n`;
-
         gData.items.forEach((it) => {
-          const noteHeader = it.note ? ` ${it.note}` : "";
-          if (it.gudang > 0 || it.waitingBeta > 0 || (it.otherStocks||[]).length) {
-            wa += `• *${it.part}*${noteHeader}\n`;
-            if(it.assy>0) wa += `  => ${formatNum(it.assy)} (Assy)\n`;
-            if(it.gudang>0) wa += `  => ${formatNum(it.gudang)} (Gudang)\n`;
-            (it.otherStocks||[]).forEach(v=>wa += `  => ${formatNum(v.qty)} (${v.label})\n`);
-            if(it.waitingBeta>0) wa += `  => ${formatNum(it.waitingBeta)} (Menunggu pengiriman dari Plant Beta - belum masuk stok Alpha)\n`;
-            wa += `  Total stok Assy + Gudang => *${formatNum(it.total)}*\n`;
-          } else {
-            const noteSuffix = it.note ? ` (${it.note})` : "";
-            wa += `• ${it.part} => *${formatNum(it.total)}*${noteSuffix}\n`;
-          }
+          const partLabel = `• *${it.part}*${it.note ? " — " + it.note : ""}`;
+          wa += `${partLabel}\n`;
+          const stockLines = [];
+          if (it.assy > 0) stockLines.push(["Assy", it.assy]);
+          if (it.gudang > 0) stockLines.push(["Gudang", it.gudang]);
+          (it.otherStocks || []).forEach(v => stockLines.push([v.label, v.qty]));
+          if (it.waitingBeta > 0) stockLines.push(["Menunggu kirim Plant Beta", it.waitingBeta]);
+          const width = Math.max(5, ...stockLines.map(v => String(v[0]).length));
+          stockLines.forEach(v => {
+            wa += "`  " + String(v[0]).padEnd(width, " ") + " : " + formatNum(v[1]).padStart(8, " ") + "`\n";
+          });
+          if (stockLines.length > 1) wa += `  Total stok Assy + Gudang : *${formatNum(it.total)}*\n`;
         });
         wa += `\n`;
       });
-
       if (!waSpaManuallyEdited) waBox.value = wa.trim();
     }
 
