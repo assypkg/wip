@@ -3844,12 +3844,13 @@
 
       groupEntries.forEach(([gName, items]) => {
         wa += `*${gName}*\n`;
+        const maxPartLength = Math.max(...items.map((it) => String(it.part || "").length), 4);
         items.forEach((it) => {
           const partText = String(it.part || "").trim();
           const qtyText = formatNum(it.qty);
-          const noteText = it.note ? ` — ${it.note}` : "";
-          // Hindari backtick agar WhatsApp memakai font normal.
-          wa += `• ${partText} : ${qtyText} pcs${noteText}\n`;
+          const noteText = it.note ? ` (${it.note})` : "";
+          const alignedPart = partText.padEnd(maxPartLength, " ");
+          wa += "`" + alignedPart + " : " + qtyText.padStart(8, " ") + "`" + noteText + "\n";
         });        wa += "\n";
       });
 
