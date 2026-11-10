@@ -19,8 +19,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-  <!-- SheetJS untuk Import/Export Excel (.xlsx / .ods) -->
-  <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+  <!-- SheetJS dimuat hanya saat fitur Excel digunakan agar startup HP lebih ringan. -->
 
   <style>
     :root {
@@ -2049,7 +2048,20 @@
       return new Date(Date.now() - tzOffset).toISOString().slice(0, 10);
     }
 
+    // Autosave terjadwal: gabungkan perubahan input yang berdekatan agar tidak
+    // menulis seluruh draft ke Local Storage pada setiap ketukan keyboard.
+    let draftSaveTimer = null;
     function simpanDraftLokal() {
+      if (draftSaveTimer) clearTimeout(draftSaveTimer);
+      draftSaveTimer = setTimeout(simpanDraftLokalSekarang, 650);
+    }
+
+    // Simpan sinkron untuk momen penting (halaman disembunyikan/ditinggalkan).
+    function simpanDraftLokalSekarang() {
+      if (draftSaveTimer) {
+        clearTimeout(draftSaveTimer);
+        draftSaveTimer = null;
+      }
       try {
         const draftObj = {
           savedDayIso: getTodayWibIso(),
@@ -2088,7 +2100,7 @@
 
             spaDate: document.getElementById("spaDate")?.value || "",
             spaPlant: document.getElementById("spaPlant")?.value || "plant alpha",
-            spaGroup: document.getElementById("spaGroup")?.value || "",
+            spaGroup: document.getElementById("spaGroup")?.value || "plant alpha",
             spaLineInfo: document.getElementById("spaLineInfo")?.value || "",
             spaBaseTarget: document.getElementById("spaBaseTarget")?.value || "",
             spaPart: document.getElementById("spaPart")?.value || "",
@@ -2098,7 +2110,31 @@
           }
         };
         localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(draftObj));
-      } catch (e) {}
+      } catch (e) {
+        console.warn("Draft lokal gagal disimpan:", e);
+      }
+    }
+
+    // Loader tunggal: jika beberapa fitur Excel dipanggil berdekatan, cukup satu unduhan.
+    let sheetJsLoadingPromise = null;
+    function ensureSheetJsLoaded() {
+      if (window.XLSX) return Promise.resolve(window.XLSX);
+      if (sheetJsLoadingPromise) return sheetJsLoadingPromise;
+      sheetJsLoadingPromise = new Promise((resolve, reject) => {
+        const script = document.createElement("script");
+        script.src = "https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js";
+        script.async = true;
+        script.onload = () => {
+          if (window.XLSX) resolve(window.XLSX);
+          else reject(new Error("Library Excel termuat tetapi XLSX tidak tersedia."));
+        };
+        script.onerror = () => {
+          sheetJsLoadingPromise = null;
+          reject(new Error("Library Excel gagal dimuat. Periksa koneksi internet lalu coba lagi."));
+        };
+        document.head.appendChild(script);
+      });
+      return sheetJsLoadingPromise;
     }
 
     function pulihkanDraftLokalJikaHariSama() {
@@ -3669,9 +3705,15 @@
       );
     }
 
-    function exportSemuaCloudKeExcel() {
+    async function exportSemuaCloudKeExcel() {
       if (cloudArchive.length === 0) {
         alert("Belum ada riwayat Cloud untuk diekspor.");
+        return;
+      }
+      try {
+        await ensureSheetJsLoaded();
+      } catch (error) {
+        alert(error.message || "Library Excel gagal dimuat.");
         return;
       }
 
@@ -4545,9 +4587,16 @@
       if (removed) alert(`Master dihapus dari perangkat:\n${removed.group} — ${removed.part}\n\nPeriksa status Cloud untuk memastikan perubahan sudah tersinkron.`);
     }
 
-    function uploadMasterExcel(event) {
+    async function uploadMasterExcel(event) {
       const file = event.target.files[0];
       if (!file) return;
+      try {
+        await ensureSheetJsLoaded();
+      } catch (error) {
+        alert(error.message || "Library Excel gagal dimuat.");
+        event.target.value = "";
+        return;
+      }
       const reader = new FileReader();
       reader.onload = function (e) {
         const data = new Uint8Array(e.target.result);
@@ -4582,11 +4631,14 @@
 
     document.addEventListener("visibilitychange", () => {
       if (document.visibilityState === "hidden") {
-        simpanDraftLokal();
+        simpanDraftLokalSekarang();
       } else if (document.visibilityState === "visible" && masterSyncReady && !masterSyncBusy) {
         tarikMasterDariFirebase();
       }
     });
+
+    // Pastikan draft terakhir tetap tersimpan ketika browser menutup halaman.
+    window.addEventListener("pagehide", simpanDraftLokalSekarang);
 
     // INISIALISASI SAAT BUKA APLIKASI
     window.addEventListener("DOMContentLoaded", () => {
@@ -4609,9 +4661,13 @@
       renderFgAll();
       renderSpaAll();
 
-      sinkronTarikDariFirebase(false);
-      tarikMasterDariFirebase();
-      tarikMasterProdukFgCloud();
+      // Beri prioritas pada tampilan dan input lokal terlebih dahulu.
+      // Sinkronisasi dimulai setelah UI awal selesai dirender.
+      setTimeout(() => {
+        sinkronTarikDariFirebase(false);
+        tarikMasterDariFirebase();
+        tarikMasterProdukFgCloud();
+      }, 1200);
     });
   </script>
 </body>
