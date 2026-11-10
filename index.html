@@ -3878,6 +3878,47 @@
         .join("");
     }
 
+    function normalisasiKunciSpa(value) {
+      return String(value || "").trim().toLocaleLowerCase("id-ID").replace(/\\s+/g, " ");
+    }
+
+    function cariItemSpaSama(group, part, excludeId = null) {
+      const keyGroup = normalisasiKunciSpa(group);
+      const keyPart = normalisasiKunciSpa(part);
+      return spaList.find(item =>
+        item.id !== excludeId &&
+        normalisasiKunciSpa(item.group) === keyGroup &&
+        normalisasiKunciSpa(item.part) === keyPart
+      );
+    }
+
+    function gabungkanRincianBoxSpa(existing, field, incomingBoxes, incomingQty) {
+      const boxesField = field + "Boxes";
+      if (!Array.isArray(existing[boxesField])) {
+        const oldQty = Number(existing[field]) || 0;
+        existing[boxesField] = oldQty ? [{ label: String(oldQty), val: oldQty }] : [];
+      }
+      const additions = Array.isArray(incomingBoxes) && incomingBoxes.length
+        ? JSON.parse(JSON.stringify(incomingBoxes))
+        : (Number(incomingQty) ? [{ label: String(incomingQty), val: Number(incomingQty) }] : []);
+      existing[boxesField].push(...additions);
+      existing[field] = Math.max(0, existing[boxesField].reduce((sum, box) => sum + (Number(box.val) || 0), 0));
+    }
+
+    function gabungkanItemSpa(existing, incoming) {
+      gabungkanRincianBoxSpa(existing, "assy", incoming.assyBoxes, incoming.assy);
+      gabungkanRincianBoxSpa(existing, "gudang", incoming.gudangBoxes, incoming.gudang);
+      existing.total = existing.assy + existing.gudang;
+      const notes = [existing.note, incoming.note].map(v => String(v || "").trim()).filter(Boolean);
+      existing.note = [...new Set(notes)].join(" | ");
+      if (incoming.lineInfo && !existing.lineInfo) existing.lineInfo = incoming.lineInfo;
+      if (Number(incoming.baseTarget) > 0 && !(Number(existing.baseTarget) > 0)) {
+        existing.baseTarget = Number(incoming.baseTarget);
+        existing.targetBuffer = Number(incoming.targetBuffer) || Math.round(existing.baseTarget * 1.05);
+      }
+      return existing;
+    }
+
     function simpanItemSpa() {
       const group = document.getElementById("spaGroup").value.trim();
       const lineInfo = document.getElementById("spaLineInfo").value.trim();
@@ -3917,20 +3958,19 @@
         }
         batalEditSpa();
       } else {
-        spaList.push({
-          id: Date.now() + Math.random(),
-          group,
-          lineInfo,
-          baseTarget,
+        const incoming = {
+          group, lineInfo, baseTarget,
           targetBuffer: Math.round(baseTarget * 1.05),
-          part,
-          note,
-          assy,
-          gudang,
-          total: assy + gudang,
+          part, note, assy, gudang, total: assy + gudang,
           assyBoxes: JSON.parse(JSON.stringify(currentSpaAssyBoxes)),
           gudangBoxes: JSON.parse(JSON.stringify(currentSpaGudangBoxes))
-        });
+        };
+        const existing = cariItemSpaSama(group, part);
+        if (existing) {
+          gabungkanItemSpa(existing, incoming);
+        } else {
+          spaList.push({ id: Date.now() + Math.random(), ...incoming });
+        }
       }
 
       document.getElementById("spaPart").value = "";
@@ -4007,41 +4047,38 @@
         alert("Daftar Sisa Barang Bagus di layar masih kosong. Silakan input WIP atau tarik dari Cloud terlebih dahulu.");
         return;
       }
-      wipList.forEach((w) => {
-        const exists = spaList.find(
-          (s) =>
-            s.group.toLowerCase() === w.group.toLowerCase() &&
-            s.part.toLowerCase() === w.part.toLowerCase() &&
-            (s.note || "").toLowerCase() === (w.note || "").toLowerCase()
-        );
+      let mergedCount = 0;
+      let addedCount = 0;
+      wipList.forEach(w => {
         const copiedBoxes = w.boxes
           ? JSON.parse(JSON.stringify(w.boxes))
-          : [{ label: String(w.qty), val: w.qty }];
-
-        if (exists) {
-          exists.assy = w.qty;
-          exists.assyBoxes = copiedBoxes;
-          exists.total = exists.assy + exists.gudang;
+          : [{ label: String(w.qty), val: Number(w.qty) || 0 }];
+        const incoming = {
+          group: w.group,
+          lineInfo: "",
+          baseTarget: 0,
+          targetBuffer: 0,
+          part: w.part,
+          note: w.note || "",
+          assy: Number(w.qty) || 0,
+          gudang: 0,
+          total: Number(w.qty) || 0,
+          assyBoxes: copiedBoxes,
+          gudangBoxes: []
+        };
+        const existing = cariItemSpaSama(w.group, w.part);
+        if (existing) {
+          gabungkanItemSpa(existing, incoming);
+          mergedCount++;
         } else {
-          spaList.push({
-            id: Date.now() + Math.random(),
-            group: w.group,
-            lineInfo: "",
-            baseTarget: 0,
-            targetBuffer: 0,
-            part: w.part,
-            note: w.note || "",
-            assy: w.qty,
-            gudang: 0,
-            total: w.qty,
-            assyBoxes: copiedBoxes,
-            gudangBoxes: []
-          });
+          spaList.push({ id: Date.now() + Math.random(), ...incoming });
+          addedCount++;
         }
       });
       switchMode("spa");
       renderSpaAll();
       simpanDraftLokal();
+      alert(`Tarik WIP selesai. ${addedCount} item baru ditambahkan dan ${mergedCount} item dengan produk/kode sama digabungkan. Rincian setiap box tetap dipertahankan.`);
     }
 
     function hapusItemSpa(id) {
