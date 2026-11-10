@@ -1080,7 +1080,7 @@
         </div>
 
         <div id="cloudStatusBanner" style="display:none; margin-bottom:10px; padding:9px 11px; border-radius:8px; font-size:0.75rem; font-weight:700; line-height:1.45;"></div>
-
+        <div style="border:1px solid var(--border);border-radius:10px;padding:12px;margin:10px 0;"><b>📥 Import laporan WhatsApp</b><p style="font-size:.73rem;color:var(--text-muted);">Tempel laporan Sisa Barang Bagus, periksa hasilnya sebelum disimpan.</p><textarea id="waImportWipText" class="wa-preview" style="min-height:125px;" placeholder="Tempel laporan SISA BARANG BAGUS di sini..."></textarea><button class="btn btn-sky" onclick="previewImportWip()">🔎 Proses & Preview</button> <button class="btn btn-outline" onclick="bersihkanImportWip()">Bersihkan</button><div id="waImportWipPreview" style="margin-top:8px;font-size:.78rem;"></div></div>
         <div id="wipGroupedContainer"></div>
       </div>
 
@@ -1537,7 +1537,7 @@
           <span class="card-title">2. Rincian SPA (Assy + Gudang & Edit)</span>
           <button class="btn btn-danger" onclick="hapusSemuaSpa()">🗑️ Reset SPA</button>
         </div>
-        <div id="spaGroupedContainer"></div>
+        <div style="border:1px solid var(--border);border-radius:10px;padding:12px;margin:10px 0;"><b>📥 Import laporan WhatsApp SPA</b><p style="font-size:.73rem;color:var(--text-muted);">Tempel laporan SPA. Stok Assy, Gudang, stok khusus, NG Hold, dan barang menunggu dari Plant Beta dipisahkan.</p><textarea id="waImportSpaText" class="wa-preview" style="min-height:150px;" placeholder="Tempel laporan SPA dari WhatsApp di sini..."></textarea><button class="btn btn-sky" onclick="previewImportSpa()">🔎 Proses & Preview</button> <button class="btn btn-outline" onclick="bersihkanImportSpa()">Bersihkan</button><div id="waImportSpaPreview" style="margin-top:8px;font-size:.78rem;"></div></div><div id="spaGroupedContainer"></div>
       </div>
 
       <div class="card">
@@ -1845,6 +1845,8 @@
     let wipList = [];
     let fgList = [];
     let spaList = [];
+    let pendingWipImport = [];
+    let pendingSpaImport = [];
 
     let cloudArchive = JSON.parse(localStorage.getItem("assy_wip_cloud_archive_v1")) || [];
     let deletedCloudIds = JSON.parse(localStorage.getItem("assy_deleted_cloud_ids_v1")) || [];
@@ -2556,6 +2558,25 @@
             </span>`;
         })
         .join("");
+    }
+
+    function bersihkanImportWip(){document.getElementById("waImportWipText").value="";document.getElementById("waImportWipPreview").innerHTML="";pendingWipImport=[];}
+    function previewImportWip(){
+      const lines=document.getElementById("waImportWipText").value.replace(/\r/g,"").split("\n"),rows=[];let group="";
+      lines.forEach(raw=>{const line=raw.replace(/[>*_]/g,"").trim();if(!line)return;
+        const prod=line.match(/^(\d{3,5}\s+.+)$/);if(prod&&!/^(base|inbs|inner|cover|hish|mesh|tray)\b/i.test(line)){group=prod[1].trim();return;}
+        const m=line.match(/^(.+?)\s*(?:=>|=)\s*([\d.,]+)\s*(?:\((.*)\))?$/);if(m&&group){const q=Number(m[2].replace(/[.,]/g,""));if(Number.isFinite(q))rows.push({id:Date.now()+Math.random(),group,part:m[1].trim(),note:(m[3]||"").trim(),qty:q,boxes:[{label:String(q),val:q}]});}
+      });
+      pendingWipImport=rows;const box=document.getElementById("waImportWipPreview");
+      if(!rows.length){box.textContent="Belum ada baris terbaca. Pastikan ada nama produk lalu Part => Qty.";return;}
+      box.innerHTML="<b>"+rows.length+" baris · "+formatNum(rows.reduce((a,x)=>a+x.qty,0))+" pcs</b><div>"+rows.map(x=>x.group+" — "+x.part+" "+(x.note?"("+x.note+") ":"")+formatNum(x.qty)).join("<br>")+"</div><button class='btn btn-emerald' onclick='konfirmasiImportWip()'>✓ Simpan ke Sisa Barang Bagus</button>";
+    }
+    function konfirmasiImportWip(){
+      if(!pendingWipImport.length)return;
+      pendingWipImport.forEach(v=>{const old=wipList.find(x=>x.group.toLowerCase()===v.group.toLowerCase()&&x.part.toLowerCase()===v.part.toLowerCase()&&(x.note||"").toLowerCase()===v.note.toLowerCase());
+        if(old){if(!Array.isArray(old.boxes))old.boxes=[{label:String(old.qty),val:Number(old.qty)||0}];old.boxes.push(...v.boxes);old.qty=old.boxes.reduce((a,b)=>a+(Number(b.val)||0),0);}else wipList.push(v);
+      });
+      const n=pendingWipImport.length;pendingWipImport=[];renderWipAll();renderFgAll();simpanDraftLokal();document.getElementById("waImportWipPreview").textContent="Berhasil menyimpan "+n+" baris.";
     }
 
     function simpanItemWip() {
@@ -3961,6 +3982,38 @@
       return existing;
     }
 
+    function bersihkanImportSpa(){document.getElementById("waImportSpaText").value="";document.getElementById("waImportSpaPreview").innerHTML="";pendingSpaImport=[];}
+    function angkaLaporanWA(v){return Number(String(v||"").replace(/[.,]/g,""))||0;}
+    function previewImportSpa(){
+      const lines=document.getElementById("waImportSpaText").value.replace(/\r/g,"").split("\n"),rows=[];let group="",lineInfo="",baseTarget=0,targetBuffer=0,current=null;
+      function flush(){if(current){current.total=current.assy+current.gudang;rows.push(current);current=null;}}
+      lines.forEach(raw=>{const line=raw.replace(/[>*_]/g,"").trim();if(!line)return;
+        const gh=line.match(/^\d+[.)]\s*(.+)$/);if(gh){flush();group=gh[1].trim();lineInfo="";baseTarget=0;targetBuffer=0;return;}
+        const target=line.match(/^(.*?)@\s*([\d.,]+)\s*\+\s*5%/i);if(target){lineInfo=target[1].trim();baseTarget=angkaLaporanWA(target[2]);return;}
+        if(/^=>\s*[\d.,]+$/.test(line)&&baseTarget&&!targetBuffer){targetBuffer=angkaLaporanWA(line.replace(/^=>\s*/,""));return;}
+        if(/^Ketersediaan/i.test(line)){flush();return;}
+        if(/\(\d{3,5}\)/.test(line)&&!/^=>/.test(line)){flush();const p=line.match(/^(.+?)(\s+Ng hold.*)?$/i);current={id:Date.now()+Math.random(),group,lineInfo,baseTarget,targetBuffer,part:p[1].trim(),note:(p[2]||"").trim(),assy:0,gudang:0,total:0,assyBoxes:[],gudangBoxes:[],waitingBeta:0,otherStocks:[]};
+          const inline=line.match(/=>\s*([\d.,]+)\s*\+\s*([\d.,]+)\s*\((.*?)\)/i);
+          if(inline){const a=angkaLaporanWA(inline[1]),b=angkaLaporanWA(inline[2]);current.assy=a;current.assyBoxes.push({label:String(a),val:a});if(/beta|tunggu/i.test(inline[3]))current.waitingBeta=b;else current.otherStocks.push({qty:b,label:inline[3]});}
+          return;}
+        if(!current)return;const q=line.match(/^(?:=>\s*)?([\d.,]+)\s*(?:\((.*?)\))?$/);if(!q)return;const qty=angkaLaporanWA(q[1]),label=(q[2]||"").trim();
+        if(/Assy/i.test(label)){current.assy+=qty;current.assyBoxes.push({label:String(qty),val:qty});}
+        else if(/Gudang/i.test(label)){current.gudang+=qty;current.gudangBoxes.push({label:String(qty),val:qty});}
+        else if(/tunggu.*beta|plant beta/i.test(label))current.waitingBeta+=qty;
+        else if(/total/i.test(label)){}
+        else if(label)current.otherStocks.push({qty,label});
+        else if(!current.assy&&!current.gudang){current.assy+=qty;current.assyBoxes.push({label:String(qty),val:qty});}
+        else current.otherStocks.push({qty,label:"Kategori belum disebutkan"});
+      });flush();pendingSpaImport=rows;const box=document.getElementById("waImportSpaPreview");
+      if(!rows.length){box.textContent="Belum ada item terbaca. Periksa nama produk dan kode komponen.";return;}
+      box.innerHTML="<b>"+rows.length+" baris terbaca</b><div>"+rows.map(x=>x.group+" — "+x.part+": Assy "+formatNum(x.assy)+", Gudang "+formatNum(x.gudang)+(x.waitingBeta?" · Menunggu Beta "+formatNum(x.waitingBeta):"")+(x.otherStocks.length?" · "+x.otherStocks.map(y=>formatNum(y.qty)+" ("+y.label+")").join(", "):"")).join("<br>")+"</div><button class='btn btn-emerald' onclick='konfirmasiImportSpa()'>✓ Simpan ke SPA</button>";
+    }
+    function konfirmasiImportSpa(){
+      if(!pendingSpaImport.length)return;pendingSpaImport.forEach(v=>{const old=spaList.find(x=>normalisasiKunciSpa(x.group)===normalisasiKunciSpa(v.group)&&normalisasiKunciSpa(x.part)===normalisasiKunciSpa(v.part)&&normalisasiKunciSpa(x.note)===normalisasiKunciSpa(v.note));
+        if(old){old.assy+=v.assy;old.gudang+=v.gudang;old.total=old.assy+old.gudang;old.assyBoxes=(old.assyBoxes||[]).concat(v.assyBoxes);old.gudangBoxes=(old.gudangBoxes||[]).concat(v.gudangBoxes);old.waitingBeta=(old.waitingBeta||0)+v.waitingBeta;old.otherStocks=(old.otherStocks||[]).concat(v.otherStocks);}else spaList.push(v);
+      });const n=pendingSpaImport.length;pendingSpaImport=[];renderSpaAll();simpanDraftLokal();document.getElementById("waImportSpaPreview").textContent="Berhasil menyimpan "+n+" baris SPA.";
+    }
+
     function simpanItemSpa() {
       const group = document.getElementById("spaGroup").value.trim();
       const lineInfo = document.getElementById("spaLineInfo").value.trim();
@@ -4203,6 +4256,8 @@
                         </div>
                         <div class="box-breakdown-info">
                           Assy: <b>${formatNum(it.assy)}</b> (${assyCount} Box) | Gudang: <b>${formatNum(it.gudang)}</b> (${gudangCount} Box)
+                          ${it.waitingBeta ? `<div style="color:#b45309;font-weight:700;">Menunggu pengiriman dari Plant Beta: ${formatNum(it.waitingBeta)} pcs (belum masuk stok Alpha)</div>` : ""}
+                          ${(it.otherStocks||[]).map(v=>`<div style="color:var(--text-muted);">${formatNum(v.qty)} pcs (${v.label})</div>`).join("")}
                         </div>
                       </div>
                       <div style="display:flex; flex-direction:column; align-items:flex-end; gap:5px;">
@@ -4237,11 +4292,13 @@
 
         gData.items.forEach((it) => {
           const noteHeader = it.note ? ` ${it.note}` : "";
-          if (it.gudang > 0) {
+          if (it.gudang > 0 || it.waitingBeta > 0 || (it.otherStocks||[]).length) {
             wa += `• *${it.part}*${noteHeader}\n`;
-            wa += `  => ${formatNum(it.assy)} (Assy)\n`;
-            wa += `  => ${formatNum(it.gudang)} (Gudang)\n`;
-            wa += `  Total => *${formatNum(it.total)}*\n`;
+            if(it.assy>0) wa += `  => ${formatNum(it.assy)} (Assy)\n`;
+            if(it.gudang>0) wa += `  => ${formatNum(it.gudang)} (Gudang)\n`;
+            (it.otherStocks||[]).forEach(v=>wa += `  => ${formatNum(v.qty)} (${v.label})\n`);
+            if(it.waitingBeta>0) wa += `  => ${formatNum(it.waitingBeta)} (Menunggu pengiriman dari Plant Beta - belum masuk stok Alpha)\n`;
+            wa += `  Total stok Assy + Gudang => *${formatNum(it.total)}*\n`;
           } else {
             const noteSuffix = it.note ? ` (${it.note})` : "";
             wa += `• ${it.part} => *${formatNum(it.total)}*${noteSuffix}\n`;
