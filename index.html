@@ -2562,15 +2562,29 @@
 
     function bersihkanImportWip(){document.getElementById("waImportWipText").value="";document.getElementById("waImportWipPreview").innerHTML="";pendingWipImport=[];}
     function previewImportWip(){
-      const lines=document.getElementById("waImportWipText").value.replace(/\r/g,"").split("\n"),rows=[];let group="";
-      lines.forEach(raw=>{const line=raw.replace(/[>*_]/g,"").trim();if(!line)return;
-        const prod=line.match(/^(\d{3,5}\s+.+)$/);if(prod&&!/^(base|inbs|inner|cover|hish|mesh|tray)\b/i.test(line)){group=prod[1].trim();return;}
-        const m=line.match(/^(.+?)\s*(?:=>|=)\s*([\d.,]+)\s*(?:\((.*)\))?$/);if(m&&group){const q=Number(m[2].replace(/[.,]/g,""));if(Number.isFinite(q))rows.push({id:Date.now()+Math.random(),group,part:m[1].trim(),note:(m[3]||"").trim(),qty:q,boxes:[{label:String(q),val:q}]});}
+      const lines=document.getElementById("waImportWipText").value.replace(/\r/g,"").split("\n");
+      const rows=[];let group="";
+      lines.forEach(raw=>{
+        const line=raw.replace(/[>*_\x60]/g,"").trim();
+        if(!line)return;
+        const prod=line.match(/^(\d{3,5}\s+.+)$/);
+        if(prod&&!/^(base|inbs|inner|cover|hish|mesh|tray)\b/i.test(line)){group=prod[1].trim();return;}
+        const m=line.replace(/^[•\-]\s*/,"").match(/^(.+?)\s*(?::|=>|=)\s*([\d.,]+)\s*(?:\((.*)\))?$/);
+        if(m&&group){
+          const q=Number(m[2].replace(/[.,]/g,""));
+          if(Number.isFinite(q)){
+            const part=m[1].trim();
+            const note=(m[3]||"").trim().replace(/^\(+|\)+$/g,"").trim();
+            rows.push({id:Date.now()+Math.random(),group,part,note,qty:q,boxes:[{label:String(q),val:q}]});
+          }
+        }
       });
-      pendingWipImport=rows;const box=document.getElementById("waImportWipPreview");
-      if(!rows.length){box.textContent="Belum ada baris terbaca. Pastikan ada nama produk lalu Part => Qty.";return;}
+      pendingWipImport=rows;
+      const box=document.getElementById("waImportWipPreview");
+      if(!rows.length){box.textContent="Belum ada baris terbaca. Format didukung: Part : Qty, Part => Qty, atau Part = Qty. Pastikan nama produk berada di baris tersendiri.";return;}
       box.innerHTML="<b>"+rows.length+" baris · "+formatNum(rows.reduce((a,x)=>a+x.qty,0))+" pcs</b><div>"+rows.map(x=>x.group+" — "+x.part+" "+(x.note?"("+x.note+") ":"")+formatNum(x.qty)).join("<br>")+"</div><button class='btn btn-emerald' onclick='konfirmasiImportWip()'>✓ Simpan ke Sisa Barang Bagus</button>";
     }
+
     function konfirmasiImportWip(){
       if(!pendingWipImport.length)return;
       pendingWipImport.forEach(v=>{const old=wipList.find(x=>x.group.toLowerCase()===v.group.toLowerCase()&&x.part.toLowerCase()===v.part.toLowerCase()&&(x.note||"").toLowerCase()===v.note.toLowerCase());
