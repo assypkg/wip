@@ -1609,15 +1609,42 @@
         </div>
         <div>
           <label>Stok Assy (PCS)</label>
-          <input type="text" inputmode="numeric" id="spaAddItemAssy" placeholder="0" />
+          <input type="text" inputmode="none" id="spaAddItemAssy" placeholder="0" readonly onfocus="bukaSpaAddCalc('spaAddItemAssy')" onclick="bukaSpaAddCalc('spaAddItemAssy')" />
+          <div class="spa-add-calc" id="spaAddItemAssyCalcPanel" style="display:none;grid-column:1/-1;margin-top:-4px;">
+            <div class="calc-keypad-wrapper">
+              <div class="calc-keypad-top"><span>🧮 Kalkulator Assy</span><span class="calc-live-result" id="spaAddItemAssyCalcPreview">0 Box (0 PCS)</span></div>
+              <input type="text" id="spaAddItemAssyCalcFormula" class="input-calc" inputmode="none" placeholder="Contoh: 550×20 atau 550+550" oninput="updateSpaAddCalcPreview('spaAddItemAssy')" style="width:100%;margin-bottom:8px;" />
+              <div class="calc-keypad-grid">
+                <button type="button" class="key-btn key-clear" onclick="tekanSpaAddCalc('spaAddItemAssy','C')">C</button><button type="button" class="key-btn key-op" onclick="tekanSpaAddCalc('spaAddItemAssy','(')">(</button><button type="button" class="key-btn key-op" onclick="tekanSpaAddCalc('spaAddItemAssy',')')">)</button><button type="button" class="key-btn key-op" onclick="tekanSpaAddCalc('spaAddItemAssy','÷')">÷</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemAssy','7')">7</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemAssy','8')">8</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemAssy','9')">9</button><button type="button" class="key-btn key-op" onclick="tekanSpaAddCalc('spaAddItemAssy','×')">×</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemAssy','4')">4</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemAssy','5')">5</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemAssy','6')">6</button><button type="button" class="key-btn key-op" onclick="tekanSpaAddCalc('spaAddItemAssy','−')">−</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemAssy','1')">1</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemAssy','2')">2</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemAssy','3')">3</button><button type="button" class="key-btn key-op" onclick="tekanSpaAddCalc('spaAddItemAssy','+')">+</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemAssy','0')">0</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemAssy','00')">00</button><button type="button" class="key-btn key-back" onclick="tekanSpaAddCalc('spaAddItemAssy','BACK')">⌫</button><button type="button" class="key-btn key-enter" onclick="tekanSpaAddCalc('spaAddItemAssy','ADD')">＋ BOX</button>
+              </div>
+            </div>
+          </div>
         </div>
         <div>
           <label>Stok Gudang (PCS)</label>
-          <input type="text" inputmode="numeric" id="spaAddItemGudang" placeholder="0" />
+          <input type="text" inputmode="none" id="spaAddItemGudang" placeholder="0" readonly onfocus="bukaSpaAddCalc('spaAddItemGudang')" onclick="bukaSpaAddCalc('spaAddItemGudang')" />
+          <div class="spa-add-calc" id="spaAddItemGudangCalcPanel" style="display:none;grid-column:1/-1;margin-top:-4px;">
+            <div class="calc-keypad-wrapper">
+              <div class="calc-keypad-top"><span>🧮 Kalkulator Gudang</span><span class="calc-live-result" id="spaAddItemGudangCalcPreview">0 Box (0 PCS)</span></div>
+              <input type="text" id="spaAddItemGudangCalcFormula" class="input-calc" inputmode="none" placeholder="Contoh: 550×20 atau 550+550" oninput="updateSpaAddCalcPreview('spaAddItemGudang')" style="width:100%;margin-bottom:8px;" />
+              <div class="calc-keypad-grid">
+                <button type="button" class="key-btn key-clear" onclick="tekanSpaAddCalc('spaAddItemGudang','C')">C</button><button type="button" class="key-btn key-op" onclick="tekanSpaAddCalc('spaAddItemGudang','(')">(</button><button type="button" class="key-btn key-op" onclick="tekanSpaAddCalc('spaAddItemGudang',')')">)</button><button type="button" class="key-btn key-op" onclick="tekanSpaAddCalc('spaAddItemGudang','÷')">÷</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemGudang','7')">7</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemGudang','8')">8</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemGudang','9')">9</button><button type="button" class="key-btn key-op" onclick="tekanSpaAddCalc('spaAddItemGudang','×')">×</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemGudang','4')">4</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemGudang','5')">5</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemGudang','6')">6</button><button type="button" class="key-btn key-op" onclick="tekanSpaAddCalc('spaAddItemGudang','−')">−</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemGudang','1')">1</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemGudang','2')">2</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemGudang','3')">3</button><button type="button" class="key-btn key-op" onclick="tekanSpaAddCalc('spaAddItemGudang','+')">+</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemGudang','0')">0</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemGudang','00')">00</button><button type="button" class="key-btn key-back" onclick="tekanSpaAddCalc('spaAddItemGudang','BACK')">⌫</button><button type="button" class="key-btn key-enter" onclick="tekanSpaAddCalc('spaAddItemGudang','ADD')">＋ BOX</button>
+              </div>
+            </div>
+          </div>
         </div>
         <div>
           <label>Stok Khusus / NG Hold (PCS)</label>
-          <input type="text" inputmode="numeric" id="spaAddItemSpecialQty" placeholder="0" />
+          <input type="text" inputmode="none" id="spaAddItemSpecialQty" placeholder="0" readonly onfocus="bukaSpaAddCalc('spaAddItemSpecialQty')" onclick="bukaSpaAddCalc('spaAddItemSpecialQty')" />
+          <div class="spa-add-calc" id="spaAddItemSpecialQtyCalcPanel" style="display:none;grid-column:1/-1;margin-top:-4px;">
+            <div class="calc-keypad-wrapper">
+              <div class="calc-keypad-top"><span>🧮 Kalkulator Stok Khusus</span><span class="calc-live-result" id="spaAddItemSpecialQtyCalcPreview">0 Box (0 PCS)</span></div>
+              <input type="text" id="spaAddItemSpecialQtyCalcFormula" class="input-calc" inputmode="none" placeholder="Contoh: 550×20 atau 550+550" oninput="updateSpaAddCalcPreview('spaAddItemSpecialQty')" style="width:100%;margin-bottom:8px;" />
+              <div class="calc-keypad-grid">
+                <button type="button" class="key-btn key-clear" onclick="tekanSpaAddCalc('spaAddItemSpecialQty','C')">C</button><button type="button" class="key-btn key-op" onclick="tekanSpaAddCalc('spaAddItemSpecialQty','(')">(</button><button type="button" class="key-btn key-op" onclick="tekanSpaAddCalc('spaAddItemSpecialQty',')')">)</button><button type="button" class="key-btn key-op" onclick="tekanSpaAddCalc('spaAddItemSpecialQty','÷')">÷</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemSpecialQty','7')">7</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemSpecialQty','8')">8</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemSpecialQty','9')">9</button><button type="button" class="key-btn key-op" onclick="tekanSpaAddCalc('spaAddItemSpecialQty','×')">×</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemSpecialQty','4')">4</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemSpecialQty','5')">5</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemSpecialQty','6')">6</button><button type="button" class="key-btn key-op" onclick="tekanSpaAddCalc('spaAddItemSpecialQty','−')">−</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemSpecialQty','1')">1</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemSpecialQty','2')">2</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemSpecialQty','3')">3</button><button type="button" class="key-btn key-op" onclick="tekanSpaAddCalc('spaAddItemSpecialQty','+')">+</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemSpecialQty','0')">0</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemSpecialQty','00')">00</button><button type="button" class="key-btn key-back" onclick="tekanSpaAddCalc('spaAddItemSpecialQty','BACK')">⌫</button><button type="button" class="key-btn key-enter" onclick="tekanSpaAddCalc('spaAddItemSpecialQty','ADD')">＋ BOX</button>
+              </div>
+            </div>
+          </div>
         </div>
         <div>
           <label>Nama Stok Khusus (Opsional)</label>
@@ -1625,7 +1652,16 @@
         </div>
         <div style="grid-column:1/-1;">
           <label>Menunggu Pengiriman Plant Beta (PCS)</label>
-          <input type="text" inputmode="numeric" id="spaAddItemWaiting" placeholder="0 — belum masuk stok Assembly" />
+          <input type="text" inputmode="none" id="spaAddItemWaiting" placeholder="0" readonly onfocus="bukaSpaAddCalc('spaAddItemWaiting')" onclick="bukaSpaAddCalc('spaAddItemWaiting')" />
+          <div class="spa-add-calc" id="spaAddItemWaitingCalcPanel" style="display:none;grid-column:1/-1;margin-top:-4px;">
+            <div class="calc-keypad-wrapper">
+              <div class="calc-keypad-top"><span>🧮 Kalkulator Menunggu Plant Beta</span><span class="calc-live-result" id="spaAddItemWaitingCalcPreview">0 Box (0 PCS)</span></div>
+              <input type="text" id="spaAddItemWaitingCalcFormula" class="input-calc" inputmode="none" placeholder="Contoh: 550×20 atau 550+550" oninput="updateSpaAddCalcPreview('spaAddItemWaiting')" style="width:100%;margin-bottom:8px;" />
+              <div class="calc-keypad-grid">
+                <button type="button" class="key-btn key-clear" onclick="tekanSpaAddCalc('spaAddItemWaiting','C')">C</button><button type="button" class="key-btn key-op" onclick="tekanSpaAddCalc('spaAddItemWaiting','(')">(</button><button type="button" class="key-btn key-op" onclick="tekanSpaAddCalc('spaAddItemWaiting',')')">)</button><button type="button" class="key-btn key-op" onclick="tekanSpaAddCalc('spaAddItemWaiting','÷')">÷</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemWaiting','7')">7</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemWaiting','8')">8</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemWaiting','9')">9</button><button type="button" class="key-btn key-op" onclick="tekanSpaAddCalc('spaAddItemWaiting','×')">×</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemWaiting','4')">4</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemWaiting','5')">5</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemWaiting','6')">6</button><button type="button" class="key-btn key-op" onclick="tekanSpaAddCalc('spaAddItemWaiting','−')">−</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemWaiting','1')">1</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemWaiting','2')">2</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemWaiting','3')">3</button><button type="button" class="key-btn key-op" onclick="tekanSpaAddCalc('spaAddItemWaiting','+')">+</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemWaiting','0')">0</button><button type="button" class="key-btn " onclick="tekanSpaAddCalc('spaAddItemWaiting','00')">00</button><button type="button" class="key-btn key-back" onclick="tekanSpaAddCalc('spaAddItemWaiting','BACK')">⌫</button><button type="button" class="key-btn key-enter" onclick="tekanSpaAddCalc('spaAddItemWaiting','ADD')">＋ BOX</button>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:14px;">
@@ -4209,8 +4245,34 @@
       if (!spaAddItemGroup) return;
       document.getElementById("spaAddItemGroupLabel").textContent = spaAddItemGroup;
       ["spaAddItemPart","spaAddItemNote","spaAddItemAssy","spaAddItemGudang","spaAddItemSpecialQty","spaAddItemSpecialLabel","spaAddItemWaiting"].forEach(id => document.getElementById(id).value = "");
+      Object.keys(spaAddCalcBoxes).forEach(id=>{spaAddCalcBoxes[id]=[];const p=document.getElementById(id+"CalcPanel");if(p)p.style.display="none";const f=document.getElementById(id+"CalcFormula");if(f)f.value="";});
+      spaAddCalcActive="";
       document.getElementById("spaAddItemModal").style.display = "flex";
       setTimeout(() => { const input=document.getElementById("spaAddItemPart"); input.focus(); onSpaAddItemSuggestionType(); }, 50);
+    }
+
+    let spaAddCalcActive = "";
+    const spaAddCalcBoxes = {spaAddItemAssy:[],spaAddItemGudang:[],spaAddItemSpecialQty:[],spaAddItemWaiting:[]};
+    function bukaSpaAddCalc(id) {
+      if (!Object.prototype.hasOwnProperty.call(spaAddCalcBoxes,id)) return;
+      spaAddCalcActive=id;
+      Object.keys(spaAddCalcBoxes).forEach(key=>{const panel=document.getElementById(key+"CalcPanel");if(panel)panel.style.display=key===id?"block":"none";});
+      const formula=document.getElementById(id+"CalcFormula");if(formula){formula.value="";updateSpaAddCalcPreview(id);}
+    }
+    function updateSpaAddCalcPreview(id) {
+      const formula=document.getElementById(id+"CalcFormula"),preview=document.getElementById(id+"CalcPreview");if(!formula||!preview)return;
+      const boxes=parseFormulaToBoxes(formula.value,1),total=boxes.reduce((sum,b)=>sum+b.val,0);
+      preview.textContent=`${boxes.length} Box (${formatNum(total)} PCS)`;
+    }
+    function tekanSpaAddCalc(id,key) {
+      const input=document.getElementById(id+"CalcFormula");if(!input)return;
+      if(key==="C")input.value="";else if(key==="BACK")input.value=input.value.slice(0,-1);
+      else if(key==="ADD"){
+        const boxes=parseFormulaToBoxes(input.value,1).filter(b=>b.val>0);if(!boxes.length){alert("Isi jumlah PCS terlebih dahulu.");return;}
+        spaAddCalcBoxes[id].push(...boxes);document.getElementById(id).value=String(spaAddCalcBoxes[id].reduce((sum,b)=>sum+b.val,0));
+        input.value="";updateSpaAddCalcPreview(id);simpanDraftLokal();return;
+      } else input.value+=key;
+      updateSpaAddCalcPreview(id);
     }
 
     function tutupSpaAddItemSuggestions() {
@@ -4294,6 +4356,8 @@
     function tutupTambahItemSpa() {
       document.getElementById("spaAddItemModal").style.display = "none";
       tutupSpaAddItemSuggestions();
+      Object.keys(spaAddCalcBoxes).forEach(id=>{const p=document.getElementById(id+"CalcPanel");if(p)p.style.display="none";});
+      spaAddCalcActive="";
       spaAddItemGroup = "";
     }
 
