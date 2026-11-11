@@ -3175,9 +3175,10 @@
         wa += `A : ${formatNum(it.boxA)} BOX @${formatNum(it.pcsPerBox)} = ${formatNum(it.pcsA)}\n`;
         wa += `B : ${formatNum(it.boxB)} BOX @${formatNum(it.pcsPerBox)} = ${formatNum(it.pcsB)}\n`;
         wa += `*TOTAL : ${formatNum(it.totalBox)} BOX @ ${formatNum(it.pcsPerBox)} = ${formatNum(it.totalPcs)} PCS*\n`;
+        // Catatan tidak tercapai hanya ditampilkan sekali dan hanya jika hasil di bawah target.
         if (it.gapNote && it.totalPcs < it.target) wa += `*${it.gapNote}*\n`;
-        wa += `\n`;        if (it.gapNote) wa += `*${it.gapNote}*\n`;
-        wa += `\n`;      });
+        wa += `\n`;
+      });
 
       const includeWip = document.getElementById("mergeWipToggle").checked;
       if (includeWip && wipList.length > 0) {
