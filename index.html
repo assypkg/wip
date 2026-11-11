@@ -4041,7 +4041,7 @@
         if(/\(\d{3,5}\)/.test(line)&&!/^=>/.test(line)){
           flush();
           const p=line.match(/^(.+?)(\s+Ng hold.*)?$/i);
-          current={id:Date.now()+Math.random(),group,lineInfo,baseTarget,targetBuffer,part:p[1].trim(),note:(p[2]||"").trim(),assy:0,gudang:0,total:0,assyBoxes:[],gudangBoxes:[],waitingBeta:0,otherStocks:[]};
+          current={id:Date.now()+Math.random(),group,lineInfo,baseTarget,targetBuffer,part:p[1].trim().replace(/^[•\-]\s*/,""),note:(p[2]||"").trim(),assy:0,gudang:0,total:0,assyBoxes:[],gudangBoxes:[],waitingBeta:0,otherStocks:[]};
           const inline=line.match(/=>\s*([\d.,]+)\s*\+\s*([\d.,]+)\s*\((.*?)\)/i);
           if(inline){
             const a=angkaLaporanWA(inline[1]),b=angkaLaporanWA(inline[2]);
