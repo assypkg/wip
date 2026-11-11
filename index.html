@@ -4082,7 +4082,7 @@
 
     function konfirmasiImportSpa(){
       if(!pendingSpaImport.length)return;pendingSpaImport.forEach(v=>{const old=spaList.find(x=>normalisasiKunciSpa(x.group)===normalisasiKunciSpa(v.group)&&normalisasiKunciSpa(x.part)===normalisasiKunciSpa(v.part)&&normalisasiKunciSpa(x.note)===normalisasiKunciSpa(v.note));
-        if(old){old.assy+=v.assy;old.gudang+=v.gudang;old.total=old.assy+old.gudang;old.assyBoxes=(old.assyBoxes||[]).concat(v.assyBoxes);old.gudangBoxes=(old.gudangBoxes||[]).concat(v.gudangBoxes);old.waitingBeta=(old.waitingBeta||0)+v.waitingBeta;old.otherStocks=(old.otherStocks||[]).concat(v.otherStocks);}else spaList.push(v);
+        if(old){old.assy+=v.assy;old.gudang+=v.gudang;old.total=old.assy+old.gudang;old.assyBoxes=(old.assyBoxes||[]).concat(v.assyBoxes);old.gudangBoxes=(old.gudangBoxes||[]).concat(v.gudangBoxes);old.waitingBeta=(old.waitingBeta||0)+v.waitingBeta;old.otherStocks=(old.otherStocks||[]).concat(v.otherStocks);if(v.lineInfo)old.lineInfo=v.lineInfo;if(v.baseTarget>0){old.baseTarget=v.baseTarget;old.targetBuffer=v.targetBuffer||Math.round(v.baseTarget*1.05);}}else spaList.push(v);
       });const n=pendingSpaImport.length;pendingSpaImport=[];renderSpaAll();simpanDraftLokal();document.getElementById("waImportSpaPreview").textContent="Berhasil menyimpan "+n+" baris SPA.";
     }
 
