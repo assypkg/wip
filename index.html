@@ -1598,7 +1598,10 @@
       <div class="form-row-responsive" style="margin-top:0;">
         <div style="grid-column:1/-1;">
           <label>Nama Komponen / Part</label>
-          <input type="text" id="spaAddItemPart" placeholder="Contoh: Base Mold 4(015)" />
+          <div class="spa-part-search-wrap" style="position:relative;">
+            <input type="text" id="spaAddItemPart" placeholder="Ketik kode / nama komponen..." autocomplete="off" oninput="onSpaAddItemSuggestionType()" onfocus="onSpaAddItemSuggestionType()" onkeydown="onSpaAddItemSuggestionKey(event)" aria-controls="spaAddItemPartSuggestions" aria-expanded="false" />
+            <div class="quick-results" id="spaAddItemPartSuggestions" role="listbox" aria-label="Saran komponen dari Master WIP"></div>
+          </div>
         </div>
         <div style="grid-column:1/-1;">
           <label>Catatan / Keterangan (Opsional)</label>
@@ -4207,11 +4210,90 @@
       document.getElementById("spaAddItemGroupLabel").textContent = spaAddItemGroup;
       ["spaAddItemPart","spaAddItemNote","spaAddItemAssy","spaAddItemGudang","spaAddItemSpecialQty","spaAddItemSpecialLabel","spaAddItemWaiting"].forEach(id => document.getElementById(id).value = "");
       document.getElementById("spaAddItemModal").style.display = "flex";
-      setTimeout(() => document.getElementById("spaAddItemPart").focus(), 50);
+      setTimeout(() => { const input=document.getElementById("spaAddItemPart"); input.focus(); onSpaAddItemSuggestionType(); }, 50);
+    }
+
+    function tutupSpaAddItemSuggestions() {
+      const box = document.getElementById("spaAddItemPartSuggestions");
+      const input = document.getElementById("spaAddItemPart");
+      if (box) { box.style.display = "none"; box.innerHTML = ""; }
+      if (input) input.setAttribute("aria-expanded", "false");
+    }
+
+    function onSpaAddItemSuggestionType() {
+      const input = document.getElementById("spaAddItemPart");
+      const box = document.getElementById("spaAddItemPartSuggestions");
+      if (!input || !box) return;
+      const query = input.value.trim().toLocaleLowerCase("id-ID");
+      const productCode = (spaAddItemGroup.match(/^\s*(\d{4})/) || [])[1] || "";
+      const source = Array.isArray(catalog) ? catalog : [];
+      const seen = new Set();
+      const matches = source.filter(item => {
+        const part = String(item.part || "").trim();
+        if (!part) return false;
+        const group = String(item.group || "");
+        if (productCode && !group.toLocaleLowerCase("id-ID").includes(productCode)) return false;
+        const key = part.toLocaleLowerCase("id-ID");
+        if (seen.has(key)) return false;
+        const target = `${group} ${part} ${item.keywords || ""}`.toLocaleLowerCase("id-ID");
+        if (query && !target.includes(query)) return false;
+        seen.add(key);
+        return true;
+      }).slice(0, 30);
+      box.innerHTML = "";
+      if (!matches.length) {
+        const empty = document.createElement("div");
+        empty.style.cssText = "padding:10px 12px;font-size:.78rem;color:var(--text-muted);";
+        empty.textContent = productCode
+          ? `Tidak ada komponen ${productCode} yang cocok. Kamu tetap bisa mengetik nama part secara manual.`
+          : "Tidak ditemukan di Master WIP. Kamu tetap bisa mengetik nama part secara manual.";
+        box.appendChild(empty);
+      } else {
+        matches.forEach(item => {
+          const option = document.createElement("div");
+          option.className = "quick-item";
+          option.setAttribute("role", "option");
+          option.tabIndex = -1;
+          const content = document.createElement("div");
+          const part = document.createElement("div");
+          part.className = "quick-item-left";
+          part.textContent = item.part;
+          const group = document.createElement("div");
+          group.className = "quick-item-sub";
+          group.textContent = item.group || "";
+          content.append(part, group);
+          const hint = document.createElement("span");
+          hint.className = "quick-item-badge";
+          hint.textContent = "Pilih →";
+          option.append(content, hint);
+          option.addEventListener("pointerdown", e => e.preventDefault());
+          option.addEventListener("click", () => {
+            input.value = item.part;
+            tutupSpaAddItemSuggestions();
+            document.getElementById("spaAddItemNote").focus();
+          });
+          box.appendChild(option);
+        });
+      }
+      box.style.display = "block";
+      input.setAttribute("aria-expanded", "true");
+    }
+
+    function onSpaAddItemSuggestionKey(event) {
+      if (event.key === "Escape") { tutupSpaAddItemSuggestions(); return; }
+      if (event.key === "Enter") {
+        const box = document.getElementById("spaAddItemPartSuggestions");
+        const first = box?.querySelector(".quick-item");
+        if (box?.style.display === "block" && first) {
+          event.preventDefault();
+          first.click();
+        }
+      }
     }
 
     function tutupTambahItemSpa() {
       document.getElementById("spaAddItemModal").style.display = "none";
+      tutupSpaAddItemSuggestions();
       spaAddItemGroup = "";
     }
 
