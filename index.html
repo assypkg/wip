@@ -1140,10 +1140,14 @@
           <div>
             <label>Shift</label>
             <select id="fgShift" onchange="onFgShiftChange()">
-              <option value="SHIFT 1">SHIFT 1</option>
-              <option value="SHIFT 2" selected>SHIFT 2</option>
-              <option value="SHIFT 2 (21.00-06.00)">SHIFT 2 (21.00-06.00)</option>
-              <option value="SHIFT 3">SHIFT 3</option>
+              <optgroup label="5 HARI KERJA — 2 SHIFT">
+                <option value="SHIFT 1 (08.00-12.00)">SHIFT 1 — Setengah hari (08.00-12.00)</option>
+                <option value="SHIFT 1 (08.00-17.00)">SHIFT 1 — Full (08.00-17.00)</option>
+                <option value="SHIFT 2 (21.00-06.00)">SHIFT 2 — Malam (21.00-06.00)</option>
+              </optgroup>
+              <optgroup label="6 HARI KERJA — 3 SHIFT">
+                <option value="SHIFT 1">SHIFT 1</option><option value="SHIFT 2" selected>SHIFT 2</option><option value="SHIFT 3">SHIFT 3</option>
+              </optgroup>
             </select>
           </div>
           <div>
@@ -1186,6 +1190,10 @@
               placeholder="Contoh: Pakai lem shadowless UV glue"
               oninput="simpanDraftLokal()"
             />
+          </div>
+          <div>
+            <label>Catatan Tidak Tercapai Target (Opsional)</label>
+            <input type="text" id="fgGapNote" placeholder="Contoh: Operator keteter, perbaikan mesin" oninput="simpanDraftLokal()" />
           </div>
           <div>
             <label>Target Produksi (PCS)</label>
@@ -2770,18 +2778,18 @@
       const timeEl = document.getElementById("fgTime");
       const durEl = document.getElementById("fgDuration");
 
-      if (shift === "SHIFT 1") {
-        timeEl.value = "15.00";
-        durEl.value = "07.00-15.00";
-      } else if (shift === "SHIFT 2") {
-        timeEl.value = "23.00";
-        durEl.value = "15.00-23.00";
+      if (shift === "SHIFT 1 (08.00-12.00)") {
+        timeEl.value = "12.00"; durEl.value = "08.00-12.00";
+      } else if (shift === "SHIFT 1 (08.00-17.00)") {
+        timeEl.value = "17.00"; durEl.value = "08.00-17.00";
       } else if (shift === "SHIFT 2 (21.00-06.00)") {
-        timeEl.value = "06.00";
-        durEl.value = "21.00-06.00";
+        timeEl.value = "06.00"; durEl.value = "21.00-06.00";
+      } else if (shift === "SHIFT 1") {
+        timeEl.value = "15.00"; durEl.value = "07.00-15.00";
+      } else if (shift === "SHIFT 2") {
+        timeEl.value = "23.00"; durEl.value = "15.00-23.00";
       } else if (shift === "SHIFT 3") {
-        timeEl.value = "07.00";
-        durEl.value = "23.00-07.00";
+        timeEl.value = "07.00"; durEl.value = "23.00-07.00";
       }
       renderFgAll();
       simpanDraftLokal();
@@ -2833,6 +2841,7 @@
       const jobOrder = document.getElementById("fgJobOrder").value.trim().toUpperCase();
       const productJo = jobOrder ? `${productName} (${jobOrder})` : productName;
       const note = document.getElementById("fgNote").value.trim();
+      const gapNote = document.getElementById("fgGapNote").value.trim();
       const duration = document.getElementById("fgDuration").value.trim();
       const target = Number(document.getElementById("fgTarget").value) || 0;
       const pcsPerBox = Number(document.getElementById("fgPcsPerBox").value) || 0;
@@ -2861,6 +2870,7 @@
         jobOrder,
         productJo,
         note,
+        gapNote,
         duration,
         target,
         pcsPerBox,
@@ -2898,6 +2908,7 @@
       document.getElementById("fgProductName").value = itemProduct.productName;
       document.getElementById("fgJobOrder").value = itemProduct.jobOrder;
       document.getElementById("fgNote").value = item.note || "";
+      document.getElementById("fgGapNote").value = item.gapNote || "";
       document.getElementById("fgDuration").value = item.duration;
       document.getElementById("fgTarget").value = item.target;
       document.getElementById("fgPcsPerBox").value = item.pcsPerBox;
@@ -3062,7 +3073,8 @@
         wa += `A : ${formatNum(it.boxA)} BOX @${formatNum(it.pcsPerBox)} = ${formatNum(it.pcsA)}\n`;
         wa += `B : ${formatNum(it.boxB)} BOX @${formatNum(it.pcsPerBox)} = ${formatNum(it.pcsB)}\n`;
         wa += `*TOTAL : ${formatNum(it.totalBox)} BOX @ ${formatNum(it.pcsPerBox)} = ${formatNum(it.totalPcs)} PCS*\n \n`;
-      });
+        if (it.gapNote) wa += `*${it.gapNote}*\n`;
+        wa += `\n`;      });
 
       const includeWip = document.getElementById("mergeWipToggle").checked;
       if (includeWip && wipList.length > 0) {
