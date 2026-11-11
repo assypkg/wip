@@ -1202,11 +1202,10 @@
               type="text"
               inputmode="numeric"
               id="fgTarget"
-              value="19800"
-              placeholder="Contoh: 19800"
-              oninput="this.value=this.value.replace(/[^0-9]/g,''); simpanDraftLokal();"
-            />
-          </div>
+              value=""
+              placeholder="Isi target produksi"
+              oninput="this.value=this.value.replace(/[^0-9]/g,''); fgTargetTouched=true; simpanDraftLokal();"
+            />          </div>
         </div>
 
         <!-- AUTO KALKULATOR HASIL PRODUKSI (A & B @ ISI PER BOX) -->
@@ -1863,6 +1862,7 @@
     let currentBoxes = [];
     let editingWipId = null;
     let editingFgId = null;
+    let fgTargetTouched = false;
     let wipEditPlaceholder = null;
     let editingCatalogIndex = null;
     let waWipManuallyEdited = false;
@@ -2101,7 +2101,8 @@
             fgProductName: document.getElementById("fgProductName")?.value || "",
             fgJobOrder: document.getElementById("fgJobOrder")?.value || "",
             fgNote: document.getElementById("fgNote")?.value || "Pakai lem shadowless UV glue",
-            fgTarget: document.getElementById("fgTarget")?.value || "19800",
+            fgTarget: document.getElementById("fgTarget")?.value ?? "",
+            fgTargetTouched,
             fgPcsPerBox: document.getElementById("fgPcsPerBox")?.value || "550",
             fgBoxA: document.getElementById("fgBoxA")?.value || "",
             fgBoxB: document.getElementById("fgBoxB")?.value || "",
@@ -2195,7 +2196,8 @@
           document.getElementById("fgJobOrder").value = legacyFg.jobOrder;
         }
         if (f.fgNote !== undefined) document.getElementById("fgNote").value = f.fgNote;
-        if (f.fgTarget !== undefined) document.getElementById("fgTarget").value = f.fgTarget;
+        fgTargetTouched = f.fgTargetTouched === true;
+        document.getElementById("fgTarget").value = fgTargetTouched && f.fgTarget !== undefined ? f.fgTarget : "";
         if (f.fgPcsPerBox !== undefined) document.getElementById("fgPcsPerBox").value = f.fgPcsPerBox;
         if (f.fgBoxA !== undefined) document.getElementById("fgBoxA").value = f.fgBoxA;
         if (f.fgBoxB !== undefined) document.getElementById("fgBoxB").value = f.fgBoxB;
@@ -2915,6 +2917,7 @@
       document.getElementById("fgGapNote").value = item.gapNote || "";
       document.getElementById("fgDuration").value = item.duration;
       document.getElementById("fgTarget").value = item.target;
+      fgTargetTouched = true;
       document.getElementById("fgPcsPerBox").value = item.pcsPerBox;
       document.getElementById("fgBoxA").value = item.boxA;
       document.getElementById("fgBoxB").value = item.boxB;
