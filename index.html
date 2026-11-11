@@ -4291,7 +4291,11 @@
         if (it.lineInfo) grouped[it.group].lineInfo = it.lineInfo;
         if (it.baseTarget > 0) {
           grouped[it.group].baseTarget = it.baseTarget;
-          grouped[it.group].targetBuffer = it.targetBuffer;
+          // Data lama yang pernah tersimpan dengan targetBuffer 0 dipulihkan dari target dasar + 5%.
+          // Nilai eksplisit yang sudah ada tetap dipertahankan.
+          grouped[it.group].targetBuffer = Number(it.targetBuffer) > 0
+            ? it.targetBuffer
+            : Math.round(Number(it.baseTarget) * 1.05);
         }
         grouped[it.group].items.push(it);
       });
