@@ -2576,7 +2576,7 @@
       const lines=document.getElementById("waImportWipText").value.replace(/\r/g,"").split("\n");
       const rows=[];let group="";
       lines.forEach(raw=>{
-        const line=raw.replace(/[>*_\x60]/g,"").trim();
+        const line=raw.replace(/[*_\x60]/g,"").trim(); // Pertahankan tanda > agar format panah => tetap terbaca.
         if(!line)return;
         const prod=line.match(/^(\d{3,5}\s+.+)$/);
         if(prod&&!/^(base|inbs|inner|cover|hish|mesh|tray)\b/i.test(line)){group=prod[1].trim();return;}
