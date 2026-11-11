@@ -808,6 +808,8 @@
     }
     #wipEditModal .modal-card { max-width: 760px; max-height: 94vh; }
     #wipEditModalContent #wipInputCard { margin-bottom: 0; box-shadow: none; }
+    #spaAddItemModal .modal-card { max-width: 560px; }
+    .spa-add-item-btn { white-space:nowrap; padding:6px 9px; font-size:.68rem; }
 
     .cloud-record-card {
       border: 1.5px solid var(--border);
@@ -1579,6 +1581,54 @@
         <button class="btn btn-danger" onclick="batalEditWip()">✕ Tutup</button>
       </div>
       <div id="wipEditModalContent"></div>
+    </div>
+  </div>
+
+  <!-- MODAL TAMBAH ITEM LANGSUNG DARI RINCIAN SPA -->
+  <div id="spaAddItemModal" class="modal-backdrop" onclick="if(event.target===this)tutupTambahItemSpa()">
+    <div class="modal-card">
+      <div class="card-header">
+        <span class="card-title">➕ Tambah Item SPA</span>
+        <button type="button" class="btn btn-danger" onclick="tutupTambahItemSpa()">✕ Tutup</button>
+      </div>
+      <div style="background:var(--purple-bg);border:1px solid #ce93d8;border-radius:9px;padding:10px;margin-bottom:12px;">
+        <div style="font-size:.68rem;color:var(--text-muted);font-weight:700;">PRODUK</div>
+        <div id="spaAddItemGroupLabel" style="font-weight:800;color:var(--purple);"></div>
+      </div>
+      <div class="form-row-responsive" style="margin-top:0;">
+        <div style="grid-column:1/-1;">
+          <label>Nama Komponen / Part</label>
+          <input type="text" id="spaAddItemPart" placeholder="Contoh: Base Mold 4(015)" />
+        </div>
+        <div style="grid-column:1/-1;">
+          <label>Catatan / Keterangan (Opsional)</label>
+          <input type="text" id="spaAddItemNote" placeholder="Contoh: NG Hold gate panjang" />
+        </div>
+        <div>
+          <label>Stok Assy (PCS)</label>
+          <input type="text" inputmode="numeric" id="spaAddItemAssy" placeholder="0" />
+        </div>
+        <div>
+          <label>Stok Gudang (PCS)</label>
+          <input type="text" inputmode="numeric" id="spaAddItemGudang" placeholder="0" />
+        </div>
+        <div>
+          <label>Stok Khusus / NG Hold (PCS)</label>
+          <input type="text" inputmode="numeric" id="spaAddItemSpecialQty" placeholder="0" />
+        </div>
+        <div>
+          <label>Nama Stok Khusus (Opsional)</label>
+          <input type="text" id="spaAddItemSpecialLabel" placeholder="Contoh: NG Hold CV 8" />
+        </div>
+        <div style="grid-column:1/-1;">
+          <label>Menunggu Pengiriman Plant Beta (PCS)</label>
+          <input type="text" inputmode="numeric" id="spaAddItemWaiting" placeholder="0 — belum masuk stok Assembly" />
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:14px;">
+        <button type="button" class="btn btn-outline" onclick="tutupTambahItemSpa()">Batal</button>
+        <button type="button" class="btn btn-emerald" onclick="simpanTambahItemSpa()">✓ Simpan Item</button>
+      </div>
     </div>
   </div>
 
@@ -4149,6 +4199,61 @@
       simpanDraftLokal();
     }
 
+    let spaAddItemGroup = "";
+
+    function bukaTambahItemSpa(group) {
+      spaAddItemGroup = String(group || "").trim();
+      if (!spaAddItemGroup) return;
+      document.getElementById("spaAddItemGroupLabel").textContent = spaAddItemGroup;
+      ["spaAddItemPart","spaAddItemNote","spaAddItemAssy","spaAddItemGudang","spaAddItemSpecialQty","spaAddItemSpecialLabel","spaAddItemWaiting"].forEach(id => document.getElementById(id).value = "");
+      document.getElementById("spaAddItemModal").style.display = "flex";
+      setTimeout(() => document.getElementById("spaAddItemPart").focus(), 50);
+    }
+
+    function tutupTambahItemSpa() {
+      document.getElementById("spaAddItemModal").style.display = "none";
+      spaAddItemGroup = "";
+    }
+
+    function simpanTambahItemSpa() {
+      const part = document.getElementById("spaAddItemPart").value.trim();
+      const note = document.getElementById("spaAddItemNote").value.trim();
+      const assy = angkaLaporanWA(document.getElementById("spaAddItemAssy").value);
+      const gudang = angkaLaporanWA(document.getElementById("spaAddItemGudang").value);
+      const specialQty = angkaLaporanWA(document.getElementById("spaAddItemSpecialQty").value);
+      const specialLabel = document.getElementById("spaAddItemSpecialLabel").value.trim() || "Stok khusus / NG Hold";
+      const waitingBeta = angkaLaporanWA(document.getElementById("spaAddItemWaiting").value);
+      if (!spaAddItemGroup || !part) {
+        alert("Nama komponen / part wajib diisi.");
+        return;
+      }
+      const existing = cariItemSpaSama(spaAddItemGroup, part);
+      if (existing) {
+        alert("Komponen dengan nama yang sama sudah ada pada produk ini. Gunakan tombol Edit agar stok tidak terhitung ganda.");
+        return;
+      }
+      const item = {
+        id: Date.now() + Math.random(),
+        group: spaAddItemGroup,
+        lineInfo: "",
+        baseTarget: 0,
+        targetBuffer: 0,
+        part,
+        note,
+        assy,
+        gudang,
+        total: assy + gudang,
+        assyBoxes: assy > 0 ? [{label:String(assy),val:assy}] : [],
+        gudangBoxes: gudang > 0 ? [{label:String(gudang),val:gudang}] : [],
+        waitingBeta,
+        otherStocks: specialQty > 0 ? [{qty:specialQty,label:specialLabel}] : []
+      };
+      spaList.push(item);
+      renderSpaAll();
+      simpanDraftLokal();
+      tutupTambahItemSpa();
+    }
+
     function mulaiEditSpa(id) {
       const item = spaList.find((x) => x.id === id);
       if (!item) return;
@@ -4317,6 +4422,7 @@
               <div class="group-card spa-mode">
                 <div class="group-header">
                   <span class="group-name">${idx + 1}) ${gName}</span>
+                  <button type="button" class="btn btn-emerald spa-add-item-btn" onclick="bukaTambahItemSpa(${JSON.stringify(gName).replace(/"/g, '&quot;')})">＋ Tambah Item</button>
                 </div>
                 ${targetInfo}
                 ${gData.items
