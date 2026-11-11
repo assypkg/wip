@@ -4389,8 +4389,8 @@
         assy,
         gudang,
         total: assy + gudang,
-        assyBoxes: assy > 0 ? [{label:String(assy),val:assy}] : [],
-        gudangBoxes: gudang > 0 ? [{label:String(gudang),val:gudang}] : [],
+        assyBoxes: spaAddCalcBoxes.spaAddItemAssy.length ? JSON.parse(JSON.stringify(spaAddCalcBoxes.spaAddItemAssy)) : (assy > 0 ? [{label:String(assy),val:assy}] : []),
+        gudangBoxes: spaAddCalcBoxes.spaAddItemGudang.length ? JSON.parse(JSON.stringify(spaAddCalcBoxes.spaAddItemGudang)) : (gudang > 0 ? [{label:String(gudang),val:gudang}] : []),
         waitingBeta,
         otherStocks: specialQty > 0 ? [{qty:specialQty,label:specialLabel}] : []
       };
