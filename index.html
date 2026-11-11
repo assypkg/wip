@@ -2891,6 +2891,7 @@
       }
 
       document.getElementById("fgLeader").value = "";
+      document.getElementById("fgGapNote").value = "";
       document.getElementById("fgBoxA").value = "";
       document.getElementById("fgBoxB").value = "";
       hitungPreviewFg();
@@ -3072,8 +3073,9 @@
         wa += `HASIL \n`;
         wa += `A : ${formatNum(it.boxA)} BOX @${formatNum(it.pcsPerBox)} = ${formatNum(it.pcsA)}\n`;
         wa += `B : ${formatNum(it.boxB)} BOX @${formatNum(it.pcsPerBox)} = ${formatNum(it.pcsB)}\n`;
-        wa += `*TOTAL : ${formatNum(it.totalBox)} BOX @ ${formatNum(it.pcsPerBox)} = ${formatNum(it.totalPcs)} PCS*\n \n`;
+        wa += `*TOTAL : ${formatNum(it.totalBox)} BOX @ ${formatNum(it.pcsPerBox)} = ${formatNum(it.totalPcs)} PCS*\n`;
         if (it.gapNote) wa += `*${it.gapNote}*\n`;
+        wa += `\n`;        if (it.gapNote) wa += `*${it.gapNote}*\n`;
         wa += `\n`;      });
 
       const includeWip = document.getElementById("mergeWipToggle").checked;
