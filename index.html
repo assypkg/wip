@@ -1142,6 +1142,7 @@
             <select id="fgShift" onchange="onFgShiftChange()">
               <optgroup label="5 HARI KERJA — 2 SHIFT">
                 <option value="SHIFT 1 (08.00-12.00)">SHIFT 1 — Setengah hari (08.00-12.00)</option>
+                <option value="SHIFT 1 (08.00-10.00)">SHIFT 1 — Laporan jam 10.00 (08.00-10.00)</option>
                 <option value="SHIFT 1 (08.00-17.00)">SHIFT 1 — Full (08.00-17.00)</option>
                 <option value="SHIFT 2 (21.00-06.00)">SHIFT 2 — Malam (21.00-06.00)</option>
               </optgroup>
@@ -2778,7 +2779,9 @@
       const timeEl = document.getElementById("fgTime");
       const durEl = document.getElementById("fgDuration");
 
-      if (shift === "SHIFT 1 (08.00-12.00)") {
+      if (shift === "SHIFT 1 (08.00-10.00)") {
+        timeEl.value = "10.00"; durEl.value = "08.00-10.00";
+      } else if (shift === "SHIFT 1 (08.00-12.00)") {
         timeEl.value = "12.00"; durEl.value = "08.00-12.00";
       } else if (shift === "SHIFT 1 (08.00-17.00)") {
         timeEl.value = "17.00"; durEl.value = "08.00-17.00";
