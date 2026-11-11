@@ -4026,18 +4026,46 @@
     function bersihkanImportSpa(){document.getElementById("waImportSpaText").value="";document.getElementById("waImportSpaPreview").innerHTML="";pendingSpaImport=[];}
     function angkaLaporanWA(v){return Number(String(v||"").replace(/[.,]/g,""))||0;}
     function previewImportSpa(){
-      const lines=document.getElementById("waImportSpaText").value.replace(/\r/g,"").split("\n"),rows=[];let group="",lineInfo="",baseTarget=0,targetBuffer=0,current=null;
+      const lines=document.getElementById("waImportSpaText").value.replace(/\r/g,"").split("\n");
+      const rows=[];let group="",lineInfo="",baseTarget=0,targetBuffer=0,current=null;
       function flush(){if(current){current.total=current.assy+current.gudang;rows.push(current);current=null;}}
-      lines.forEach(raw=>{const line=raw.replace(/[>*_]/g,"").trim();if(!line)return;
-        const gh=line.match(/^\d+[.)]\s*(.+)$/);if(gh){flush();group=gh[1].trim();lineInfo="";baseTarget=0;targetBuffer=0;return;}
-        const target=line.match(/^(.*?)@\s*([\d.,]+)\s*\+\s*5%/i);if(target){lineInfo=target[1].trim();baseTarget=angkaLaporanWA(target[2]);return;}
+      lines.forEach(raw=>{
+        const line=raw.replace(/[>*_\x60]/g,"").trim();
+        if(!line)return;
+        const gh=line.match(/^\d+[.)]\s*(.+)$/);
+        if(gh){flush();group=gh[1].trim();lineInfo="";baseTarget=0;targetBuffer=0;return;}
+        const target=line.match(/^(.*?)@\s*([\d.,]+)\s*\+\s*5%/i);
+        if(target){lineInfo=target[1].trim();baseTarget=angkaLaporanWA(target[2]);return;}
         if(/^=>\s*[\d.,]+$/.test(line)&&baseTarget&&!targetBuffer){targetBuffer=angkaLaporanWA(line.replace(/^=>\s*/,""));return;}
         if(/^Ketersediaan/i.test(line)){flush();return;}
-        if(/\(\d{3,5}\)/.test(line)&&!/^=>/.test(line)){flush();const p=line.match(/^(.+?)(\s+Ng hold.*)?$/i);current={id:Date.now()+Math.random(),group,lineInfo,baseTarget,targetBuffer,part:p[1].trim(),note:(p[2]||"").trim(),assy:0,gudang:0,total:0,assyBoxes:[],gudangBoxes:[],waitingBeta:0,otherStocks:[]};
+        if(/\(\d{3,5}\)/.test(line)&&!/^=>/.test(line)){
+          flush();
+          const p=line.match(/^(.+?)(\s+Ng hold.*)?$/i);
+          current={id:Date.now()+Math.random(),group,lineInfo,baseTarget,targetBuffer,part:p[1].trim(),note:(p[2]||"").trim(),assy:0,gudang:0,total:0,assyBoxes:[],gudangBoxes:[],waitingBeta:0,otherStocks:[]};
           const inline=line.match(/=>\s*([\d.,]+)\s*\+\s*([\d.,]+)\s*\((.*?)\)/i);
-          if(inline){const a=angkaLaporanWA(inline[1]),b=angkaLaporanWA(inline[2]);current.assy=a;current.assyBoxes.push({label:String(a),val:a});if(/beta|tunggu/i.test(inline[3]))current.waitingBeta=b;else current.otherStocks.push({qty:b,label:inline[3]});}
-          return;}
-        if(!current)return;const q=line.match(/^(?:=>\s*)?([\d.,]+)\s*(?:\((.*?)\))?$/);if(!q)return;const qty=angkaLaporanWA(q[1]),label=(q[2]||"").trim();
+          if(inline){
+            const a=angkaLaporanWA(inline[1]),b=angkaLaporanWA(inline[2]);
+            current.assy=a;current.assyBoxes.push({label:String(a),val:a});
+            if(/beta|tunggu/i.test(inline[3]))current.waitingBeta=b;
+            else current.otherStocks.push({qty:b,label:inline[3]});
+          }
+          return;
+        }
+        if(!current)return;
+        // Format baru: Assy : 50.918 / Gudang : 43.740
+        const labeled=line.match(/^(Assy|Gudang|.*(?:tunggu.*beta|plant beta)|.+?)\s*:\s*([\d.,]+)$/i);
+        if(labeled){
+          const label=labeled[1].trim(),qty=angkaLaporanWA(labeled[2]);
+          if(/^Assy$/i.test(label)){current.assy+=qty;current.assyBoxes.push({label:String(qty),val:qty});}
+          else if(/^Gudang$/i.test(label)){current.gudang+=qty;current.gudangBoxes.push({label:String(qty),val:qty});}
+          else if(/tunggu.*beta|plant beta/i.test(label))current.waitingBeta+=qty;
+          else if(!/total/i.test(label))current.otherStocks.push({qty,label});
+          return;
+        }
+        // Format lama: => 50.918 (Assy), => 43.740 (Gudang)
+        const q=line.match(/^(?:=>\s*)?([\d.,]+)\s*(?:\((.*?)\))?$/);
+        if(!q)return;
+        const qty=angkaLaporanWA(q[1]),label=(q[2]||"").trim();
         if(/Assy/i.test(label)){current.assy+=qty;current.assyBoxes.push({label:String(qty),val:qty});}
         else if(/Gudang/i.test(label)){current.gudang+=qty;current.gudangBoxes.push({label:String(qty),val:qty});}
         else if(/tunggu.*beta|plant beta/i.test(label))current.waitingBeta+=qty;
@@ -4045,10 +4073,13 @@
         else if(label)current.otherStocks.push({qty,label});
         else if(!current.assy&&!current.gudang){current.assy+=qty;current.assyBoxes.push({label:String(qty),val:qty});}
         else current.otherStocks.push({qty,label:"Kategori belum disebutkan"});
-      });flush();pendingSpaImport=rows;const box=document.getElementById("waImportSpaPreview");
+      });
+      flush();pendingSpaImport=rows;
+      const box=document.getElementById("waImportSpaPreview");
       if(!rows.length){box.textContent="Belum ada item terbaca. Periksa nama produk dan kode komponen.";return;}
       box.innerHTML="<b>"+rows.length+" baris terbaca</b><div>"+rows.map(x=>x.group+" — "+x.part+": Assy "+formatNum(x.assy)+", Gudang "+formatNum(x.gudang)+(x.waitingBeta?" · Menunggu Beta "+formatNum(x.waitingBeta):"")+(x.otherStocks.length?" · "+x.otherStocks.map(y=>formatNum(y.qty)+" ("+y.label+")").join(", "):"")).join("<br>")+"</div><button class='btn btn-emerald' onclick='konfirmasiImportSpa()'>✓ Simpan ke SPA</button>";
     }
+
     function konfirmasiImportSpa(){
       if(!pendingSpaImport.length)return;pendingSpaImport.forEach(v=>{const old=spaList.find(x=>normalisasiKunciSpa(x.group)===normalisasiKunciSpa(v.group)&&normalisasiKunciSpa(x.part)===normalisasiKunciSpa(v.part)&&normalisasiKunciSpa(x.note)===normalisasiKunciSpa(v.note));
         if(old){old.assy+=v.assy;old.gudang+=v.gudang;old.total=old.assy+old.gudang;old.assyBoxes=(old.assyBoxes||[]).concat(v.assyBoxes);old.gudangBoxes=(old.gudangBoxes||[]).concat(v.gudangBoxes);old.waitingBeta=(old.waitingBeta||0)+v.waitingBeta;old.otherStocks=(old.otherStocks||[]).concat(v.otherStocks);}else spaList.push(v);
