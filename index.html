@@ -1251,6 +1251,11 @@
                 oninput="this.value=this.value.replace(/[^0-9]/g,''); hitungPreviewFg(); simpanDraftLokal();"
               />
             </div>
+            <div style="grid-column:1/-1;">
+              <label>Qty Receh (PCS) — pisahkan dengan tanda +</label>
+              <input type="text" inputmode="numeric" id="fgRecehQty" placeholder="Contoh: 352+500" oninput="this.value=this.value.replace(/[^0-9+]/g,'').replace(/\+{2,}/g,'+'); hitungPreviewFg(); simpanDraftLokal();" />
+              <small style="color:var(--text-muted);">Setiap angka dihitung sebagai 1 box receh. Contoh 352+500 = 2 box receh.</small>
+            </div>
           </div>
 
           <div id="fgBreakdownPreview" style="margin-top:8px; font-size:0.74rem; color:var(--emerald); font-weight:700; background:#fff; padding:8px 10px; border-radius:8px; border:1px solid #a5d6a7;">
@@ -2893,20 +2898,27 @@
       simpanDraftLokal();
     }
 
+    function parseRecehFg(value) {
+      return String(value || "").split("+").map(v => Number(v.trim())).filter(v => Number.isFinite(v) && v > 0);
+    }
+
     function hitungPreviewFg() {
       const perBox = Number(document.getElementById("fgPcsPerBox").value) || 0;
       const boxA = Number(document.getElementById("fgBoxA").value) || 0;
       const boxB = Number(document.getElementById("fgBoxB").value) || 0;
+      const recehBoxes = parseRecehFg(document.getElementById("fgRecehQty").value);
+      const pcsReceh = recehBoxes.reduce((sum, qty) => sum + qty, 0);
 
       const pcsA = boxA * perBox;
       const pcsB = boxB * perBox;
-      const totalBox = boxA + boxB;
-      const totalPcs = pcsA + pcsB;
+      const totalBox = boxA + boxB + recehBoxes.length;
+      const totalPcs = pcsA + pcsB + pcsReceh;
 
       document.getElementById("fgBreakdownPreview").innerHTML =
-        `A : <b>${formatNum(boxA)} BOX @${formatNum(perBox)} = ${formatNum(pcsA)}</b> &nbsp;|&nbsp; B : <b>${formatNum(boxB)} BOX @${formatNum(perBox)} = ${formatNum(pcsB)}</b>`;
+        `A : <b>${formatNum(boxA)} BOX @${formatNum(perBox)} = ${formatNum(pcsA)}</b> &nbsp;|&nbsp; B : <b>${formatNum(boxB)} BOX @${formatNum(perBox)} = ${formatNum(pcsB)}</b>` +
+        (recehBoxes.length ? `<br>RECEH : <b>${recehBoxes.length} BOX (${recehBoxes.map(formatNum).join(" + ")}) = ${formatNum(pcsReceh)} PCS</b>` : "");
       document.getElementById("fgLiveTotalPreview").textContent =
-        `TOTAL : ${formatNum(totalBox)} BOX @ ${formatNum(perBox)} = ${formatNum(totalPcs)} PCS`;
+        `TOTAL : ${formatNum(totalBox)} BOX = ${formatNum(totalPcs)} PCS`;
     }
 
     function copySpekFgTerakhir() {
@@ -2945,21 +2957,31 @@
       const pcsPerBox = Number(document.getElementById("fgPcsPerBox").value) || 0;
       const boxA = Number(document.getElementById("fgBoxA").value) || 0;
       const boxB = Number(document.getElementById("fgBoxB").value) || 0;
+      const recehBoxes = parseRecehFg(document.getElementById("fgRecehQty").value);
+      const pcsReceh = recehBoxes.reduce((sum, qty) => sum + qty, 0);
 
       if (!leader || !productName || !jobOrder) {
         alert("Mohon isi Nama Leader/Operator, Nama Produk, dan Nomor Job Order.");
         return;
       }
 
-      if (pcsPerBox <= 0 || (boxA === 0 && boxB === 0)) {
-        alert("Mohon isi Isi Per Box (@) serta jumlah Box A atau Box B.");
+      if ((boxA > 0 || boxB > 0) && pcsPerBox <= 0) {
+        alert("Isi Per Box (@) wajib diisi jika ada Box A atau Box B.");
+        return;
+      }
+      if (boxA === 0 && boxB === 0 && recehBoxes.length === 0) {
+        alert("Isi jumlah Box A/B atau Qty Receh terlebih dahulu.");
+        return;
+      }
+      if (String(document.getElementById("fgRecehQty").value || "").trim() && recehBoxes.length === 0) {
+        alert("Qty Receh tidak valid. Gunakan angka dan pisahkan setiap box dengan tanda +, contoh 352+500.");
         return;
       }
 
       const pcsA = boxA * pcsPerBox;
       const pcsB = boxB * pcsPerBox;
-      const totalBox = boxA + boxB;
-      const totalPcs = pcsA + pcsB;
+      const totalBox = boxA + boxB + recehBoxes.length;
+      const totalPcs = pcsA + pcsB + pcsReceh;
 
       const record = {
         id: editingFgId !== null ? editingFgId : Date.now() + Math.random(),
@@ -2976,6 +2998,8 @@
         pcsA,
         boxB,
         pcsB,
+        recehBoxes,
+        pcsReceh,
         totalBox,
         totalPcs
       };
@@ -2994,6 +3018,7 @@
       document.getElementById("fgGapNote").value = "";
       document.getElementById("fgBoxA").value = "";
       document.getElementById("fgBoxB").value = "";
+      document.getElementById("fgRecehQty").value = "";
       hitungPreviewFg();
       renderFgAll();
       simpanDraftLokal();
@@ -3016,6 +3041,7 @@
       document.getElementById("fgPcsPerBox").value = item.pcsPerBox;
       document.getElementById("fgBoxA").value = item.boxA;
       document.getElementById("fgBoxB").value = item.boxB;
+      document.getElementById("fgRecehQty").value = (item.recehBoxes || []).join("+");
       hitungPreviewFg();
 
       document.getElementById("fgInputCard").classList.add("editing-mode");
@@ -3149,7 +3175,8 @@
               <div class="box-breakdown-info" style="margin-top:6px;">
                 A : ${formatNum(it.boxA)} BOX @${formatNum(it.pcsPerBox)} = <b>${formatNum(it.pcsA)}</b><br>
                 B : ${formatNum(it.boxB)} BOX @${formatNum(it.pcsPerBox)} = <b>${formatNum(it.pcsB)}</b><br>
-                <span style="color:var(--emerald); font-weight:800;">TOTAL : ${formatNum(it.totalBox)} BOX @ ${formatNum(it.pcsPerBox)} = ${formatNum(it.totalPcs)} PCS</span>
+                ${(it.recehBoxes || []).length ? `RECEH : ${it.recehBoxes.length} BOX (${it.recehBoxes.map(formatNum).join(" + ")}) = <b>${formatNum(it.pcsReceh || it.recehBoxes.reduce((a,b)=>a+b,0))} PCS</b><br>` : ""}
+                <span style="color:var(--emerald); font-weight:800;">TOTAL : ${formatNum(it.totalBox)} BOX = ${formatNum(it.totalPcs)} PCS</span>
               </div>
             </div>`
           )
@@ -3174,6 +3201,7 @@
         wa += `HASIL \n`;
         wa += `A : ${formatNum(it.boxA)} BOX @${formatNum(it.pcsPerBox)} = ${formatNum(it.pcsA)}\n`;
         wa += `B : ${formatNum(it.boxB)} BOX @${formatNum(it.pcsPerBox)} = ${formatNum(it.pcsB)}\n`;
+        if ((it.recehBoxes || []).length) wa += `RECEH : ${it.recehBoxes.length} BOX (${it.recehBoxes.map(formatNum).join(" + ")}) = ${formatNum(it.pcsReceh || it.recehBoxes.reduce((a,b)=>a+b,0))} PCS\n`;
         const achievementPct = Number(it.target) > 0 ? (Number(it.totalPcs || 0) / Number(it.target) * 100) : 0;        wa += `*TOTAL : ${formatNum(it.totalBox)} BOX @ ${formatNum(it.pcsPerBox)} = ${formatNum(it.totalPcs)} PCS | ${(achievementPct).toFixed(2)}%*\n`;
         // Catatan tidak tercapai hanya ditampilkan sekali dan hanya jika hasil di bawah target.
         if (it.gapNote && it.totalPcs < it.target) wa += `*${it.gapNote}*\n`;
