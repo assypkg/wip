@@ -2989,8 +2989,8 @@
         alert("Isi jumlah Box A/B atau Qty Receh terlebih dahulu.");
         return;
       }
-      const recehAInvalid = rawRecehA && (rawRecehA.split("+").some(part => !/^\\d+$/.test(part.trim())) || recehABoxes.length === 0);
-      const recehBInvalid = rawRecehB && (rawRecehB.split("+").some(part => !/^\\d+$/.test(part.trim())) || recehBBoxes.length === 0);
+      const recehAInvalid = rawRecehA && (rawRecehA.split("+").some(part => !/^\d+$/.test(part.trim())) || recehABoxes.length === 0);
+      const recehBInvalid = rawRecehB && (rawRecehB.split("+").some(part => !/^\d+$/.test(part.trim())) || recehBBoxes.length === 0);
       if (recehAInvalid || recehBInvalid) {
         alert("Qty Receh A/B tidak valid. Gunakan angka dan pisahkan setiap box dengan tanda +, contoh 352+500.");
         return;
