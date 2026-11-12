@@ -2967,8 +2967,14 @@
       const pcsPerBox = Number(document.getElementById("fgPcsPerBox").value) || 0;
       const boxA = Number(document.getElementById("fgBoxA").value) || 0;
       const boxB = Number(document.getElementById("fgBoxB").value) || 0;
-      const recehBoxes = parseRecehFg(document.getElementById("fgRecehQty").value);
-      const pcsReceh = recehBoxes.reduce((sum, qty) => sum + qty, 0);
+      const rawRecehA = String(document.getElementById("fgRecehAQty").value || "").trim();
+      const rawRecehB = String(document.getElementById("fgRecehBQty").value || "").trim();
+      const recehABoxes = parseRecehFg(rawRecehA);
+      const recehBBoxes = parseRecehFg(rawRecehB);
+      const pcsRecehA = recehABoxes.reduce((sum, qty) => sum + qty, 0);
+      const pcsRecehB = recehBBoxes.reduce((sum, qty) => sum + qty, 0);
+      const totalRecehBoxes = recehABoxes.length + recehBBoxes.length;
+      const pcsReceh = pcsRecehA + pcsRecehB;
 
       if (!leader || !productName || !jobOrder) {
         alert("Mohon isi Nama Leader/Operator, Nama Produk, dan Nomor Job Order.");
@@ -2983,14 +2989,16 @@
         alert("Isi jumlah Box A/B atau Qty Receh terlebih dahulu.");
         return;
       }
-      if ((String(document.getElementById("fgRecehAQty").value || "").trim() && recehABoxes.length === 0) || (String(document.getElementById("fgRecehBQty").value || "").trim() && recehBBoxes.length === 0)) {
+      const recehAInvalid = rawRecehA && (rawRecehA.split("+").some(part => !/^\\d+$/.test(part.trim())) || recehABoxes.length === 0);
+      const recehBInvalid = rawRecehB && (rawRecehB.split("+").some(part => !/^\\d+$/.test(part.trim())) || recehBBoxes.length === 0);
+      if (recehAInvalid || recehBInvalid) {
         alert("Qty Receh A/B tidak valid. Gunakan angka dan pisahkan setiap box dengan tanda +, contoh 352+500.");
         return;
       }
 
       const pcsA = boxA * pcsPerBox;
       const pcsB = boxB * pcsPerBox;
-      const totalBox = boxA + boxB + recehBoxes.length;
+      const totalBox = boxA + boxB + totalRecehBoxes;
       const totalPcs = pcsA + pcsB + pcsReceh;
 
       const record = {
@@ -3014,8 +3022,7 @@
         pcsRecehB,
         // kompatibilitas data lama: receh sebelumnya diperlakukan sebagai receh B
         recehBoxes: recehBBoxes,
-        pcsReceh,
-
+        pcsReceh: pcsRecehB,
         totalBox,
         totalPcs
       };
