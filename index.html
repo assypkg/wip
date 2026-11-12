@@ -3174,7 +3174,7 @@
         wa += `HASIL \n`;
         wa += `A : ${formatNum(it.boxA)} BOX @${formatNum(it.pcsPerBox)} = ${formatNum(it.pcsA)}\n`;
         wa += `B : ${formatNum(it.boxB)} BOX @${formatNum(it.pcsPerBox)} = ${formatNum(it.pcsB)}\n`;
-        wa += `*TOTAL : ${formatNum(it.totalBox)} BOX @ ${formatNum(it.pcsPerBox)} = ${formatNum(it.totalPcs)} PCS*\n`;
+        const achievementPct = Number(it.target) > 0 ? (Number(it.totalPcs || 0) / Number(it.target) * 100) : 0;        wa += `*TOTAL : ${formatNum(it.totalBox)} BOX @ ${formatNum(it.pcsPerBox)} = ${formatNum(it.totalPcs)} PCS | ${(achievementPct).toFixed(2)}%*\n`;
         // Catatan tidak tercapai hanya ditampilkan sekali dan hanya jika hasil di bawah target.
         if (it.gapNote && it.totalPcs < it.target) wa += `*${it.gapNote}*\n`;
         wa += `\n`;
