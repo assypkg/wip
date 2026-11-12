@@ -4727,10 +4727,9 @@
           if (it.gudang > 0) stockLines.push(["Gudang", it.gudang]);
           (it.otherStocks || []).forEach(v => stockLines.push([v.label, v.qty]));
           if (it.waitingBeta > 0) stockLines.push(["Menunggu kirim Plant Beta", it.waitingBeta]);
-          const width = Math.max(5, ...stockLines.map(v => String(v[0]).length));
           stockLines.forEach(v => {
-            // Tidak memberi spasi setelah backtick pembuka agar WhatsApp mengenali inline monospace.
-            wa += "`" + String(v[0]).padEnd(width, " ") + " : " + formatNum(v[1]).padStart(8, " ") + "`\n";
+            // Pertahankan blok monospace WhatsApp, tetapi tanpa padding kolom yang membuat angka turun baris di layar HP.
+            wa += "`" + String(v[0]).trim() + " : " + formatNum(v[1]) + "`\n";
           });
           if (stockLines.length > 1) wa += `  Total stok Assy + Gudang : *${formatNum(it.total)}*\n`;
         });
