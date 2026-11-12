@@ -3229,7 +3229,7 @@
         if ((it.recehABoxes || []).length) wa += `RECEH A : ${it.recehABoxes.length} BOX (${it.recehABoxes.map(formatNum).join(" + ")}) = ${formatNum(it.pcsRecehA || it.recehABoxes.reduce((a,b)=>a+b,0))} PCS\n`;
         const recehB = it.recehBBoxes || it.recehBoxes || [];
         if (recehB.length) wa += `RECEH B : ${recehB.length} BOX (${recehB.map(formatNum).join(" + ")}) = ${formatNum(it.pcsRecehB || it.pcsReceh || recehB.reduce((a,b)=>a+b,0))} PCS\n`;
-        const achievementPct = Number(it.target) > 0 ? (Number(it.totalPcs || 0) / Number(it.target) * 100) : 0;        wa += `*TOTAL : ${formatNum(it.totalBox)} BOX @ ${formatNum(it.pcsPerBox)} = ${formatNum(it.totalPcs)} PCS | ${(achievementPct).toFixed(2)}%*\n`;
+        const achievementPct = Number(it.target) > 0 ? (Number(it.totalPcs || 0) / Number(it.target) * 100) : 0;        wa += `*TOTAL : ${formatNum(it.totalBox)} BOX @${formatNum(it.pcsPerBox)} = ${formatNum(it.totalPcs)} PCS | ${(achievementPct).toFixed(2)}%*\n`;
         // Catatan tidak tercapai hanya ditampilkan sekali dan hanya jika hasil di bawah target.
         if (it.gapNote) wa += `*Catatan: ${it.gapNote}*\n`;
         wa += `\n`;
