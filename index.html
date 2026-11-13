@@ -3526,7 +3526,7 @@
         if (recehB.length) hasilRows.push({ label: "RECEH B", value: `${recehB.length} BOX (${recehB.map(formatNum).join(" + ")}) = ${formatNum(it.pcsRecehB || it.pcsReceh || recehB.reduce((a,b)=>a+b,0))} PCS` });
         hasilRows.push({ label: "TOTAL", value: `${totalBoxLabel} = ${formatNum(it.totalPcs)} PCS | ${achievementPct.toFixed(2)}%`, bold: true });
         // Catatan dimasukkan ke formatter yang sama agar sejajar dengan A, B, dan TOTAL.
-        if (it.gapNote) hasilRows.push({ label: "Catatan", value: it.gapNote, bold: true });
+        if (it.gapNote) hasilRows.push({ label: "NOTE", value: it.gapNote, bold: true, noCode: true });
         wa += formatWhatsAppQtyRows(hasilRows) + "\n\n";
       });
 
@@ -4277,16 +4277,24 @@
         .map(row => String(row.label).trim().length)
         .filter(length => length <= 26));
       const width = Math.min(26, maxAlignedLabel);
+      // Samakan posisi tanda "=" agar angka hasil di setiap baris berada pada kolom yang sama.
+      const valuePrefixes = cleanRows.map(row => String(row.value ?? "").trim().split(" = ")[0]);
+      const equalsWidth = Math.max(0, ...cleanRows.map((row, i) => String(row.value ?? "").includes(" = ") ? valuePrefixes[i].length : 0));
       return cleanRows.map(row => {
         const label = String(row.label).trim().replace(/[`]/g, "'");
-        const value = String(row.value ?? "").trim();
+        let value = String(row.value ?? "").trim();
+        if (value.includes(" = ")) {
+          const parts = value.split(" = ");
+          value = parts[0].padEnd(equalsWidth, " ") + " = " + parts.slice(1).join(" = ");
+        }
         const left = label.length <= width ? label.padEnd(width, " ") : label;
         const line = left + " : " + value;
+        // Baris NOTE dibuat tebal tanpa pembungkus backtick.
+        if (row.noCode) return row.bold ? "*" + line + "*" : line;
         const code = "`" + line + "`";
         return row.bold ? "*" + code + "*" : code;
       }).join("\n");
     }
-
     function renderWipAll() {
       const container = document.getElementById("wipGroupedContainer");
       const waBox = document.getElementById("waPreviewWip");
