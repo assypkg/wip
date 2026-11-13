@@ -811,6 +811,62 @@
     #spaAddItemModal .modal-card { max-width: 560px; }
     .spa-add-item-btn { white-space:nowrap; padding:6px 9px; font-size:.68rem; }
 
+    #cloudModal .modal-card.cloud-modal-card {
+      display:flex;
+      flex-direction:column;
+      max-height:92vh;
+      overflow:hidden;
+      overscroll-behavior:contain;
+    }
+    #cloudModal #cloudArchiveContainer {
+      flex:1 1 auto;
+      min-height:120px;
+      max-height:none !important;
+      overflow-y:auto;
+      overscroll-behavior:contain;
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:thin;
+      padding-right:3px;
+    }
+    .cloud-item-detail {
+      margin-top:8px;
+      padding:7px 8px;
+      border:1px solid #e2e8f0;
+      border-radius:8px;
+      background:#f8fafc;
+    }
+    .cloud-item-heading {
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:8px;
+      font-size:.78rem;
+      font-weight:800;
+      line-height:1.35;
+    }
+    .cloud-box-list {
+      display:grid;
+      gap:0;
+      margin-top:5px;
+      max-height:150px;
+      overflow-y:auto;
+      overscroll-behavior:contain;
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:thin;
+      border-top:1px solid #e2e8f0;
+    }
+    .cloud-box-row {
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+      padding:5px 2px;
+      border-bottom:1px solid #e8edf3;
+      font-size:.72rem;
+      line-height:1.25;
+    }
+    .cloud-box-row span:first-child { color:var(--text-muted); font-weight:700; }
+    .cloud-box-row span:last-child { color:var(--text-main); font-weight:800; font-variant-numeric:tabular-nums; }
+
     .cloud-record-card {
       border: 1.5px solid var(--border);
       border-left: 5px solid var(--sky);
@@ -1535,7 +1591,7 @@
        MODAL 1: RIWAYAT CLOUD & AUDIT SELISIH GUDANG (ANTI DUPLIKAT)
        ========================================================= -->
   <div id="cloudModal" class="modal-backdrop">
-    <div class="modal-card">
+    <div class="modal-card cloud-modal-card">
       <div class="card-header">
         <span class="card-title">☁️ Database Cloud & Audit Selisih Gudang</span>
         <button class="btn btn-danger" onclick="toggleModal('cloudModal', false)">✕ Tutup</button>
@@ -1587,7 +1643,7 @@
         </div>
       </div>
 
-      <div id="cloudArchiveContainer" style="max-height:360px; overflow-y:auto;"></div>
+      <div id="cloudArchiveContainer"></div>
     </div>
   </div>
 
@@ -3774,23 +3830,20 @@
                   ? it.boxes
                   : [{ label: String(it.qty), val: it.qty }];
               let pIdx = 0;
-              const boxStr = boxList
-                .map((b) => {
-                  if (b.val < 0) return `[Diambil: ${formatNum(b.val)}]`;
-                  pIdx++;
-                  return `[Box ${pIdx}: ${formatNum(b.val)}]`;
-                })
-                .join(" ");
+              const boxRows = boxList.map((b) => {
+                const isNegative = Number(b.val) < 0;
+                const label = isNegative ? "Pengambilan" : `Box ${String(++pIdx).padStart(2,"0")}`;
+                return `<div class="cloud-box-row"><span>${label}</span><span>${formatNum(Math.abs(Number(b.val)||0))} PCS</span></div>`;
+              }).join("");
 
               return `
-                <div style="padding:6px 0; border-bottom:1px solid #f1f5f9; font-size:0.78rem;">
-                  <div style="display:flex; justify-content:space-between; font-weight:700;">
+                <div class="cloud-item-detail">
+                  <div class="cloud-item-heading">
                     <span style="color:var(--navy);">${it.group} &mdash; ${it.part} ${it.note ? `(${it.note})` : ""}</span>
-                    <span style="color:var(--emerald);">${formatNum(it.qty)} PCS</span>
+                    <span style="color:var(--emerald);white-space:nowrap;">${formatNum(it.qty)} PCS</span>
                   </div>
-                  <div style="font-size:0.71rem; color:var(--text-muted); margin-top:2px;">
-                    📦 Rincian Box: ${boxStr}
-                  </div>
+                  <div style="font-size:.68rem;color:var(--text-muted);font-weight:700;margin-top:5px;">📦 Rincian Box (${boxList.length}) · Geser untuk melihat selanjutnya</div>
+                  <div class="cloud-box-list">${boxRows}</div>
                 </div>`;
             })
             .join("");
