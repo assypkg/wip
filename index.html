@@ -3516,9 +3516,12 @@
           : `${formatNum(it.totalBox)} BOX @${formatNum(it.pcsPerBox)}`;
         const achievementPct = Number(it.target) > 0 ? (Number(it.totalPcs || 0) / Number(it.target) * 100) : 0;
         const hasilRows = [
-          { label: "A", value: `${formatNum(it.boxA)} BOX @${formatNum(it.pcsPerBox)} = ${formatNum(it.pcsA)} PCS` },
-          { label: "B", value: `${formatNum(it.boxB)} BOX @${formatNum(it.pcsPerBox)} = ${formatNum(it.pcsB)} PCS` }
+          { label: "A", value: `${formatNum(it.boxA)} BOX @${formatNum(it.pcsPerBox)} = ${formatNum(it.pcsA)} PCS` }
         ];
+        // Lot B hanya ditampilkan jika ada box B atau qty receh B.
+        if ((Number(it.boxB) || 0) > 0 || recehB.length > 0) {
+          hasilRows.push({ label: "B", value: `${formatNum(it.boxB)} BOX @${formatNum(it.pcsPerBox)} = ${formatNum(it.pcsB)} PCS` });
+        }
         if (recehA.length) hasilRows.push({ label: "RECEH A", value: `${recehA.length} BOX (${recehA.map(formatNum).join(" + ")}) = ${formatNum(it.pcsRecehA || recehA.reduce((a,b)=>a+b,0))} PCS` });
         if (recehB.length) hasilRows.push({ label: "RECEH B", value: `${recehB.length} BOX (${recehB.map(formatNum).join(" + ")}) = ${formatNum(it.pcsRecehB || it.pcsReceh || recehB.reduce((a,b)=>a+b,0))} PCS` });
         hasilRows.push({ label: "TOTAL", value: `${totalBoxLabel} = ${formatNum(it.totalPcs)} PCS | ${achievementPct.toFixed(2)}%`, bold: true });
