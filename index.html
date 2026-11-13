@@ -1916,6 +1916,7 @@
     let masterProdukFgBusy = false;
     let masterProdukFgConflict = false;
     let masterProdukFgBootstrapQueued = false;
+    let masterProdukFgMergeQueued = false;
     let editingMasterProdukFg = null;
     let masterSyncReady = false;
     let masterSyncBusy = false;
@@ -4997,6 +4998,58 @@
       const btn=document.getElementById("btnBackupMasterProdukFg");if(btn)btn.style.display=localStorage.getItem(MASTER_PRODUK_FG_BACKUP_KEY)?"inline-flex":"none";
     }
 
+    function gabungkanMasterProdukFgTigaArah(baseProducts, baseTargets, localProducts, localTargets, remoteProducts, remoteTargets) {
+      const normalizeProducts = list => normalisasiMasterProdukFg(list);
+      const baseList = normalizeProducts(baseProducts);
+      const localList = normalizeProducts(localProducts);
+      const remoteList = normalizeProducts(remoteProducts);
+      const byKey = list => new Map(list.map(name => [name.toLocaleLowerCase("id"), name]));
+      const bMap = byKey(baseList), lMap = byKey(localList), rMap = byKey(remoteList);
+      const allKeys = new Set([...bMap.keys(), ...lMap.keys(), ...rMap.keys()]);
+      const mergedNames = [];
+      const conflicts = [];
+
+      allKeys.forEach(key => {
+        const b = bMap.has(key), l = lMap.has(key), r = rMap.has(key);
+        let keep;
+        if (l === b) keep = r;
+        else if (r === b || l === r) keep = l;
+        else {
+          conflicts.push("Keberadaan produk: " + (lMap.get(key) || rMap.get(key) || bMap.get(key)));
+          return;
+        }
+        if (keep) mergedNames.push(lMap.get(key) || rMap.get(key) || bMap.get(key));
+      });
+
+      const normalizeTargets = (targets, products) => {
+        const normalized = normalisasiTargetMasterFg(targets, products);
+        return new Map(Object.entries(normalized).map(([name, value]) => [name.toLocaleLowerCase("id"), Number(value)]));
+      };
+      const bt = normalizeTargets(baseTargets, baseList);
+      const lt = normalizeTargets(localTargets, localList);
+      const rt = normalizeTargets(remoteTargets, remoteList);
+      const mergedTargets = {};
+
+      mergedNames.forEach(name => {
+        const key = name.toLocaleLowerCase("id");
+        const b = bt.has(key) ? bt.get(key) : null;
+        const l = lt.has(key) ? lt.get(key) : null;
+        const r = rt.has(key) ? rt.get(key) : null;
+        let value;
+        if (l === b) value = r;
+        else if (r === b || l === r) value = l;
+        else {
+          conflicts.push("Target 8 jam berbeda untuk: " + name);
+          return;
+        }
+        if (value !== null && Number.isFinite(value) && value > 0) mergedTargets[name] = value;
+      });
+
+      if (conflicts.length) return { ok: false, conflicts };
+      const products = normalizeProducts(mergedNames);
+      return { ok: true, products, targets: normalisasiTargetMasterFg(mergedTargets, products) };
+    }
+
     async function tarikMasterProdukFgCloud() {
       if(masterProdukFgBusy)return false;
       masterProdukFgBusy=true;
@@ -5053,10 +5106,32 @@
           masterTargetFg=normalizedTargets;
         } else if(doc.updateTime!==baseTime) {
           if(localChanged) {
-            masterProdukFgConflict=true;
-            localStorage.setItem(MASTER_PRODUK_FG_BACKUP_KEY,JSON.stringify({savedAt:new Date().toISOString(),products:localProducts,targets:localTargets}));
-            setStatusMasterProdukFg("conflict","Lokal dan Cloud sama-sama berubah. Produk/target lokal diamankan; tidak ada yang ditimpa.");
-            return false;
+            const merge = gabungkanMasterProdukFgTigaArah(base, targetBase, localProducts, localTargets, normalized, normalizedTargets);
+            if(!merge.ok) {
+              masterProdukFgConflict=true;
+              localStorage.setItem(MASTER_PRODUK_FG_BACKUP_KEY,JSON.stringify({
+                savedAt:new Date().toISOString(),
+                products:localProducts,targets:localTargets,
+                cloudProducts:normalized,cloudTargets:normalizedTargets,
+                baseProducts:base,baseTargets:targetBase,
+                conflicts:merge.conflicts
+              }));
+              setStatusMasterProdukFg("conflict","Ada perubahan pada produk/target yang sama. Data lokal dan Cloud sudah diamankan; perlu pemeriksaan sebelum digabungkan.");
+              return false;
+            }
+            // Perubahan lokal dan Cloud yang tidak bertabrakan digabungkan.
+            // Versi Cloud terbaru dijadikan dasar sebelum mengirim hasil gabungan dengan precondition.
+            masterProdukFg=merge.products;
+            masterTargetFg=merge.targets;
+            localStorage.setItem(MASTER_PRODUK_FG_BASE_KEY,JSON.stringify(normalized));
+            localStorage.setItem(MASTER_PRODUK_FG_TARGET_BASE_KEY,JSON.stringify(normalizedTargets));
+            localStorage.setItem(MASTER_PRODUK_FG_UPDATE_KEY,doc.updateTime||"");
+            masterProdukFgMergeQueued=true;
+            masterProdukFgReady=true;
+            masterProdukFgConflict=false;
+            simpanMasterProdukFgLokal();
+            setStatusMasterProdukFg("syncing","Perubahan lokal dan Cloud tidak bertabrakan. Menggabungkan lalu memverifikasi hasil...");
+            return true;
           }
           masterProdukFg=normalized;
           masterTargetFg=normalizedTargets;
@@ -5080,7 +5155,10 @@
         return false;
       } finally {
         masterProdukFgBusy=false;
-        if(masterProdukFgBootstrapQueued&&masterProdukFgReady&&!masterProdukFgConflict) {
+        if(masterProdukFgMergeQueued&&masterProdukFgReady&&!masterProdukFgConflict) {
+          masterProdukFgMergeQueued=false;
+          simpanMasterProdukFgCloud();
+        } else if(masterProdukFgBootstrapQueued&&masterProdukFgReady&&!masterProdukFgConflict) {
           masterProdukFgBootstrapQueued=false;
           simpanMasterProdukFgCloud();
         }
