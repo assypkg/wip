@@ -3224,20 +3224,22 @@
         wa += `DURASI  : ${it.duration}\n`;
         wa += `TARGET : ${formatNum(it.target)}\n`;
         wa += `HASIL \n`;
-        wa += `A : ${formatNum(it.boxA)} BOX @${formatNum(it.pcsPerBox)} = ${formatNum(it.pcsA)}\n`;
-        wa += `B : ${formatNum(it.boxB)} BOX @${formatNum(it.pcsPerBox)} = ${formatNum(it.pcsB)}\n`;
-        if ((it.recehABoxes || []).length) wa += `RECEH A : ${it.recehABoxes.length} BOX (${it.recehABoxes.map(formatNum).join(" + ")}) = ${formatNum(it.pcsRecehA || it.recehABoxes.reduce((a,b)=>a+b,0))} PCS\n`;
-        const recehB = it.recehBBoxes || it.recehBoxes || [];
-        if (recehB.length) wa += `RECEH B : ${recehB.length} BOX (${recehB.map(formatNum).join(" + ")}) = ${formatNum(it.pcsRecehB || it.pcsReceh || recehB.reduce((a,b)=>a+b,0))} PCS\n`;
         const recehA = it.recehABoxes || [];
-        const recehBCount = (it.recehBBoxes || it.recehBoxes || []).length;
-        const totalRecehBoxes = recehA.length + recehBCount;
+        const recehB = it.recehBBoxes || it.recehBoxes || [];
+        const totalRecehBoxes = recehA.length + recehB.length;
         const normalBoxCount = (Number(it.boxA) || 0) + (Number(it.boxB) || 0);
         const totalBoxLabel = totalRecehBoxes > 0
           ? `${formatNum(it.totalBox)} BOX (${formatNum(normalBoxCount)} BOX + ${formatNum(totalRecehBoxes)} RECEH)`
           : `${formatNum(it.totalBox)} BOX @${formatNum(it.pcsPerBox)}`;
         const achievementPct = Number(it.target) > 0 ? (Number(it.totalPcs || 0) / Number(it.target) * 100) : 0;
-        wa += `*TOTAL : ${totalBoxLabel} = ${formatNum(it.totalPcs)} PCS | ${(achievementPct).toFixed(2)}%*\n`;
+        const hasilLines = [
+          `A : ${formatNum(it.boxA)} BOX @${formatNum(it.pcsPerBox)} = ${formatNum(it.pcsA)}`,
+          `B : ${formatNum(it.boxB)} BOX @${formatNum(it.pcsPerBox)} = ${formatNum(it.pcsB)}`
+        ];
+        if (recehA.length) hasilLines.push(`RECEH A : ${recehA.length} BOX (${recehA.map(formatNum).join(" + ")}) = ${formatNum(it.pcsRecehA || recehA.reduce((a,b)=>a+b,0))} PCS`);
+        if (recehB.length) hasilLines.push(`RECEH B : ${recehB.length} BOX (${recehB.map(formatNum).join(" + ")}) = ${formatNum(it.pcsRecehB || it.pcsReceh || recehB.reduce((a,b)=>a+b,0))} PCS`);
+        hasilLines.push(`*TOTAL : ${totalBoxLabel} = ${formatNum(it.totalPcs)} PCS | ${(achievementPct).toFixed(2)}%*`);
+        wa += hasilLines.join("\n") + "\n";
         // Catatan tidak tercapai hanya ditampilkan sekali dan hanya jika hasil di bawah target.
         if (it.gapNote) wa += `*Catatan: ${it.gapNote}*\n`;
         wa += `\n`;
