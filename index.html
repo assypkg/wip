@@ -930,6 +930,7 @@
     @media (max-width:879px) {
       .mobile-tab-hidden { display:none !important; }
       .sheet-section-nav { display:none; position:sticky; position:-webkit-sticky; top:0; align-self:stretch; width:100%; max-width:1140px; margin:0 auto 8px; padding:7px; z-index:500; background:#fff; box-shadow:0 5px 14px rgba(15,23,42,.12); scroll-margin-top:0; }
+      body { overflow-anchor:none; }
       .sheet-section-nav.is-active { display:grid; }
       .mobile-sheet-meta { grid-template-columns:1fr 1fr; gap:6px; padding:8px; }
       #wipMetaControls > div:first-child { grid-column:1 / -1; }
@@ -2313,14 +2314,21 @@
       return `${tgl} ${bulanIndo[blnIdx] || ""} ${thn}`;
     }
 
+    function alignSheetNavToTop(nav) {
+      if (!nav) return;
+      nav.classList.add("is-active");
+      // Hitung koordinat dokumen secara langsung. scrollIntoView() pada Android
+      // dapat memilih scroll container yang salah dan menyisakan menu sheet di atas.
+      const top = window.pageYOffset + nav.getBoundingClientRect().top;
+      window.scrollTo(0, Math.max(0, top));
+    }
+
     function scrollToSheetSection(targetId, navId, buttonEl) {
       const target = document.getElementById(targetId);
       if (!target) return;
       const nav = document.getElementById(navId);
       if (nav) nav.querySelectorAll(".sheet-nav-btn").forEach(btn => btn.classList.toggle("active", btn === buttonEl));
 
-      // Di HP, navigasi bekerja seperti tab: hanya satu bagian yang tampil.
-      // Tidak menggulir halaman ke atas/bawah. Di desktop perilaku lama tetap dipakai.
       if (window.matchMedia && window.matchMedia("(max-width: 879px)").matches) {
         const groups = {
           wipSectionNav: ["wipInputSection", "wipListCard", "wipWaCard"],
@@ -2331,11 +2339,9 @@
           const panel = document.getElementById(id);
           if (panel) panel.classList.toggle("mobile-tab-hidden", id !== targetId);
         });
-        // Setelah panel berganti, posisikan bar navigasi tepat di tepi atas layar.
-        if (nav) {
-          nav.classList.add("is-active");
-          nav.scrollIntoView({ behavior: "instant", block: "start" });
-        }
+        // Tunggu layout satu frame setelah menyembunyikan panel, lalu kunci tab
+        // di koordinat paling atas viewport (bukan di bawah menu pilihan sheet).
+        requestAnimationFrame(() => alignSheetNavToTop(nav));
         return;
       }
       target.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -2373,10 +2379,13 @@
         nav.querySelectorAll(".sheet-nav-btn").forEach((btn, index) => btn.classList.toggle("active", index === 0));
       });
 
-      if (mode === "fg") {
-        renderFgAll();
-      }
+      // Data FG sudah dirender saat input WIP/FG berubah. Jangan render ulang
+      // seluruh daftar saat hanya berpindah sheet karena dapat menimbulkan jeda.
       simpanDraftLokal();
+      if (window.matchMedia && window.matchMedia("(max-width: 879px)").matches) {
+        const activeNav = mode === "wip" ? wipNav : mode === "fg" ? fgNav : spaNav;
+        requestAnimationFrame(() => alignSheetNavToTop(activeNav));
+      }
     }
 
     /********************************************************************
