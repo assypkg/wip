@@ -1042,9 +1042,10 @@
             <input type="text" id="selectedGroup" class="group-suggest-input" placeholder="Ketik kode atau nama produk..." oninput="onWipSearchType(); simpanDraftLokal();" autocomplete="off" required />
             <div class="quick-results" id="wipGroupSuggestions"></div>
           </div>
-          <div>
+          <div class="wip-part-search-wrap" style="position:relative;">
             <label>Nama Komponen & Kode</label>
-            <input type="text" id="selectedPart" placeholder="Misal: Inbs(009)" oninput="simpanDraftLokal()" required />
+            <input type="text" id="selectedPart" placeholder="Misal: Inbs(009)" onfocus="onWipPartSuggestionType()" oninput="onWipPartSuggestionType(); simpanDraftLokal();" onkeydown="onWipPartSuggestionKey(event)" aria-controls="wipPartSuggestions" aria-expanded="false" autocomplete="off" required />
+            <div class="quick-results" id="wipPartSuggestions" role="listbox" aria-label="Saran komponen sesuai kelompok produk"></div>
           </div>
           <div style="grid-column: 1 / -1;">
             <label>Keterangan Cavity / Status / Mold (Opsional)</label>
@@ -2423,6 +2424,105 @@
     /********************************************************************
      * 4. SMART SEARCH: HANYA MUNCUL SAAT DIKETIK
      ********************************************************************/
+    function getCatalogComponentsForProduct(groupValue, partQuery = "", limit = 40) {
+      const groupQuery = String(groupValue || "").trim().toLocaleLowerCase("id-ID").replace(/\s+/g, " ");
+      const componentQuery = String(partQuery || "").trim().toLocaleLowerCase("id-ID");
+      if (!groupQuery) return [];
+      const source = Array.isArray(catalog) ? catalog : [];
+      const matches = [];
+      const seen = new Set();
+      source.forEach(item => {
+        const group = String(item.group || "").trim();
+        const part = String(item.part || "").trim();
+        if (!group || !part) return;
+        const normalizedGroup = group.toLocaleLowerCase("id-ID").replace(/\s+/g, " ");
+        if (!normalizedGroup.includes(groupQuery)) return;
+        if (componentQuery && !part.toLocaleLowerCase("id-ID").includes(componentQuery)) return;
+        const key = part.toLocaleLowerCase("id-ID");
+        if (seen.has(key)) return;
+        seen.add(key);
+        matches.push({ group, part });
+      });
+      return matches.slice(0, limit);
+    }
+
+    function renderProductComponentSuggestions(box, matches, emptyMessage, onChoose) {
+      if (!box) return;
+      box.innerHTML = "";
+      if (!matches.length) {
+        const empty = document.createElement("div");
+        empty.style.cssText = "padding:10px 12px;font-size:.78rem;color:var(--text-muted);";
+        empty.textContent = emptyMessage;
+        box.appendChild(empty);
+      } else {
+        matches.forEach(item => {
+          const option = document.createElement("div");
+          option.className = "quick-item";
+          option.setAttribute("role", "option");
+          option.tabIndex = -1;
+          const content = document.createElement("div");
+          const part = document.createElement("div");
+          part.className = "quick-item-left";
+          part.textContent = item.part;
+          const group = document.createElement("div");
+          group.className = "quick-item-sub";
+          group.textContent = item.group;
+          content.append(part, group);
+          const hint = document.createElement("span");
+          hint.className = "quick-item-badge";
+          hint.textContent = "Pilih →";
+          option.append(content, hint);
+          option.addEventListener("pointerdown", event => event.preventDefault());
+          option.addEventListener("click", () => onChoose(item));
+          box.appendChild(option);
+        });
+      }
+      box.style.display = "block";
+    }
+
+    function tutupWipPartSuggestions() {
+      const box = document.getElementById("wipPartSuggestions");
+      const input = document.getElementById("selectedPart");
+      if (box) { box.style.display = "none"; box.innerHTML = ""; }
+      if (input) input.setAttribute("aria-expanded", "false");
+    }
+
+    function onWipPartSuggestionType() {
+      const input = document.getElementById("selectedPart");
+      const groupInput = document.getElementById("selectedGroup");
+      const box = document.getElementById("wipPartSuggestions");
+      if (!input || !groupInput || !box) return;
+      const group = groupInput.value.trim();
+      const matches = getCatalogComponentsForProduct(group, input.value, 40);
+      renderProductComponentSuggestions(
+        box,
+        matches,
+        group ? "Komponen untuk kelompok ini tidak ditemukan di Master WIP. Anda tetap bisa mengetik manual." : "Isi Kelompok Produk terlebih dahulu untuk melihat saran komponen.",
+        item => {
+          input.value = item.part;
+          tutupWipPartSuggestions();
+          simpanDraftLokal();
+        }
+      );
+      input.setAttribute("aria-expanded", "true");
+    }
+
+    function onWipPartSuggestionKey(event) {
+      if (event.key === "Escape") { tutupWipPartSuggestions(); return; }
+      if (event.key === "Enter") {
+        const box = document.getElementById("wipPartSuggestions");
+        const first = box?.querySelector(".quick-item");
+        if (box?.style.display === "block" && first) {
+          event.preventDefault();
+          first.click();
+        }
+      }
+    }
+
+    document.addEventListener("pointerdown", event => {
+      if (!event.target.closest(".wip-part-search-wrap")) tutupWipPartSuggestions();
+    });
+
     function onWipSearchType() {
       const inputEl = document.getElementById("selectedGroup");
       const resultsBox = document.getElementById("wipGroupSuggestions");
@@ -2481,54 +2581,21 @@
 
     function onSpaPartSuggestionType() {
       const input = document.getElementById("spaPart");
+      const groupInput = document.getElementById("spaGroup");
       const box = document.getElementById("spaPartSuggestions");
-      if (!input || !box) return;
-      const query = input.value.trim().toLocaleLowerCase("id-ID");
-      const source = Array.isArray(catalog) ? catalog : [];
-      const seen = new Set();
-      const matches = source.filter(item => {
-        const part = String(item.part || "").trim();
-        if (!part) return false;
-        const key = part.toLocaleLowerCase("id-ID");
-        if (seen.has(key)) return false;
-        seen.add(key);
-        const target = `${item.group || ""} ${part} ${item.keywords || ""}`.toLocaleLowerCase("id-ID");
-        return !query || target.includes(query);
-      }).slice(0, 40);
-      box.innerHTML = "";
-      if (!matches.length) {
-        const empty = document.createElement("div");
-        empty.style.cssText = "padding:10px 12px;font-size:.78rem;color:var(--text-muted);";
-        empty.textContent = "Komponen/kode tidak ditemukan di Master WIP. Periksa Master WIP atau isi manual.";
-        box.appendChild(empty);
-      } else {
-        matches.forEach(item => {
-          const option = document.createElement("div");
-          option.className = "quick-item";
-          option.setAttribute("role", "option");
-          option.tabIndex = -1;
-          const content = document.createElement("div");
-          const part = document.createElement("div");
-          part.className = "quick-item-left";
-          part.textContent = item.part;
-          const group = document.createElement("div");
-          group.className = "quick-item-sub";
-          group.textContent = item.group || "";
-          content.append(part, group);
-          const hint = document.createElement("span");
-          hint.className = "quick-item-badge";
-          hint.textContent = "Pilih →";
-          option.append(content, hint);
-          option.addEventListener("pointerdown", e => e.preventDefault());
-          option.addEventListener("click", () => {
-            input.value = item.part;
-            tutupSpaPartSuggestions();
-            simpanDraftLokal();
-          });
-          box.appendChild(option);
-        });
-      }
-      box.style.display = "block";
+      if (!input || !groupInput || !box) return;
+      const group = groupInput.value.trim();
+      const matches = getCatalogComponentsForProduct(group, input.value, 40);
+      renderProductComponentSuggestions(
+        box,
+        matches,
+        group ? "Komponen untuk produk utama ini tidak ditemukan di Master WIP. Anda tetap bisa mengetik manual." : "Isi Nama Produk Utama terlebih dahulu untuk melihat saran komponen.",
+        item => {
+          input.value = item.part;
+          tutupSpaPartSuggestions();
+          simpanDraftLokal();
+        }
+      );
       input.setAttribute("aria-expanded", "true");
     }
 
