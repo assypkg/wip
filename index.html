@@ -4921,8 +4921,9 @@
       const start = sh * 60 + sm;
       let end = eh * 60 + em;
       if (end <= start) end += 24 * 60;
-      const minutes = end - start;
-      return minutes > 0 && minutes <= 24 * 60 ? minutes / 60 : 0;
+      // Semua shift memiliki istirahat 1 jam yang tidak dihitung sebagai jam kerja produktif.
+      const effectiveMinutes = (end - start) - 60;
+      return effectiveMinutes > 0 && effectiveMinutes <= 24 * 60 ? effectiveMinutes / 60 : 0;
     }
 
     function hitungTargetFgOtomatis(force = false) {
