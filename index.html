@@ -929,7 +929,8 @@
     .mobile-legacy-hidden { display:none !important; }
     @media (max-width:879px) {
       .mobile-tab-hidden { display:none !important; }
-      .sheet-section-nav { display:grid; position:sticky; top:0; align-self:start; margin:0 -4px 8px; z-index:140; }
+      .sheet-section-nav { display:none; position:sticky; position:-webkit-sticky; top:0; align-self:stretch; width:100%; max-width:1140px; margin:0 auto 8px; padding:7px; z-index:500; background:#fff; }
+      .sheet-section-nav.is-active { display:grid; }
       .mobile-sheet-meta { grid-template-columns:1fr 1fr; gap:6px; padding:8px; }
       #wipMetaControls > div:first-child { grid-column:1 / -1; }
       .mobile-sheet-meta label { font-size:.63rem; margin-bottom:3px; }
@@ -1004,12 +1005,12 @@
   <!-- =========================================================
        SHEET 1: SISA BARANG BAGUS ASSY (WIP)
        ========================================================= -->
+  <nav class="sheet-section-nav is-active" id="wipSectionNav" aria-label="Navigasi Sisa Barang Bagus">
+    <button type="button" class="sheet-nav-btn active" onclick="scrollToSheetSection('wipInputSection','wipSectionNav',this)"><span class="nav-number">1</span> INPUT WIP</button>
+    <button type="button" class="sheet-nav-btn" onclick="scrollToSheetSection('wipListCard','wipSectionNav',this)"><span class="nav-number">2</span> DAFTAR WIP</button>
+    <button type="button" class="sheet-nav-btn" onclick="scrollToSheetSection('wipWaCard','wipSectionNav',this)"><span class="nav-number">3</span> WHATSAPP</button>
+  </nav>
   <main id="sectionWip" class="container">
-    <nav class="sheet-section-nav" id="wipSectionNav" aria-label="Navigasi Sisa Barang Bagus">
-      <button type="button" class="sheet-nav-btn active" onclick="scrollToSheetSection('wipInputSection','wipSectionNav',this)"><span class="nav-number">1</span> INPUT WIP</button>
-      <button type="button" class="sheet-nav-btn" onclick="scrollToSheetSection('wipListCard','wipSectionNav',this)"><span class="nav-number">2</span> DAFTAR WIP</button>
-      <button type="button" class="sheet-nav-btn" onclick="scrollToSheetSection('wipWaCard','wipSectionNav',this)"><span class="nav-number">3</span> WHATSAPP</button>
-    </nav>
     <div class="meta-grid mobile-sheet-meta" id="wipMetaControls">
       <div><label>Pilih Tanggal</label><input type="date" id="wipDate" onchange="simpanDraftLokal(); renderWipAll(); renderFgAll();" /></div>
       <div><label>Shift</label><select id="wipShift" onchange="simpanDraftLokal(); renderWipAll();"><option value="shift 1">Shift 1</option><option value="shift 2">Shift 2</option><option value="shift 3">Shift 3</option></select></div>
@@ -1341,12 +1342,12 @@
   <!-- =========================================================
        SHEET 3: LAPORAN SPA AWAL SHIFT (MASING-MASING KOLOM ADA PAPAN KALKULATOR)
        ========================================================= -->
+  <nav class="sheet-section-nav" id="spaSectionNav" aria-label="Navigasi SPA Awal Shift">
+    <button type="button" class="sheet-nav-btn active" onclick="scrollToSheetSection('spaInputSection','spaSectionNav',this)"><span class="nav-number">1</span> INPUT SPA</button>
+    <button type="button" class="sheet-nav-btn" onclick="scrollToSheetSection('spaListCard','spaSectionNav',this)"><span class="nav-number">2</span> RINCIAN SPA</button>
+    <button type="button" class="sheet-nav-btn" onclick="scrollToSheetSection('spaWaCard','spaSectionNav',this)"><span class="nav-number">3</span> WHATSAPP</button>
+  </nav>
   <main id="sectionSpa" class="container" style="display:none;">
-    <nav class="sheet-section-nav" id="spaSectionNav" aria-label="Navigasi SPA Awal Shift">
-      <button type="button" class="sheet-nav-btn active" onclick="scrollToSheetSection('spaInputSection','spaSectionNav',this)"><span class="nav-number">1</span> INPUT SPA</button>
-      <button type="button" class="sheet-nav-btn" onclick="scrollToSheetSection('spaListCard','spaSectionNav',this)"><span class="nav-number">2</span> RINCIAN SPA</button>
-      <button type="button" class="sheet-nav-btn" onclick="scrollToSheetSection('spaWaCard','spaSectionNav',this)"><span class="nav-number">3</span> WHATSAPP</button>
-    </nav>
     <div class="meta-grid two-cols mobile-sheet-meta" id="spaMetaControls">
       <div><label>Pilih Tanggal SPA</label><input type="date" id="spaDate" onchange="simpanDraftLokal(); renderSpaAll();" /></div>
       <div><label>Plant</label><select id="spaPlant" onchange="simpanDraftLokal(); renderSpaAll();"><option value="plant alpha">Plant Alpha</option><option value="plant beta">Plant Beta</option></select></div>
@@ -2349,6 +2350,11 @@
       btnWip.className = mode === "wip" ? "tab-btn active-wip" : "tab-btn";
       btnFg.className = mode === "fg" ? "tab-btn active-fg" : "tab-btn";
       btnSpa.className = mode === "spa" ? "tab-btn active-spa" : "tab-btn";
+
+      const wipNav = document.getElementById("wipSectionNav");
+      const spaNav = document.getElementById("spaSectionNav");
+      if (wipNav) wipNav.classList.toggle("is-active", mode === "wip");
+      if (spaNav) spaNav.classList.toggle("is-active", mode === "spa");
 
       if (mode === "fg") {
         renderFgAll();
