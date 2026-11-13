@@ -929,7 +929,7 @@
     .mobile-legacy-hidden { display:none !important; }
     @media (max-width:879px) {
       .mobile-tab-hidden { display:none !important; }
-      .sheet-section-nav { display:none; position:sticky; position:-webkit-sticky; top:0; align-self:stretch; width:100%; max-width:1140px; margin:0 auto 8px; padding:7px; z-index:500; background:#fff; }
+      .sheet-section-nav { display:none; position:sticky; position:-webkit-sticky; top:0; align-self:stretch; width:100%; max-width:1140px; margin:0 auto 8px; padding:7px; z-index:500; background:#fff; box-shadow:0 5px 14px rgba(15,23,42,.12); scroll-margin-top:0; }
       .sheet-section-nav.is-active { display:grid; }
       .mobile-sheet-meta { grid-template-columns:1fr 1fr; gap:6px; padding:8px; }
       #wipMetaControls > div:first-child { grid-column:1 / -1; }
@@ -1133,6 +1133,11 @@
   <!-- =========================================================
        SHEET 2: LAPORAN HASIL PRODUKSI FINISH GOOD (+ GABUNGAN WIP)
        ========================================================= -->
+  <nav class="sheet-section-nav" id="fgSectionNav" aria-label="Navigasi Finish Good">
+    <button type="button" class="sheet-nav-btn active" onclick="scrollToSheetSection('fgInputCard','fgSectionNav',this)"><span class="nav-number">1</span> INPUT FG</button>
+    <button type="button" class="sheet-nav-btn" onclick="scrollToSheetSection('fgListCard','fgSectionNav',this)"><span class="nav-number">2</span> DAFTAR FG</button>
+    <button type="button" class="sheet-nav-btn" onclick="scrollToSheetSection('fgWaCard','fgSectionNav',this)"><span class="nav-number">3</span> WHATSAPP</button>
+  </nav>
   <main id="sectionFg" class="container" style="display:none;">
     <!-- KOLOM KIRI: INPUT HASIL PRODUKSI FINISH GOOD -->
     <section>
@@ -1298,7 +1303,7 @@
 
     <!-- KOLOM KANAN: DAFTAR FINISH GOOD & LAPORAN WA GABUNGAN -->
     <section>
-      <div class="card">
+      <div class="card sheet-section-target mobile-tab-hidden" id="fgListCard">
         <div class="card-header">
           <span class="card-title">2. Daftar Hasil Produksi (Finish Good)</span>
           <div style="display:flex; gap:6px;">
@@ -1318,7 +1323,7 @@
         <div id="fgListContainer"></div>
       </div>
 
-      <div class="card">
+      <div class="card sheet-section-target mobile-tab-hidden" id="fgWaCard">
         <div class="card-header">
           <span class="card-title">3. Laporan WA (Finish Good + Sisa WIP)</span>
         </div>
@@ -2319,12 +2324,18 @@
       if (window.matchMedia && window.matchMedia("(max-width: 879px)").matches) {
         const groups = {
           wipSectionNav: ["wipInputSection", "wipListCard", "wipWaCard"],
+          fgSectionNav: ["fgInputCard", "fgListCard", "fgWaCard"],
           spaSectionNav: ["spaInputSection", "spaListCard", "spaWaCard"]
         };
         (groups[navId] || []).forEach(id => {
           const panel = document.getElementById(id);
           if (panel) panel.classList.toggle("mobile-tab-hidden", id !== targetId);
         });
+        // Setelah panel berganti, posisikan bar navigasi tepat di tepi atas layar.
+        if (nav) {
+          nav.classList.add("is-active");
+          nav.scrollIntoView({ behavior: "instant", block: "start" });
+        }
         return;
       }
       target.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -2352,9 +2363,15 @@
       btnSpa.className = mode === "spa" ? "tab-btn active-spa" : "tab-btn";
 
       const wipNav = document.getElementById("wipSectionNav");
+      const fgNav = document.getElementById("fgSectionNav");
       const spaNav = document.getElementById("spaSectionNav");
       if (wipNav) wipNav.classList.toggle("is-active", mode === "wip");
+      if (fgNav) fgNav.classList.toggle("is-active", mode === "fg");
       if (spaNav) spaNav.classList.toggle("is-active", mode === "spa");
+      [wipNav, fgNav, spaNav].forEach(nav => {
+        if (!nav) return;
+        nav.querySelectorAll(".sheet-nav-btn").forEach((btn, index) => btn.classList.toggle("active", index === 0));
+      });
 
       if (mode === "fg") {
         renderFgAll();
