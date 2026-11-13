@@ -4904,15 +4904,18 @@
       const byKey = new Map();
       let activeGroup = "";
       let currentItem = null;
+      const groupMeta = new Map();
       const ignored = /^(spa untuk|sisa barang|laporan spa|kebutuhan untuk|ketersediaan barang|target|catatan|━━━━━━━━|[-_=]{3,})/i;
 
       const ensureItem = (group, part, note = "") => {
         const key = group.toLocaleLowerCase("id-ID") + "||" + part.toLocaleLowerCase("id-ID");
         let item = byKey.get(key);
         if (!item) {
+          const meta = groupMeta.get(group.toLocaleLowerCase("id-ID")) || {};
           item = {
             id: Date.now() + Math.random(),
-            group, lineInfo: "", baseTarget: 0, targetBuffer: 0,
+            group, lineInfo: meta.lineInfo || "", baseTarget: Number(meta.baseTarget) || 0,
+            targetBuffer: Number(meta.baseTarget) > 0 ? Math.round(Number(meta.baseTarget) * 1.05) : 0,
             part, note, assy: 0, gudang: 0, total: 0,
             assyBoxes: [], gudangBoxes: [], waitingBeta: 0, otherStocks: []
           };
@@ -4931,7 +4934,7 @@
 
         // Header produk: mendukung format "*1) 8603 OMG*" dan "*1E02 PASANG MAGNET*".
         const numberedHeader = line.match(/^\d+[.)]\s+(.+)$/);
-        const codedHeader = !/[:=]/.test(line) && line.match(/^(?:[A-Z]{1,3}\d{1,4}|\d{3,5})\s+[A-Z0-9].+$/i);
+        const codedHeader = !/[:=]/.test(line) && line.match(/^(?=[A-Z0-9]*\d)[A-Z0-9]{3,6}\s+[A-Z0-9].+$/i);
         if (numberedHeader || codedHeader) {
           activeGroup = String(numberedHeader ? numberedHeader[1] : line).trim();
           currentItem = null;
@@ -4941,12 +4944,18 @@
         // Metadata target/line pada laporan SPA yang dibuat aplikasi.
         if (/^\d+\s*(?:line|lines)\b/i.test(line) || /@\s*[\d.,]+/.test(line)) {
           const targetMatch = line.match(/@\s*([\d.,]+)/);
-          if (targetMatch && activeGroup) {
-            const item = rows.find(x => x.group.toLocaleLowerCase("id-ID") === activeGroup.toLocaleLowerCase("id-ID"));
-            if (item) {
-              item.baseTarget = parseSpaImportNumber(targetMatch[1]);
-              item.targetBuffer = Math.round(item.baseTarget * 1.05);
-            }
+          if (activeGroup) {
+            const meta = groupMeta.get(activeGroup.toLocaleLowerCase("id-ID")) || {};
+            if (/^\d+\s*(?:line|lines)\b/i.test(line)) meta.lineInfo = line.split("@")[0].trim();
+            if (targetMatch) meta.baseTarget = parseSpaImportNumber(targetMatch[1]);
+            groupMeta.set(activeGroup.toLocaleLowerCase("id-ID"), meta);
+            rows.filter(x => x.group.toLocaleLowerCase("id-ID") === activeGroup.toLocaleLowerCase("id-ID")).forEach(item => {
+              if (meta.lineInfo) item.lineInfo = meta.lineInfo;
+              if (meta.baseTarget > 0) {
+                item.baseTarget = meta.baseTarget;
+                item.targetBuffer = Math.round(meta.baseTarget * 1.05);
+              }
+            });
           }
           return;
         }
