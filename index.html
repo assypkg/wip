@@ -2205,11 +2205,9 @@
     }
 
     function cleanAndDeduplicateCloudArchive(list) {
-      const deletedSet = new Set(deletedCloudIds);
       const map = new Map();
       (Array.isArray(list) ? list : []).forEach(item => {
         if (!item || !item.recordId) return;
-        if (deletedSet.has(item.recordId) || (item.docId && deletedSet.has(item.docId))) return;
         const key = wipRecordKey(item) || item.recordId;
         const previous = map.get(key);
         const currentTime = Date.parse(item.cloudUpdateTime || item.savedAt || "") || 0;
@@ -3225,7 +3223,7 @@
         url.searchParams.set("pageSize", "100");
         if (pageToken) url.searchParams.set("pageToken", pageToken);
         const res = await fetch(url.toString(), { cache: "no-store" });
-        if (res.status === 404) return docs;
+        if (res.status === 404) throw new Error("Koleksi Cloud WIP tidak ditemukan (HTTP 404). Data lokal tidak akan dihapus.");
         if (!res.ok) {
           let detail = "";
           try { const data = await res.json(); detail = data.error?.message || ""; } catch (e) {}
@@ -3352,17 +3350,27 @@
       const badge = document.getElementById("firebaseConnBadge");
       try {
         const docs = await ambilSemuaDokumenWipCloud();
-        const deletedSet = new Set(deletedCloudIds);
+        // Pembacaan/sinkronisasi tidak boleh menghapus data Cloud berdasarkan
+        // penanda lokal yang mungkin sudah usang pada perangkat lain.
+        if (docs.length === 0 && cloudArchive.length > 0) {
+          const msg = "Cloud mengembalikan 0 rekaman, tetapi perangkat ini masih memiliki " + cloudArchive.length + " rekaman tersimpan lokal. Arsip lokal dipertahankan; tidak ada data yang dihapus. Periksa project ID, database, dan koleksi Cloud.";
+          showCloudErrorBanner(msg);
+          const badge = document.getElementById("firebaseConnBadge");
+          if (badge) {
+            badge.textContent = "⚠️ Cloud terbaca 0 data — arsip lokal dipertahankan";
+            badge.style.background = "#fff7ed";
+            badge.style.color = "#9a3412";
+          }
+          renderCloudArchiveList();
+          if (showAlert) alert(msg);
+          return;
+        }
         const groups = new Map();
         for (const doc of docs) {
           const actualDocId = (doc.name || "").split("/").pop();
           const f = doc.fields || {};
           const recId = f.recordId?.stringValue || actualDocId;
           if (!recId) continue;
-          if (deletedSet.has(recId) || deletedSet.has(actualDocId)) {
-            await hapusDokumenWipCloudTerverifikasi(actualDocId);
-            continue;
-          }
           const items = JSON.parse(f.payloadJson?.stringValue || "[]");
           const record = {
             recordId: recId, docId: actualDocId,
