@@ -2560,6 +2560,7 @@
         const qty=formatNum(Math.abs(Number(b.val)||0));
         return `<div class="box-detail-row ${neg?"negative":""}"><span class="box-detail-label">${label}</span><span class="box-detail-value">${qty} PCS</span><button type="button" onclick="hapusBoxChip(${i})" aria-label="Hapus ${label}">Hapus</button></div>`;
       }).join("");
+      updateGroupQtyPreview("wip");
     }
 
     function bersihkanImportWip(){document.getElementById("waImportWipText").value="";document.getElementById("waImportWipPreview").innerHTML="";pendingWipImport=[];}
@@ -4044,6 +4045,8 @@
         const label=neg?`Pengurangan ${i+1}`:`Box ${String(gi).padStart(2,"0")}`;
         return `<div class="box-detail-row ${neg?"negative":""}"><span class="box-detail-label">${label}</span><span class="box-detail-value">${formatNum(Math.abs(Number(b.val)||0))} PCS</span><button type="button" onclick="hapusBoxSpaChip('gudang',${i})">Hapus</button></div>`;
       }).join("");
+      updateGroupQtyPreview("spa_assy");
+      updateGroupQtyPreview("spa_gudang");
     }
 
     function simpanItemSpa() {
