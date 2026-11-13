@@ -2032,6 +2032,8 @@
             selectedPart: document.getElementById("selectedPart")?.value || "",
             selectedNote: document.getElementById("selectedNote")?.value || "",
             calcBoxInput: document.getElementById("calcBoxInput")?.value || "",
+            wipQtyPerBox: document.getElementById("wipQtyPerBox")?.value || "",
+            wipQtyBoxCount: document.getElementById("wipQtyBoxCount")?.value || "",
 
             fgDate: document.getElementById("fgDate")?.value || "",
             fgTime: document.getElementById("fgTime")?.value || "23.00",
@@ -2058,6 +2060,10 @@
             spaBaseTarget: document.getElementById("spaBaseTarget")?.value || "",
             spaPart: document.getElementById("spaPart")?.value || "",
             spaNote: document.getElementById("spaNote")?.value || "",
+            spaAssyQtyPerBox: document.getElementById("spaAssyQtyPerBox")?.value || "",
+            spaAssyQtyBoxCount: document.getElementById("spaAssyQtyBoxCount")?.value || "",
+            spaGudangQtyPerBox: document.getElementById("spaGudangQtyPerBox")?.value || "",
+            spaGudangQtyBoxCount: document.getElementById("spaGudangQtyBoxCount")?.value || "",
             waPreviewSpa: document.getElementById("waPreviewSpa")?.value || "",
             waSpaManuallyEdited
           }
@@ -2121,6 +2127,8 @@
         if (f.selectedPart !== undefined) document.getElementById("selectedPart").value = f.selectedPart;
         if (f.selectedNote !== undefined) document.getElementById("selectedNote").value = f.selectedNote;
         if (f.calcBoxInput !== undefined) document.getElementById("calcBoxInput").value = f.calcBoxInput;
+        if (f.wipQtyPerBox !== undefined) document.getElementById("wipQtyPerBox").value = f.wipQtyPerBox;
+        if (f.wipQtyBoxCount !== undefined) document.getElementById("wipQtyBoxCount").value = f.wipQtyBoxCount;
 
         if (f.fgDate) document.getElementById("fgDate").value = f.fgDate;
         if (f.fgTime !== undefined) document.getElementById("fgTime").value = f.fgTime;
@@ -2153,6 +2161,10 @@
         if (f.spaBaseTarget !== undefined) document.getElementById("spaBaseTarget").value = f.spaBaseTarget;
         if (f.spaPart !== undefined) document.getElementById("spaPart").value = f.spaPart;
         if (f.spaNote !== undefined) document.getElementById("spaNote").value = f.spaNote;
+        if (f.spaAssyQtyPerBox !== undefined) document.getElementById("spaAssyQtyPerBox").value = f.spaAssyQtyPerBox;
+        if (f.spaAssyQtyBoxCount !== undefined) document.getElementById("spaAssyQtyBoxCount").value = f.spaAssyQtyBoxCount;
+        if (f.spaGudangQtyPerBox !== undefined) document.getElementById("spaGudangQtyPerBox").value = f.spaGudangQtyPerBox;
+        if (f.spaGudangQtyBoxCount !== undefined) document.getElementById("spaGudangQtyBoxCount").value = f.spaGudangQtyBoxCount;
         if (f.waSpaManuallyEdited !== undefined) waSpaManuallyEdited = !!f.waSpaManuallyEdited;
         if (f.waPreviewSpa !== undefined) document.getElementById("waPreviewSpa").value = f.waPreviewSpa;
 
@@ -2230,6 +2242,14 @@
       return `${tgl} ${bulanIndo[blnIdx] || ""} ${thn}`;
     }
 
+    function scrollToSheetSection(targetId, navId, buttonEl) {
+      const target = document.getElementById(targetId);
+      if (!target) return;
+      const nav = document.getElementById(navId);
+      if (nav) nav.querySelectorAll(".sheet-nav-btn").forEach(btn => btn.classList.toggle("active", btn === buttonEl));
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
     /********************************************************************
      * 3. PINDAH TAB MODE (SISA WIP vs FINISH GOOD vs SPA AWAL SHIFT)
      ********************************************************************/
@@ -2261,56 +2281,52 @@
      * 4. SMART SEARCH: HANYA MUNCUL SAAT DIKETIK
      ********************************************************************/
     function onWipSearchType() {
-      const inputEl = document.getElementById("smartSearchInput");
-      const clearBtn = document.getElementById("clearWipSearchBtn");
-      const resultsBox = document.getElementById("smartSearchResults");
-      const query = inputEl.value.toLowerCase().trim();
-
-      if (!query) {
-        resultsBox.style.display = "none";
-        clearBtn.style.display = "none";
-        resultsBox.innerHTML = "";
-        return;
+      const inputEl = document.getElementById("selectedGroup");
+      const resultsBox = document.getElementById("wipGroupSuggestions");
+      if (!inputEl || !resultsBox) return;
+      const query = inputEl.value.trim().toLocaleLowerCase("id-ID");
+      if (!query) { resultsBox.style.display = "none"; resultsBox.innerHTML = ""; return; }
+      const filtered = (Array.isArray(catalog) ? catalog : []).filter(item =>
+        `${item.group || ""} ${item.part || ""} ${item.keywords || ""}`.toLocaleLowerCase("id-ID").includes(query)
+      ).filter((item,index,arr) => arr.findIndex(x =>
+        String(x.group).toLowerCase()===String(item.group).toLowerCase() &&
+        String(x.part).toLowerCase()===String(item.part).toLowerCase()
+      )===index).slice(0,25);
+      resultsBox.innerHTML = "";
+      if (!filtered.length) {
+        const empty=document.createElement("div");
+        empty.style.cssText="padding:10px 12px;font-size:.78rem;color:var(--text-muted);";
+        empty.textContent="Tidak ditemukan di Master. Nama produk tetap bisa diketik manual.";
+        resultsBox.appendChild(empty);
+      } else {
+        filtered.forEach(item => {
+          const row=document.createElement("div"); row.className="quick-item";
+          const body=document.createElement("div");
+          const group=document.createElement("div"); group.className="quick-item-left"; group.textContent=item.group || "";
+          const part=document.createElement("div"); part.className="quick-item-sub"; part.textContent=item.part || "";
+          body.append(group,part);
+          const badge=document.createElement("span"); badge.className="quick-item-badge"; badge.textContent="Pilih →";
+          row.append(body,badge);
+          row.addEventListener("pointerdown",e=>e.preventDefault());
+          row.addEventListener("click",()=>pilihItemWip(item.group,item.part));
+          resultsBox.appendChild(row);
+        });
       }
-
-      clearBtn.style.display = "flex";
-      const filtered = catalog.filter((item) => {
-        const searchTarget = `${item.group} ${item.part} ${item.keywords || ""}`.toLowerCase();
-        return searchTarget.includes(query);
-      });
-
-      resultsBox.style.display = "block";
-
-      if (filtered.length === 0) {
-        resultsBox.innerHTML = `<div style="padding:10px 12px; font-size:0.78rem; color:var(--text-muted);">Item tidak ditemukan di Master. Silakan ketik langsung pada kolom di bawah.</div>`;
-        return;
-      }
-
-      resultsBox.innerHTML = filtered
-        .map(
-          (item) => `
-          <div class="quick-item" onclick="pilihItemWip('${item.group}', '${item.part}')">
-            <div>
-              <div class="quick-item-left">${item.part}</div>
-              <div class="quick-item-sub">${item.group}</div>
-            </div>
-            <span class="quick-item-badge">Pilih &rarr;</span>
-          </div>`
-        )
-        .join("");
+      resultsBox.style.display="block";
     }
 
     function clearWipSearch() {
-      document.getElementById("smartSearchInput").value = "";
-      document.getElementById("smartSearchResults").style.display = "none";
-      document.getElementById("clearWipSearchBtn").style.display = "none";
+      const box=document.getElementById("wipGroupSuggestions");
+      if (box) { box.style.display="none"; box.innerHTML=""; }
     }
 
     function pilihItemWip(group, part) {
-      document.getElementById("selectedGroup").value = group;
-      document.getElementById("selectedPart").value = part;
+      document.getElementById("selectedGroup").value = group || "";
+      document.getElementById("selectedPart").value = part || "";
       clearWipSearch();
       simpanDraftLokal();
+      const note=document.getElementById("selectedNote");
+      if(note) note.focus();
     }
 
     function tutupSpaPartSuggestions() {
@@ -2390,48 +2406,43 @@
     });
 
     function onSpaSearchType() {
-      const inputEl = document.getElementById("spaSearchInput");
-      const clearBtn = document.getElementById("clearSpaSearchBtn");
-      const resultsBox = document.getElementById("spaSearchResults");
-      const query = inputEl.value.toLowerCase().trim();
-
-      if (!query) {
-        resultsBox.style.display = "none";
-        clearBtn.style.display = "none";
-        resultsBox.innerHTML = "";
-        return;
+      const inputEl = document.getElementById("spaGroup");
+      const resultsBox = document.getElementById("spaGroupSuggestions");
+      if (!inputEl || !resultsBox) return;
+      const query = inputEl.value.trim().toLocaleLowerCase("id-ID");
+      if (!query) { resultsBox.style.display="none"; resultsBox.innerHTML=""; return; }
+      const filtered = (Array.isArray(catalog) ? catalog : []).filter(item =>
+        `${item.group || ""} ${item.part || ""} ${item.keywords || ""}`.toLocaleLowerCase("id-ID").includes(query)
+      ).filter((item,index,arr) => arr.findIndex(x =>
+        String(x.group).toLowerCase()===String(item.group).toLowerCase() &&
+        String(x.part).toLowerCase()===String(item.part).toLowerCase()
+      )===index).slice(0,25);
+      resultsBox.innerHTML="";
+      if (!filtered.length) {
+        const empty=document.createElement("div");
+        empty.style.cssText="padding:10px 12px;font-size:.78rem;color:var(--text-muted);";
+        empty.textContent="Tidak ditemukan di Master. Nama produk tetap bisa diketik manual.";
+        resultsBox.appendChild(empty);
+      } else {
+        filtered.forEach(item => {
+          const row=document.createElement("div"); row.className="quick-item";
+          const body=document.createElement("div");
+          const group=document.createElement("div"); group.className="quick-item-left"; group.textContent=item.group || "";
+          const part=document.createElement("div"); part.className="quick-item-sub"; part.textContent=item.part || "";
+          body.append(group,part);
+          const badge=document.createElement("span"); badge.className="quick-item-badge"; badge.textContent="Pilih →";
+          row.append(body,badge);
+          row.addEventListener("pointerdown",e=>e.preventDefault());
+          row.addEventListener("click",()=>pilihItemSpa(item.group,item.part));
+          resultsBox.appendChild(row);
+        });
       }
-
-      clearBtn.style.display = "flex";
-      const filtered = catalog.filter((c) =>
-        `${c.group} ${c.part} ${c.keywords || ""}`.toLowerCase().includes(query)
-      );
-
-      resultsBox.style.display = "block";
-
-      if (filtered.length === 0) {
-        resultsBox.innerHTML = `<div style="padding:10px 12px; font-size:0.78rem; color:var(--text-muted);">Tidak ditemukan. Silakan isi manual di bawah.</div>`;
-        return;
-      }
-
-      resultsBox.innerHTML = filtered
-        .map(
-          (c) => `
-          <div class="quick-item" onclick="pilihItemSpa('${c.group}', '${c.part}')">
-            <div>
-              <div class="quick-item-left">${c.part}</div>
-              <div class="quick-item-sub">${c.group}</div>
-            </div>
-            <span class="quick-item-badge">Pilih &rarr;</span>
-          </div>`
-        )
-        .join("");
+      resultsBox.style.display="block";
     }
 
     function clearSpaSearch() {
-      document.getElementById("spaSearchInput").value = "";
-      document.getElementById("spaSearchResults").style.display = "none";
-      document.getElementById("clearSpaSearchBtn").style.display = "none";
+      const box=document.getElementById("spaGroupSuggestions");
+      if (box) { box.style.display="none"; box.innerHTML=""; }
     }
 
     function pilihItemSpa(group, part) {
@@ -2452,19 +2463,35 @@
     }
 
     document.addEventListener("click", function (e) {
-      const wipWrap = document.getElementById("wipSearchWrapper");
-      const spaWrap = document.getElementById("spaSearchWrapper");
-      if (wipWrap && !wipWrap.contains(e.target)) {
-        document.getElementById("smartSearchResults").style.display = "none";
-      }
-      if (spaWrap && !spaWrap.contains(e.target)) {
-        document.getElementById("spaSearchResults").style.display = "none";
-      }
+      const wipWrap = document.getElementById("wipGroupSearchWrap");
+      const spaWrap = document.getElementById("spaGroupSearchWrap");
+      if (wipWrap && !wipWrap.contains(e.target)) clearWipSearch();
+      if (spaWrap && !spaWrap.contains(e.target)) clearSpaSearch();
     });
 
     /********************************************************************
      * 5. AUTO-KALKULATOR WIP (PECAH RUMUS JADI BOX INDIVIDUAL)
      ********************************************************************/
+    function tambahKelompokWip(multiplier = 1) {
+      const qtyEl=document.getElementById("wipQtyPerBox");
+      const countEl=document.getElementById("wipQtyBoxCount");
+      const qty=Number(qtyEl.value);
+      const count=Number(countEl.value);
+      if (!Number.isInteger(qty) || qty<=0 || !Number.isInteger(count) || count<=0) {
+        alert("Isi PCS per box dan jumlah box dengan angka bulat lebih dari 0.");
+        return false;
+      }
+      if (count>300 || currentBoxes.length+count>1000) {
+        alert("Jumlah box terlalu banyak untuk satu kali input. Masukkan dalam beberapa kelompok.");
+        return false;
+      }
+      for(let i=0;i<count;i++) currentBoxes.push({label:String(qty*multiplier),val:qty*multiplier});
+      qtyEl.value=""; countEl.value="";
+      renderCurrentBoxes();
+      simpanDraftLokal();
+      return true;
+    }
+
     function tambahAngkaBox(multiplier = 1) {
       const inputEl = document.getElementById("calcBoxInput");
       const raw = inputEl.value.trim();
@@ -2487,29 +2514,28 @@
     }
 
     function renderCurrentBoxes() {
-      const container = document.getElementById("boxChipsList");
-      const sumEl = document.getElementById("liveCalcSum");
-      const countEl = document.getElementById("liveBoxCount");
-
-      const total = Math.max(0, currentBoxes.reduce((acc, b) => acc + b.val, 0));
-      const positiveBoxes = currentBoxes.filter((b) => b.val >= 0).length;
-
-      sumEl.textContent = formatNum(total);
-      countEl.textContent = positiveBoxes;
-
-      let posBoxIdx = 0;
-      container.innerHTML = currentBoxes
-        .map((b, i) => {
-          const isNeg = b.val < 0;
-          if (!isNeg) posBoxIdx++;
-          const prefix = isNeg ? `Diambil: ` : `Box ${posBoxIdx}: `;
-          return `
-            <span class="box-chip ${isNeg ? "minus-chip" : ""}">
-              ${prefix}${formatNum(b.val)}
-              <button type="button" onclick="hapusBoxChip(${i})" title="Hapus box ini">&times;</button>
-            </span>`;
-        })
-        .join("");
+      const container=document.getElementById("boxChipsList");
+      const sumEl=document.getElementById("liveCalcSum");
+      const countEl=document.getElementById("liveBoxCount");
+      if(!container||!sumEl||!countEl) return;
+      const total=Math.max(0,currentBoxes.reduce((acc,b)=>acc+(Number(b.val)||0),0));
+      const positiveBoxes=currentBoxes.filter(b=>Number(b.val)>=0).length;
+      sumEl.textContent=formatNum(total);
+      countEl.textContent=positiveBoxes;
+      const mirror=document.getElementById("liveCalcSumMirror");
+      if(mirror) mirror.textContent=formatNum(total);
+      const summary=document.getElementById("wipBoxDetailsSummary");
+      if(summary) summary.textContent=`Lihat rincian box (${currentBoxes.length}) • ${positiveBoxes} box fisik • ${formatNum(total)} PCS`;
+      const details=document.getElementById("wipBoxDetails");
+      if(details) details.open=currentBoxes.length>0;
+      let pos=0;
+      container.innerHTML=currentBoxes.map((b,i)=>{
+        const neg=Number(b.val)<0;
+        if(!neg) pos++;
+        const label=neg?`Pengambilan ${i+1}`:`Box ${String(pos).padStart(2,"0")}`;
+        const qty=formatNum(Math.abs(Number(b.val)||0));
+        return `<div class="box-detail-row ${neg?"negative":""}"><span class="box-detail-label">${label}</span><span class="box-detail-value">${qty} PCS</span><button type="button" onclick="hapusBoxChip(${i})" aria-label="Hapus ${label}">Hapus</button></div>`;
+      }).join("");
     }
 
     function bersihkanImportWip(){document.getElementById("waImportWipText").value="";document.getElementById("waImportWipPreview").innerHTML="";pendingWipImport=[];}
@@ -2549,6 +2575,9 @@
       const group = document.getElementById("selectedGroup").value.trim();
       const part = document.getElementById("selectedPart").value.trim();
       const note = document.getElementById("selectedNote").value.trim();
+      const newQty = document.getElementById("wipQtyPerBox")?.value || "";
+      const newCount = document.getElementById("wipQtyBoxCount")?.value || "";
+      if (newQty || newCount) { if (!tambahKelompokWip(1)) return; }
       const pendingInput = document.getElementById("calcBoxInput").value.trim();
 
       if (pendingInput) {
@@ -2608,6 +2637,8 @@
 
       currentBoxes = [];
       document.getElementById("selectedNote").value = "";
+      document.getElementById("wipQtyPerBox").value = "";
+      document.getElementById("wipQtyBoxCount").value = "";
       document.getElementById("calcBoxInput").value = "";
       updateLiveFormulaPreview("wip");
       renderCurrentBoxes();
@@ -2624,6 +2655,8 @@
       document.getElementById("selectedGroup").value = item.group;
       document.getElementById("selectedPart").value = item.part;
       document.getElementById("selectedNote").value = item.note || "";
+      document.getElementById("wipQtyPerBox").value = "";
+      document.getElementById("wipQtyBoxCount").value = "";
 
       currentBoxes =
         item.boxes && item.boxes.length > 0
@@ -2649,6 +2682,8 @@
       document.getElementById("selectedGroup").value = "";
       document.getElementById("selectedPart").value = "";
       document.getElementById("selectedNote").value = "";
+      document.getElementById("wipQtyPerBox").value = "";
+      document.getElementById("wipQtyBoxCount").value = "";
       document.getElementById("calcBoxInput").value = "";
       updateLiveFormulaPreview("wip");
       renderCurrentBoxes();
@@ -2680,7 +2715,7 @@
     function resetSemuaDataWip() {
       if (!confirm("RESET ALL DATA WIP?\n\nSemua daftar WIP, rincian box, input yang belum disimpan, dan laporan WhatsApp WIP akan dikosongkan. Master Katalog, riwayat Cloud, data Finish Good, dan data SPA TIDAK dihapus.")) return;
       editingWipId = null; currentBoxes = []; wipList = []; waWipManuallyEdited = false;
-      ["selectedGroup", "selectedPart", "selectedNote", "calcBoxInput", "smartSearchInput"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+      ["selectedGroup", "selectedPart", "selectedNote", "calcBoxInput", "wipQtyPerBox", "wipQtyBoxCount"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
       document.getElementById("wipEditBanner").style.display = "none";
       document.getElementById("wipInputCard").classList.remove("editing-mode");
       document.getElementById("btnSubmitWip").textContent = "✅ SIMPAN KE DAFTAR WIP";
@@ -3906,6 +3941,28 @@
           : `Target + 5% Buffer: 0 pcs`;
     }
 
+    function tambahKelompokSpa(targetType, multiplier = 1) {
+      const prefix=targetType==="assy"?"spaAssy":"spaGudang";
+      const qtyEl=document.getElementById(prefix+"QtyPerBox");
+      const countEl=document.getElementById(prefix+"QtyBoxCount");
+      if(!qtyEl||!countEl) return false;
+      const qty=Number(qtyEl.value), count=Number(countEl.value);
+      if(!Number.isInteger(qty)||qty<=0||!Number.isInteger(count)||count<=0){
+        alert("Isi PCS per box dan jumlah box "+(targetType==="assy"?"Assy":"Gudang")+" dengan angka bulat lebih dari 0.");
+        return false;
+      }
+      const target=targetType==="assy"?currentSpaAssyBoxes:currentSpaGudangBoxes;
+      if(count>300||target.length+count>1000){
+        alert("Jumlah box terlalu banyak untuk satu kali input. Masukkan dalam beberapa kelompok.");
+        return false;
+      }
+      for(let i=0;i<count;i++) target.push({label:String(qty*multiplier),val:qty*multiplier});
+      qtyEl.value=""; countEl.value="";
+      renderSpaCalcBoxes();
+      simpanDraftLokal();
+      return true;
+    }
+
     function tambahBoxSpa(targetType, multiplier = 1) {
       const inputId = targetType === "assy" ? "spaCalcAssyInput" : "spaCalcGudangInput";
       const previewMode = targetType === "assy" ? "spa_assy" : "spa_gudang";
@@ -3939,145 +3996,35 @@
     }
 
     function renderSpaCalcBoxes() {
-      const assyTotal = Math.max(0, currentSpaAssyBoxes.reduce((a, b) => a + b.val, 0));
-      const assyPosCount = currentSpaAssyBoxes.filter((b) => b.val >= 0).length;
-      document.getElementById("spaAssySum").textContent = formatNum(assyTotal);
-      document.getElementById("spaAssyBoxCount").textContent = assyPosCount;
+      const assyTotal=Math.max(0,currentSpaAssyBoxes.reduce((a,b)=>a+(Number(b.val)||0),0));
+      const assyPos=currentSpaAssyBoxes.filter(b=>Number(b.val)>=0).length;
+      document.getElementById("spaAssySum").textContent=formatNum(assyTotal);
+      document.getElementById("spaAssyBoxCount").textContent=assyPos;
+      const assyDetails=document.getElementById("spaAssyDetails");
+      const assySummary=document.getElementById("spaAssyDetailsSummary");
+      if(assySummary) assySummary.textContent=`Lihat rincian box Assy (${currentSpaAssyBoxes.length}) • ${formatNum(assyTotal)} PCS`;
+      if(assyDetails) assyDetails.open=currentSpaAssyBoxes.length>0;
+      let ai=0;
+      document.getElementById("spaAssyChips").innerHTML=currentSpaAssyBoxes.map((b,i)=>{
+        const neg=Number(b.val)<0;if(!neg)ai++;
+        const label=neg?`Pengurangan ${i+1}`:`Box ${String(ai).padStart(2,"0")}`;
+        return `<div class="box-detail-row ${neg?"negative":""}"><span class="box-detail-label">${label}</span><span class="box-detail-value">${formatNum(Math.abs(Number(b.val)||0))} PCS</span><button type="button" onclick="hapusBoxSpaChip('assy',${i})">Hapus</button></div>`;
+      }).join("");
 
-      let assyIdx = 0;
-      document.getElementById("spaAssyChips").innerHTML = currentSpaAssyBoxes
-        .map((b, i) => {
-          const isNeg = b.val < 0;
-          if (!isNeg) assyIdx++;
-          return `
-            <span class="box-chip ${isNeg ? "minus-chip" : ""}">
-              ${isNeg ? "Kurang: " : `Box ${assyIdx}: `}${formatNum(b.val)}
-              <button type="button" onclick="hapusBoxSpaChip('assy', ${i})">&times;</button>
-            </span>`;
-        })
-        .join("");
-
-      const gudangTotal = Math.max(0, currentSpaGudangBoxes.reduce((a, b) => a + b.val, 0));
-      const gudangPosCount = currentSpaGudangBoxes.filter((b) => b.val >= 0).length;
-      document.getElementById("spaGudangSum").textContent = formatNum(gudangTotal);
-      document.getElementById("spaGudangBoxCount").textContent = gudangPosCount;
-
-      let gudangIdx = 0;
-      document.getElementById("spaGudangChips").innerHTML = currentSpaGudangBoxes
-        .map((b, i) => {
-          const isNeg = b.val < 0;
-          if (!isNeg) gudangIdx++;
-          return `
-            <span class="box-chip ${isNeg ? "minus-chip" : ""}">
-              ${isNeg ? "Kurang: " : `Box ${gudangIdx}: `}${formatNum(b.val)}
-              <button type="button" onclick="hapusBoxSpaChip('gudang', ${i})">&times;</button>
-            </span>`;
-        })
-        .join("");
-    }
-
-    function normalisasiKunciSpa(value) {
-      return String(value || "").trim().toLocaleLowerCase("id-ID").replace(/\\s+/g, " ");
-    }
-
-    function cariItemSpaSama(group, part, excludeId = null) {
-      const keyGroup = normalisasiKunciSpa(group);
-      const keyPart = normalisasiKunciSpa(part);
-      return spaList.find(item =>
-        item.id !== excludeId &&
-        normalisasiKunciSpa(item.group) === keyGroup &&
-        normalisasiKunciSpa(item.part) === keyPart
-      );
-    }
-
-    function gabungkanRincianBoxSpa(existing, field, incomingBoxes, incomingQty) {
-      const boxesField = field + "Boxes";
-      if (!Array.isArray(existing[boxesField])) {
-        const oldQty = Number(existing[field]) || 0;
-        existing[boxesField] = oldQty ? [{ label: String(oldQty), val: oldQty }] : [];
-      }
-      const additions = Array.isArray(incomingBoxes) && incomingBoxes.length
-        ? JSON.parse(JSON.stringify(incomingBoxes))
-        : (Number(incomingQty) ? [{ label: String(incomingQty), val: Number(incomingQty) }] : []);
-      existing[boxesField].push(...additions);
-      existing[field] = Math.max(0, existing[boxesField].reduce((sum, box) => sum + (Number(box.val) || 0), 0));
-    }
-
-    function gabungkanItemSpa(existing, incoming) {
-      gabungkanRincianBoxSpa(existing, "assy", incoming.assyBoxes, incoming.assy);
-      gabungkanRincianBoxSpa(existing, "gudang", incoming.gudangBoxes, incoming.gudang);
-      existing.total = existing.assy + existing.gudang;
-      const notes = [existing.note, incoming.note].map(v => String(v || "").trim()).filter(Boolean);
-      existing.note = [...new Set(notes)].join(" | ");
-      if (incoming.lineInfo && !existing.lineInfo) existing.lineInfo = incoming.lineInfo;
-      if (Number(incoming.baseTarget) > 0 && !(Number(existing.baseTarget) > 0)) {
-        existing.baseTarget = Number(incoming.baseTarget);
-        existing.targetBuffer = Number(incoming.targetBuffer) || Math.round(existing.baseTarget * 1.05);
-      }
-      return existing;
-    }
-
-    function bersihkanImportSpa(){document.getElementById("waImportSpaText").value="";document.getElementById("waImportSpaPreview").innerHTML="";pendingSpaImport=[];}
-    function angkaLaporanWA(v){return Number(String(v||"").replace(/[.,]/g,""))||0;}
-    function previewImportSpa(){
-      const lines=document.getElementById("waImportSpaText").value.replace(/\r/g,"").split("\n");
-      const rows=[];let group="",lineInfo="",baseTarget=0,targetBuffer=0,current=null;
-      function flush(){if(current){current.total=current.assy+current.gudang;rows.push(current);current=null;}}
-      lines.forEach(raw=>{
-        const line=raw.replace(/[>*_\x60]/g,"").trim();
-        if(!line)return;
-        const gh=line.match(/^\d+[.)]\s*(.+)$/);
-        if(gh){flush();group=gh[1].trim();lineInfo="";baseTarget=0;targetBuffer=0;return;}
-        const target=line.match(/^(.*?)@\s*([\d.,]+)\s*\+\s*5%/i);
-        if(target){lineInfo=target[1].trim();baseTarget=angkaLaporanWA(target[2]);return;}
-        if(/^=>\s*[\d.,]+$/.test(line)&&baseTarget&&!targetBuffer){targetBuffer=angkaLaporanWA(line.replace(/^=>\s*/,""));return;}
-        if(/^Ketersediaan/i.test(line)){flush();return;}
-        if(/\(\d{3,5}\)/.test(line)&&!/^=>/.test(line)){
-          flush();
-          const p=line.match(/^(.+?)(\s+Ng hold.*)?$/i);
-          current={id:Date.now()+Math.random(),group,lineInfo,baseTarget,targetBuffer,part:p[1].trim().replace(/^[•\-]\s*/,""),note:(p[2]||"").trim(),assy:0,gudang:0,total:0,assyBoxes:[],gudangBoxes:[],waitingBeta:0,otherStocks:[]};
-          const inline=line.match(/=>\s*([\d.,]+)\s*\+\s*([\d.,]+)\s*\((.*?)\)/i);
-          if(inline){
-            const a=angkaLaporanWA(inline[1]),b=angkaLaporanWA(inline[2]);
-            current.assy=a;current.assyBoxes.push({label:String(a),val:a});
-            if(/beta|tunggu/i.test(inline[3]))current.waitingBeta=b;
-            else current.otherStocks.push({qty:b,label:inline[3]});
-          }
-          return;
-        }
-        if(!current)return;
-        // Format baru: Assy : 50.918 / Gudang : 43.740
-        const labeled=line.match(/^(Assy|Gudang|.*(?:tunggu.*beta|plant beta)|.+?)\s*:\s*([\d.,]+)$/i);
-        if(labeled){
-          const label=labeled[1].trim(),qty=angkaLaporanWA(labeled[2]);
-          if(/^Assy$/i.test(label)){current.assy+=qty;current.assyBoxes.push({label:String(qty),val:qty});}
-          else if(/^Gudang$/i.test(label)){current.gudang+=qty;current.gudangBoxes.push({label:String(qty),val:qty});}
-          else if(/tunggu.*beta|plant beta/i.test(label))current.waitingBeta+=qty;
-          else if(!/total/i.test(label))current.otherStocks.push({qty,label});
-          return;
-        }
-        // Format lama: => 50.918 (Assy), => 43.740 (Gudang)
-        const q=line.match(/^(?:=>\s*)?([\d.,]+)\s*(?:\((.*?)\))?$/);
-        if(!q)return;
-        const qty=angkaLaporanWA(q[1]),label=(q[2]||"").trim();
-        if(/Assy/i.test(label)){current.assy+=qty;current.assyBoxes.push({label:String(qty),val:qty});}
-        else if(/Gudang/i.test(label)){current.gudang+=qty;current.gudangBoxes.push({label:String(qty),val:qty});}
-        else if(/tunggu.*beta|plant beta/i.test(label))current.waitingBeta+=qty;
-        else if(/total/i.test(label)){}
-        else if(label)current.otherStocks.push({qty,label});
-        else if(!current.assy&&!current.gudang){current.assy+=qty;current.assyBoxes.push({label:String(qty),val:qty});}
-        else current.otherStocks.push({qty,label:"Kategori belum disebutkan"});
-      });
-      flush();pendingSpaImport=rows;
-      const box=document.getElementById("waImportSpaPreview");
-      if(!rows.length){box.textContent="Belum ada item terbaca. Periksa nama produk dan kode komponen.";return;}
-      box.innerHTML="<b>"+rows.length+" baris terbaca</b><div>"+rows.map(x=>x.group+" — "+x.part+": Assy "+formatNum(x.assy)+", Gudang "+formatNum(x.gudang)+(x.waitingBeta?" · Menunggu Beta "+formatNum(x.waitingBeta):"")+(x.otherStocks.length?" · "+x.otherStocks.map(y=>formatNum(y.qty)+" ("+y.label+")").join(", "):"")).join("<br>")+"</div><button class='btn btn-emerald' onclick='konfirmasiImportSpa()'>✓ Simpan ke SPA</button>";
-    }
-
-    function konfirmasiImportSpa(){
-      if(!pendingSpaImport.length)return;pendingSpaImport.forEach(v=>{const old=spaList.find(x=>normalisasiKunciSpa(x.group)===normalisasiKunciSpa(v.group)&&normalisasiKunciSpa(x.part)===normalisasiKunciSpa(v.part)&&normalisasiKunciSpa(x.note)===normalisasiKunciSpa(v.note));
-        if(old){old.assy+=v.assy;old.gudang+=v.gudang;old.total=old.assy+old.gudang;old.assyBoxes=(old.assyBoxes||[]).concat(v.assyBoxes);old.gudangBoxes=(old.gudangBoxes||[]).concat(v.gudangBoxes);old.waitingBeta=(old.waitingBeta||0)+v.waitingBeta;old.otherStocks=(old.otherStocks||[]).concat(v.otherStocks);if(v.lineInfo)old.lineInfo=v.lineInfo;if(v.baseTarget>0){old.baseTarget=v.baseTarget;old.targetBuffer=v.targetBuffer||Math.round(v.baseTarget*1.05);}}else spaList.push(v);
-      });const n=pendingSpaImport.length;pendingSpaImport=[];renderSpaAll();simpanDraftLokal();document.getElementById("waImportSpaPreview").textContent="Berhasil menyimpan "+n+" baris SPA.";
+      const gudangTotal=Math.max(0,currentSpaGudangBoxes.reduce((a,b)=>a+(Number(b.val)||0),0));
+      const gudangPos=currentSpaGudangBoxes.filter(b=>Number(b.val)>=0).length;
+      document.getElementById("spaGudangSum").textContent=formatNum(gudangTotal);
+      document.getElementById("spaGudangBoxCount").textContent=gudangPos;
+      const gudangDetails=document.getElementById("spaGudangDetails");
+      const gudangSummary=document.getElementById("spaGudangDetailsSummary");
+      if(gudangSummary) gudangSummary.textContent=`Lihat rincian box Gudang (${currentSpaGudangBoxes.length}) • ${formatNum(gudangTotal)} PCS`;
+      if(gudangDetails) gudangDetails.open=currentSpaGudangBoxes.length>0;
+      let gi=0;
+      document.getElementById("spaGudangChips").innerHTML=currentSpaGudangBoxes.map((b,i)=>{
+        const neg=Number(b.val)<0;if(!neg)gi++;
+        const label=neg?`Pengurangan ${i+1}`:`Box ${String(gi).padStart(2,"0")}`;
+        return `<div class="box-detail-row ${neg?"negative":""}"><span class="box-detail-label">${label}</span><span class="box-detail-value">${formatNum(Math.abs(Number(b.val)||0))} PCS</span><button type="button" onclick="hapusBoxSpaChip('gudang',${i})">Hapus</button></div>`;
+      }).join("");
     }
 
     function simpanItemSpa() {
@@ -4087,12 +4034,14 @@
       const part = document.getElementById("spaPart").value.trim();
       const note = document.getElementById("spaNote").value.trim();
 
-      if (document.getElementById("spaCalcAssyInput").value.trim()) {
-        tambahBoxSpa("assy", 1);
-      }
-      if (document.getElementById("spaCalcGudangInput").value.trim()) {
-        tambahBoxSpa("gudang", 1);
-      }
+      const pendingAssyQty=document.getElementById("spaAssyQtyPerBox")?.value || "";
+      const pendingAssyCount=document.getElementById("spaAssyQtyBoxCount")?.value || "";
+      if(pendingAssyQty||pendingAssyCount){if(!tambahKelompokSpa("assy",1))return;}
+      const pendingGudangQty=document.getElementById("spaGudangQtyPerBox")?.value || "";
+      const pendingGudangCount=document.getElementById("spaGudangQtyBoxCount")?.value || "";
+      if(pendingGudangQty||pendingGudangCount){if(!tambahKelompokSpa("gudang",1))return;}
+      if (document.getElementById("spaCalcAssyInput").value.trim()) tambahBoxSpa("assy", 1);
+      if (document.getElementById("spaCalcGudangInput").value.trim()) tambahBoxSpa("gudang", 1);
 
       if (!group || !part) {
         alert("Mohon isi Nama Produk Utama dan Komponen.");
@@ -4136,6 +4085,10 @@
 
       document.getElementById("spaPart").value = "";
       document.getElementById("spaNote").value = "";
+      document.getElementById("spaAssyQtyPerBox").value = "";
+      document.getElementById("spaAssyQtyBoxCount").value = "";
+      document.getElementById("spaGudangQtyPerBox").value = "";
+      document.getElementById("spaGudangQtyBoxCount").value = "";
       currentSpaAssyBoxes = [];
       currentSpaGudangBoxes = [];
       renderSpaCalcBoxes();
@@ -4359,6 +4312,10 @@
 
       document.getElementById("spaPart").value = item.part;
       document.getElementById("spaNote").value = item.note || "";
+      document.getElementById("spaAssyQtyPerBox").value = "";
+      document.getElementById("spaAssyQtyBoxCount").value = "";
+      document.getElementById("spaGudangQtyPerBox").value = "";
+      document.getElementById("spaGudangQtyBoxCount").value = "";
 
       currentSpaAssyBoxes =
         item.assyBoxes && item.assyBoxes.length > 0
@@ -4395,6 +4352,10 @@
       document.getElementById("spaNote").value = "";
       document.getElementById("spaCalcAssyInput").value = "";
       document.getElementById("spaCalcGudangInput").value = "";
+      document.getElementById("spaAssyQtyPerBox").value = "";
+      document.getElementById("spaAssyQtyBoxCount").value = "";
+      document.getElementById("spaGudangQtyPerBox").value = "";
+      document.getElementById("spaGudangQtyBoxCount").value = "";
       updateLiveFormulaPreview("spa_assy");
       updateLiveFormulaPreview("spa_gudang");
       renderSpaCalcBoxes();
@@ -4463,7 +4424,7 @@
     function resetSemuaDataSpa() {
       if (!confirm("RESET ALL DATA SPA?\n\nSemua daftar SPA, rincian box Assy/Gudang, dan input yang belum disimpan akan dikosongkan. Data WIP, Finish Good, Master Katalog, dan riwayat Cloud TIDAK dihapus.")) return;
       editingSpaId = null; spaList = []; currentSpaAssyBoxes = []; currentSpaGudangBoxes = [];
-      ["spaGroup", "spaLineInfo", "spaBaseTarget", "spaPart", "spaNote", "spaCalcAssyInput", "spaCalcGudangInput", "spaSearchInput"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+      ["spaGroup", "spaLineInfo", "spaBaseTarget", "spaPart", "spaNote", "spaCalcAssyInput", "spaCalcGudangInput", "spaAssyQtyPerBox", "spaAssyQtyBoxCount", "spaGudangQtyPerBox", "spaGudangQtyBoxCount"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
       document.getElementById("spaEditBanner").style.display = "none";
       document.getElementById("spaInputCard").classList.remove("editing-mode");
       document.getElementById("btnSubmitSpa").textContent = "➕ SIMPAN KE LAPORAN SPA";
