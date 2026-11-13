@@ -3237,7 +3237,7 @@
           ? `${formatNum(it.totalBox)} BOX (${formatNum(normalBoxCount)} BOX + ${formatNum(totalRecehBoxes)} RECEH)`
           : `${formatNum(it.totalBox)} BOX @${formatNum(it.pcsPerBox)}`;
         const achievementPct = Number(it.target) > 0 ? (Number(it.totalPcs || 0) / Number(it.target) * 100) : 0;
-        wa += `*TOTAL : ${totalBoxLabel} = ${formatNum(it.totalPcs)} PCS | ${(achievementPct).toFixed(2)}%*\\n`;
+        wa += `*TOTAL : ${totalBoxLabel} = ${formatNum(it.totalPcs)} PCS | ${(achievementPct).toFixed(2)}%*\n`;
         // Catatan tidak tercapai hanya ditampilkan sekali dan hanya jika hasil di bawah target.
         if (it.gapNote) wa += `*Catatan: ${it.gapNote}*\n`;
         wa += `\n`;
