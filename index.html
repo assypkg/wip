@@ -1947,6 +1947,7 @@
     let masterLeaderBusy = false;
     let masterLeaderConflict = false;
     let masterLeaderBootstrapQueued = false;
+    let masterLeaderMigrationQueued = false;
     let editingMasterLeader = null;
     let masterProdukFg = JSON.parse(localStorage.getItem(MASTER_PRODUK_FG_KEY) || "[]");
     let masterTargetFg = JSON.parse(localStorage.getItem(MASTER_PRODUK_FG_TARGET_KEY) || "{}");
@@ -5507,14 +5508,19 @@
     }
 
     function normalisasiMasterLeader(list) {
+      const aliases = {
+        "WIFITKURNIATIN": "WIFIT KURNIATIN",
+        "ANNANESYAF": "ANNA NESYA F"
+      };
       const seen = new Set();
-      return (Array.isArray(list) ? list : []).map(value => String(value || "").trim().toUpperCase().replace(/\s+/g," "))
-        .filter(value => {
-          if (!value || seen.has(value)) return false;
-          seen.add(value);
-          return true;
-        })
-        .sort((a,b) => new Intl.Collator("id",{numeric:true,sensitivity:"base"}).compare(a,b));
+      return (Array.isArray(list) ? list : []).map(value => {
+        const raw=String(value || "").trim().toUpperCase().replace(/\s+/g," ");
+        return aliases[raw.replace(/\s+/g,"")] || raw;
+      }).filter(value => {
+        if (!value || seen.has(value)) return false;
+        seen.add(value);
+        return true;
+      }).sort((a,b) => new Intl.Collator("id",{numeric:true,sensitivity:"base"}).compare(a,b));
     }
 
     function simpanMasterLeaderLokal() {
@@ -5562,6 +5568,9 @@
         if(!Array.isArray(remote))throw new Error("Struktur Master Leader Cloud tidak valid.");
 
         const normalized=normalisasiMasterLeader(remote);
+        const remoteCanonical=remote.map(value=>String(value||"").trim().toUpperCase().replace(/\s+/g," "));
+        const needsNameMigration=JSON.stringify(remoteCanonical)!==JSON.stringify(normalized);
+        if(needsNameMigration)masterLeaderMigrationQueued=true;
         const baseTime=localStorage.getItem(MASTER_LEADER_UPDATE_KEY);
         const baseRaw=localStorage.getItem(MASTER_LEADER_BASE_KEY);
         const base=baseRaw?JSON.parse(baseRaw):null;
@@ -5598,7 +5607,10 @@
         return false;
       } finally {
         masterLeaderBusy=false;
-        if(masterLeaderBootstrapQueued&&masterLeaderReady&&!masterLeaderConflict) {
+        if(masterLeaderMigrationQueued&&masterLeaderReady&&!masterLeaderConflict) {
+          masterLeaderMigrationQueued=false;
+          simpanMasterLeaderCloud();
+        } else if(masterLeaderBootstrapQueued&&masterLeaderReady&&!masterLeaderConflict) {
           masterLeaderBootstrapQueued=false;
           simpanMasterLeaderCloud();
         }
