@@ -1205,6 +1205,11 @@
             <label>Durasi Jam Kerja</label>
             <input type="text" id="fgDuration" value="15.00-23.00" placeholder="Contoh: 15.00-23.00" oninput="onFgDurationInput()" />
           </div>
+          <div>
+            <label>Durasi Istirahat (Menit)</label>
+            <input type="number" id="fgBreakMinutes" inputmode="numeric" min="0" step="1" placeholder="Kosongkan jika tidak istirahat" oninput="onFgDurationInput()" />
+            <div style="font-size:.66rem;color:var(--text-muted);margin-top:3px;">Contoh: 60 untuk istirahat 1 jam. Kosong = 0 menit.</div>
+          </div>
           <div style="grid-column: 1 / -1;">
             <label>Nama Produk</label>
             <div class="fg-product-search-wrap" style="position:relative;">
@@ -4913,7 +4918,7 @@
       return found ? Math.max(0, Math.round(Number(found[1]) || 0)) : 0;
     }
 
-    function hitungDurasiJamKerja(value) {
+    function hitungDurasiJamKerja(value, breakMinutes = 0) {
       const match = String(value || "").trim().match(/^(\d{1,2})[.:](\d{2})\s*[-–—]\s*(\d{1,2})[.:](\d{2})$/);
       if (!match) return 0;
       const sh = Number(match[1]), sm = Number(match[2]), eh = Number(match[3]), em = Number(match[4]);
@@ -4921,8 +4926,10 @@
       const start = sh * 60 + sm;
       let end = eh * 60 + em;
       if (end <= start) end += 24 * 60;
-      // Semua shift memiliki istirahat 1 jam yang tidak dihitung sebagai jam kerja produktif.
-      const effectiveMinutes = (end - start) - 60;
+      const grossMinutes = end - start;
+      const rest = String(breakMinutes ?? "").trim() === "" ? 0 : Number(breakMinutes);
+      if (!Number.isFinite(rest) || rest < 0 || !Number.isInteger(rest) || rest >= grossMinutes) return 0;
+      const effectiveMinutes = grossMinutes - rest;
       return effectiveMinutes > 0 && effectiveMinutes <= 24 * 60 ? effectiveMinutes / 60 : 0;
     }
 
@@ -4942,7 +4949,8 @@
         }
         return 0;
       }
-      const hours = hitungDurasiJamKerja(durationInput.value);
+      const breakInput = document.getElementById("fgBreakMinutes");
+      const hours = hitungDurasiJamKerja(durationInput.value, breakInput ? breakInput.value : "");
       if (!hours) {
         if (force) {
           targetInput.value = "";
