@@ -1994,6 +1994,7 @@
     let fgTargetTouched = false;
     let wipEditPlaceholder = null;
     let fgEditPlaceholder = null;
+    let fgEditWasMobileHidden = false;
     let editingCatalogIndex = null;
     let waWipManuallyEdited = false;
     let waSpaManuallyEdited = false;
@@ -5051,8 +5052,8 @@
       });
       const count = imported.length;
       pendingSpaImport = [];
-      renderSpaAll();
       waSpaManuallyEdited = false;
+      renderSpaAll();
       simpanDraftLokal();
       const preview = document.getElementById("waImportSpaPreview");
       if (preview) preview.innerHTML = "<b style='color:var(--emerald);'>Berhasil mengimpor " + count + " komponen ke Rincian SPA.</b>";
@@ -6305,6 +6306,8 @@
       const card = document.getElementById("fgInputCard");
       const target = document.getElementById("fgEditModalContent");
       if (!card || !target) return;
+      fgEditWasMobileHidden = card.classList.contains("mobile-tab-hidden");
+      card.classList.remove("mobile-tab-hidden");
       if (!fgEditPlaceholder && card.parentNode !== target) {
         fgEditPlaceholder = document.createComment("Posisi asli form Finish Good");
         card.parentNode.insertBefore(fgEditPlaceholder, card);
@@ -6319,6 +6322,8 @@
         fgEditPlaceholder.parentNode.insertBefore(card, fgEditPlaceholder);
         fgEditPlaceholder.remove();
       }
+      if (card) card.classList.toggle("mobile-tab-hidden", fgEditWasMobileHidden);
+      fgEditWasMobileHidden = false;
       fgEditPlaceholder = null;
       toggleModal("fgEditModal", false);
     }
