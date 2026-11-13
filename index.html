@@ -5144,6 +5144,292 @@
       }
     }
 
+    function normalisasiMasterJobOrder(list) {
+      const seen = new Set();
+      return (Array.isArray(list) ? list : []).map(value => String(value || "").trim().toUpperCase().replace(/\s+/g,""))
+        .filter(value => {
+          if (!value || seen.has(value)) return false;
+          seen.add(value);
+          return true;
+        })
+        .sort((a,b) => new Intl.Collator("id",{numeric:true,sensitivity:"base"}).compare(a,b));
+    }
+
+    function simpanMasterJobOrderLokal() {
+      masterJobOrders = normalisasiMasterJobOrder(masterJobOrders);
+      localStorage.setItem(MASTER_JOB_ORDER_KEY,JSON.stringify(masterJobOrders));
+      const count=document.getElementById("masterJobOrderCount");
+      if(count)count.textContent=masterJobOrders.length;
+      renderMasterJobOrder();
+    }
+
+    function setStatusMasterJobOrder(type,message) {
+      const box=document.getElementById("masterJobOrderCloudStatus");
+      if(!box)return;
+      const styles={syncing:["#eff6ff","#1d4ed8","⏳"],success:["#ecfdf5","#166534","☁️"],warning:["#fffbeb","#92400e","⚠️"],error:["#fef2f2","#b91c1c","❌"],conflict:["#fff7ed","#9a3412","🛡️"]};
+      const style=styles[type]||styles.warning;
+      box.style.background=style[0];box.style.color=style[1];box.style.borderColor=style[1]+"66";box.textContent=style[2]+" "+message;
+      const backup=document.getElementById("btnBackupMasterJobOrder");
+      if(backup)backup.style.display=localStorage.getItem(MASTER_JOB_ORDER_BACKUP_KEY)?"inline-flex":"none";
+    }
+
+    async function tarikMasterJobOrderCloud() {
+      if(masterJobOrderBusy)return false;
+      masterJobOrderBusy=true;
+      setStatusMasterJobOrder("syncing","Memeriksa Master Job Order di Cloud...");
+      try {
+        const url=getFirestoreBaseUrl()+"/"+COLLECTION_MASTER+"/master_job_order";
+        const res=await fetch(url,{cache:"no-store"});
+        if(res.status===404) {
+          if(localStorage.getItem(MASTER_JOB_ORDER_UPDATE_KEY)) {
+            masterJobOrderConflict=true;
+            localStorage.setItem(MASTER_JOB_ORDER_BACKUP_KEY,JSON.stringify({savedAt:new Date().toISOString(),jobOrders:masterJobOrders}));
+            setStatusMasterJobOrder("conflict","Dokumen Cloud tidak ditemukan. Data Job Order lokal diamankan.");
+            return false;
+          }
+          masterJobOrderReady=true;
+          if(masterJobOrders.length)masterJobOrderBootstrapQueued=true;
+          setStatusMasterJobOrder("warning",masterJobOrders.length?"Dokumen Cloud belum ada. Data lokal akan dikirim sebagai Master Job Order pusat.":"Master Job Order Cloud belum dibuat. Tambahkan nomor JO untuk membuat data pusat.");
+          return true;
+        }
+        if(!res.ok)throw new Error("Firestore GET gagal (HTTP "+res.status+")");
+        const doc=await res.json();
+        let remote;
+        try{remote=JSON.parse(doc.fields?.jobOrdersJson?.stringValue||"[]");}
+        catch(e){throw new Error("Format Master Job Order Cloud tidak valid.");}
+        if(!Array.isArray(remote))throw new Error("Struktur Master Job Order Cloud tidak valid.");
+
+        const normalized=normalisasiMasterJobOrder(remote);
+        const baseTime=localStorage.getItem(MASTER_JOB_ORDER_UPDATE_KEY);
+        const baseRaw=localStorage.getItem(MASTER_JOB_ORDER_BASE_KEY);
+        const base=baseRaw?JSON.parse(baseRaw):null;
+        const local=normalisasiMasterJobOrder(masterJobOrders);
+        const localChanged=!!base && JSON.stringify(local)!==JSON.stringify(normalisasiMasterJobOrder(base));
+
+        if(!baseTime||!base) {
+          if(local.length&&JSON.stringify(local)!==JSON.stringify(normalized)) {
+            localStorage.setItem(MASTER_JOB_ORDER_BACKUP_KEY,JSON.stringify({savedAt:new Date().toISOString(),jobOrders:local,reason:"Backup lokal sebelum mengikuti Master Job Order Cloud"}));
+          }
+          masterJobOrders=normalized;
+        } else if(doc.updateTime!==baseTime) {
+          if(localChanged) {
+            masterJobOrderConflict=true;
+            localStorage.setItem(MASTER_JOB_ORDER_BACKUP_KEY,JSON.stringify({savedAt:new Date().toISOString(),jobOrders:local}));
+            setStatusMasterJobOrder("conflict","Lokal dan Cloud sama-sama berubah. Data lokal diamankan; tidak ada yang ditimpa.");
+            return false;
+          }
+          masterJobOrders=normalized;
+        } else {
+          masterJobOrders=local;
+        }
+
+        localStorage.setItem(MASTER_JOB_ORDER_BASE_KEY,JSON.stringify(normalized));
+        localStorage.setItem(MASTER_JOB_ORDER_UPDATE_KEY,doc.updateTime||"");
+        masterJobOrderReady=true;
+        masterJobOrderConflict=false;
+        simpanMasterJobOrderLokal();
+        setStatusMasterJobOrder("success","Sinkron dan terverifikasi • "+masterJobOrders.length+" Job Order.");
+        return true;
+      } catch(e) {
+        masterJobOrderReady=false;
+        setStatusMasterJobOrder("error","Tidak dapat memverifikasi Cloud: "+e.message+". Data lokal tidak diubah.");
+        return false;
+      } finally {
+        masterJobOrderBusy=false;
+        if(masterJobOrderBootstrapQueued&&masterJobOrderReady&&!masterJobOrderConflict) {
+          masterJobOrderBootstrapQueued=false;
+          simpanMasterJobOrderCloud();
+        }
+      }
+    }
+
+    async function simpanMasterJobOrderCloud() {
+      if(!masterJobOrderReady||masterJobOrderBusy||masterJobOrderConflict) {
+        setStatusMasterJobOrder(masterJobOrderConflict?"conflict":"warning","Lokal tersimpan, tetapi Cloud belum siap atau ada konflik. Sinkronkan sebelum mencoba lagi.");
+        return false;
+      }
+      masterJobOrderBusy=true;
+      setStatusMasterJobOrder("syncing","Memverifikasi versi Cloud sebelum menyimpan...");
+      try {
+        const url=getFirestoreBaseUrl()+"/"+COLLECTION_MASTER+"/master_job_order";
+        const check=await fetch(url,{cache:"no-store"});
+        const baseTime=localStorage.getItem(MASTER_JOB_ORDER_UPDATE_KEY);
+        let updateTime=null;
+        if(check.status===404) {
+          if(baseTime)throw new Error("Dokumen Cloud hilang; data lokal tidak ditimpa.");
+        } else {
+          if(!check.ok)throw new Error("Firestore GET gagal (HTTP "+check.status+")");
+          const current=await check.json();
+          updateTime=current.updateTime;
+          if(!baseTime||updateTime!==baseTime) {
+            masterJobOrderConflict=true;
+            localStorage.setItem(MASTER_JOB_ORDER_BACKUP_KEY,JSON.stringify({savedAt:new Date().toISOString(),jobOrders:masterJobOrders}));
+            setStatusMasterJobOrder("conflict","Versi Cloud berubah. Data lokal diamankan dan penyimpanan dihentikan.");
+            return false;
+          }
+        }
+
+        const snapshot=normalisasiMasterJobOrder(masterJobOrders);
+        const patchUrl=new URL(url);
+        if(updateTime)patchUrl.searchParams.set("currentDocument.updateTime",updateTime);
+        else patchUrl.searchParams.set("currentDocument.exists","false");
+        const payload={fields:{updatedAt:{stringValue:new Date().toISOString()},jobOrdersJson:{stringValue:JSON.stringify(snapshot)}}};
+        const saved=await fetch(patchUrl.toString(),{method:"PATCH",cache:"no-store",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+        if(saved.status===409||saved.status===412)throw new Error("Konflik versi saat menyimpan (HTTP "+saved.status+")");
+        if(!saved.ok) {
+          let detail="";try{const err=await saved.json();detail=err.error?.message||"";}catch(e){}
+          throw new Error("Firestore PATCH gagal (HTTP "+saved.status+")"+(detail?": "+detail:""));
+        }
+        const savedDoc=await saved.json();
+        const verify=await fetch(url,{cache:"no-store"});
+        if(!verify.ok)throw new Error("Job Order tersimpan tetapi verifikasi baca ulang Cloud gagal (HTTP "+verify.status+").");
+        const verified=await verify.json();
+        let remote;
+        try{remote=normalisasiMasterJobOrder(JSON.parse(verified.fields?.jobOrdersJson?.stringValue||"[]"));}
+        catch(e){throw new Error("Data hasil baca ulang Cloud tidak valid.");}
+        if(JSON.stringify(remote)!==JSON.stringify(snapshot))throw new Error("Verifikasi Cloud tidak cocok dengan daftar Job Order yang dikirim.");
+
+        localStorage.setItem(MASTER_JOB_ORDER_BASE_KEY,JSON.stringify(snapshot));
+        localStorage.setItem(MASTER_JOB_ORDER_UPDATE_KEY,verified.updateTime||savedDoc.updateTime||"");
+        masterJobOrderReady=true;
+        setStatusMasterJobOrder("success","Berhasil disimpan dan diverifikasi di Cloud • "+snapshot.length+" Job Order.");
+        return true;
+      } catch(e) {
+        setStatusMasterJobOrder("error","Gagal menyimpan Cloud: "+e.message+". Data lokal tetap tersedia.");
+        return false;
+      } finally {
+        masterJobOrderBusy=false;
+      }
+    }
+
+    function renderMasterJobOrder() {
+      const list=document.getElementById("masterJobOrderList");
+      const info=document.getElementById("masterJobOrderInfo");
+      if(!list||!info)return;
+      const q=(document.getElementById("masterJobOrderSearch")?.value||"").trim().toLowerCase();
+      const items=masterJobOrders.map((name,index)=>({name,index})).filter(item=>!q||item.name.toLowerCase().includes(q));
+      info.textContent=q?"Ditemukan "+items.length+" dari "+masterJobOrders.length+" Job Order.":"Total "+masterJobOrders.length+" Job Order.";
+      if(!items.length) {
+        list.innerHTML='<div style="padding:14px;text-align:center;color:var(--text-muted);">Belum ada Job Order yang cocok.</div>';
+        return;
+      }
+      list.innerHTML=items.map(item=>'<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;padding:8px 4px;border-bottom:1px solid #f1f5f9;"><b style="flex:1;min-width:0;overflow-wrap:anywhere;">'+item.name.replace(/[&<>]/g,"")+'</b><div style="display:flex;gap:4px;flex-shrink:0;"><button class="btn btn-edit" onclick="editMasterJobOrder('+item.index+')">Edit</button><button class="btn btn-danger" onclick="hapusMasterJobOrder('+item.index+')">Hapus</button></div></div>').join("");
+    }
+
+    function simpanItemMasterJobOrder() {
+      const input=document.getElementById("masterJobOrderInput");
+      const name=String(input?.value||"").trim().toUpperCase().replace(/\s+/g,"");
+      if(!name){alert("Isi nomor Job Order terlebih dahulu.");return;}
+      if(masterJobOrders.some((value,index)=>index!==editingMasterJobOrder&&value.toLowerCase()===name.toLowerCase())) {
+        alert("Nomor Job Order sudah terdaftar di Master Job Order.");
+        return;
+      }
+      if(editingMasterJobOrder!==null)masterJobOrders[editingMasterJobOrder]=name;
+      else masterJobOrders.push(name);
+      batalEditMasterJobOrder();
+      simpanMasterJobOrderLokal();
+      simpanMasterJobOrderCloud();
+    }
+
+    function editMasterJobOrder(index) {
+      const name=masterJobOrders[index];
+      if(!name)return;
+      editingMasterJobOrder=index;
+      document.getElementById("masterJobOrderInput").value=name;
+      document.getElementById("btnSimpanMasterJobOrder").textContent="💾 Simpan Perubahan";
+      document.getElementById("btnBatalEditMasterJobOrder").style.display="inline-flex";
+      document.getElementById("masterJobOrderInput").focus();
+    }
+
+    function batalEditMasterJobOrder() {
+      editingMasterJobOrder=null;
+      const input=document.getElementById("masterJobOrderInput");
+      if(input)input.value="";
+      const save=document.getElementById("btnSimpanMasterJobOrder");
+      if(save)save.textContent="+ Tambah Job Order";
+      const cancel=document.getElementById("btnBatalEditMasterJobOrder");
+      if(cancel)cancel.style.display="none";
+    }
+
+    function hapusMasterJobOrder(index) {
+      const name=masterJobOrders[index];
+      if(!name||!confirm("Hapus Job Order dari Master?\\n\\n"+name))return;
+      masterJobOrders.splice(index,1);
+      if(editingMasterJobOrder===index)batalEditMasterJobOrder();
+      simpanMasterJobOrderLokal();
+      simpanMasterJobOrderCloud();
+    }
+
+    function downloadBackupMasterJobOrder() {
+      const raw=localStorage.getItem(MASTER_JOB_ORDER_BACKUP_KEY);
+      if(!raw){alert("Belum ada backup Master Job Order lokal.");return;}
+      const url=URL.createObjectURL(new Blob([raw],{type:"application/json"}));
+      const anchor=document.createElement("a");
+      anchor.href=url;anchor.download="backup-master-job-order-"+getTodayWibIso()+".json";
+      anchor.click();URL.revokeObjectURL(url);
+    }
+
+    function bukaMasterJobOrder() {
+      toggleModal("masterJobOrderModal",true);
+      renderMasterJobOrder();
+      if(!masterJobOrderReady)tarikMasterJobOrderCloud();
+    }
+
+    function tutupFgJobOrderSuggestions() {
+      const box=document.getElementById("fgJobOrderSuggestions");
+      const input=document.getElementById("fgJobOrder");
+      if(box){box.style.display="none";box.innerHTML="";}
+      if(input)input.setAttribute("aria-expanded","false");
+    }
+
+    function onFgJobOrderType() {
+      const input=document.getElementById("fgJobOrder");
+      const box=document.getElementById("fgJobOrderSuggestions");
+      if(!input||!box)return;
+      const q=input.value.trim().toLowerCase();
+      const matches=normalisasiMasterJobOrder(masterJobOrders).filter(name=>!q||name.toLowerCase().includes(q)).slice(0,30);
+      box.innerHTML="";
+      if(!matches.length) {
+        const empty=document.createElement("div");
+        empty.style.cssText="padding:10px 12px;font-size:.78rem;color:var(--text-muted);";
+        empty.textContent=masterJobOrders.length?"Tidak ada Job Order yang cocok. Anda tetap bisa mengetik manual.":"Master Job Order belum berisi data. Anda tetap bisa mengetik manual.";
+        box.appendChild(empty);
+      } else {
+        matches.forEach(name=>{
+          const option=document.createElement("div");
+          option.className="quick-item";
+          option.setAttribute("role","option");
+          option.tabIndex=-1;
+          const label=document.createElement("span");
+          label.className="quick-item-left";
+          label.textContent=name;
+          option.appendChild(label);
+          option.addEventListener("pointerdown",event=>event.preventDefault());
+          option.addEventListener("click",()=>{
+            input.value=name;
+            tutupFgJobOrderSuggestions();
+            simpanDraftLokal();
+          });
+          box.appendChild(option);
+        });
+      }
+      box.style.display="block";
+      input.setAttribute("aria-expanded","true");
+    }
+
+    function onFgJobOrderKey(event) {
+      if(event.key==="Escape"){tutupFgJobOrderSuggestions();return;}
+      if(event.key==="Enter") {
+        const box=document.getElementById("fgJobOrderSuggestions");
+        const first=box?.querySelector(".quick-item");
+        if(box?.style.display==="block"&&first){event.preventDefault();first.click();}
+      }
+    }
+
+    document.addEventListener("pointerdown",event=>{
+      if(!event.target.closest(".fg-job-order-search-wrap"))tutupFgJobOrderSuggestions();
+    });
+
     function bukaMasterProdukFg(){toggleModal("masterProdukFgModal",true);renderMasterProdukFg();if(!masterProdukFgReady)tarikMasterProdukFgCloud();}
     function tutupFgProductSuggestions() {
       const box = document.getElementById("fgProductSuggestions");
@@ -5279,12 +5565,22 @@
     }
     function downloadBackupMasterProdukFg(){const raw=localStorage.getItem(MASTER_PRODUK_FG_BACKUP_KEY);if(!raw){alert("Belum ada backup Master Produk lokal.");return;}const url=URL.createObjectURL(new Blob([raw],{type:"application/json"})),a=document.createElement("a");a.href=url;a.download="backup-master-produk-fg-"+getTodayWibIso()+".json";a.click();URL.revokeObjectURL(url);}
 
+    function syncSheetNavModalVisibility() {
+      const anyModalOpen=Array.from(document.querySelectorAll(".modal-backdrop"))
+        .some(modal=>getComputedStyle(modal).display!=="none");
+      document.querySelectorAll(".sheet-section-nav").forEach(nav=>{
+        nav.classList.toggle("modal-nav-hidden",anyModalOpen);
+      });
+    }
+
     function toggleModal(id, show) {
       const modal = document.getElementById(id);
       if (!modal) return;
       modal.style.display = show ? "flex" : "none";
       if (show && id === "masterModal") renderMasterModalList();
       if (show && id === "masterProdukFgModal") renderMasterProdukFg();
+      if (show && id === "masterJobOrderModal") renderMasterJobOrder();
+      syncSheetNavModalVisibility();
     }
 
     function bukaModalEditWip() {
@@ -5486,6 +5782,7 @@
 
       document.getElementById("masterCount").textContent = catalog.length;
       simpanMasterProdukFgLokal();
+      simpanMasterJobOrderLokal();
       updateCloudCounterUI();
 
       pulihkanDraftLokalJikaHariSama();
@@ -5509,6 +5806,7 @@
         sinkronTarikDariFirebase(false);
         tarikMasterDariFirebase();
         tarikMasterProdukFgCloud();
+        tarikMasterJobOrderCloud();
       }, 1200);
     });
   </script>
