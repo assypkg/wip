@@ -2951,7 +2951,7 @@
 
         // Header produk mendukung kode angka (8603, 4022) dan alfanumerik (1E03, 1E02, JD26).
         // Kode harus berada di awal baris; komponen seperti Inbs(003) tidak akan tertukar menjadi header.
-        const productHeader=line.match(/^(\d{3,5}|[A-Z]{1,2}\d[A-Z0-9]{1,5})\s+(.+)$/i);
+        const productHeader=line.match(/^(\d{3,5}|(?=[A-Z0-9]{3,8}\s)(?=[A-Z0-9]*[A-Z])(?=[A-Z0-9]*\d)[A-Z0-9]{3,8})\s+(.+)$/i);
         if(productHeader && !/[:=]/.test(line)){
           const candidate=(productHeader[1]+" "+productHeader[2]).trim();
           const key=candidate.toLocaleLowerCase("id-ID");
