@@ -928,6 +928,7 @@
     .saved-box-details .box-detail-row { font-size:.72rem; padding:6px 2px; }
     .mobile-legacy-hidden { display:none !important; }
     @media (max-width:879px) {
+      .mobile-tab-hidden { display:none !important; }
       .sheet-section-nav { display:grid; position:sticky; top:0; margin:0 -4px 4px; }
       .mobile-sheet-meta { grid-template-columns:1fr 1fr; gap:6px; padding:8px; }
       #wipMetaControls > div:first-child { grid-column:1 / -1; }
@@ -1083,7 +1084,7 @@
 
     <!-- KOLOM KANAN: REKAP, SIMPAN CLOUD & SHARE LANGSUNG WA -->
     <section>
-      <div class="card sheet-section-target" id="wipListCard">
+      <div class="card sheet-section-target" id="wipListCard" class="sheet-section-target mobile-tab-hidden">
         <div class="card-header" style="margin-bottom:8px; border-bottom:none; padding-bottom:0;">
           <span class="card-title">2. Daftar Sisa Barang Bagus (Rincian Box & Edit)</span>
         </div>
@@ -1105,7 +1106,7 @@
         <div id="wipGroupedContainer"></div>
       </div>
 
-      <div class="card sheet-section-target" id="wipWaCard">
+      <div class="card sheet-section-target" id="wipWaCard" class="sheet-section-target mobile-tab-hidden">
         <div class="card-header">
           <span class="card-title">3. Laporan WhatsApp (Khusus Sisa WIP)</span>
         </div>
@@ -1454,7 +1455,7 @@
     </section>
 
     <section>
-      <div class="card sheet-section-target" id="spaListCard">
+      <div class="card sheet-section-target" id="spaListCard" class="sheet-section-target mobile-tab-hidden">
         <div class="card-header">
           <span class="card-title">2. Rincian SPA (Assy + Gudang & Edit)</span>
           <button class="btn btn-danger" onclick="hapusSemuaSpa()">🗑️ Reset SPA</button>
@@ -1462,7 +1463,7 @@
         <div style="border:1px solid var(--border);border-radius:10px;padding:12px;margin:10px 0;"><b>📥 Import laporan WhatsApp SPA</b><p style="font-size:.73rem;color:var(--text-muted);">Tempel laporan SPA. Stok Assy, Gudang, stok khusus, NG Hold, dan barang menunggu dari Plant Beta dipisahkan.</p><textarea id="waImportSpaText" class="wa-preview" style="min-height:150px;" placeholder="Tempel laporan SPA dari WhatsApp di sini..."></textarea><button class="btn btn-sky" onclick="previewImportSpa()">🔎 Proses & Preview</button> <button class="btn btn-outline" onclick="bersihkanImportSpa()">Bersihkan</button><div id="waImportSpaPreview" style="margin-top:8px;font-size:.78rem;"></div></div><div id="spaGroupedContainer"></div>
       </div>
 
-      <div class="card sheet-section-target" id="spaWaCard">
+      <div class="card sheet-section-target" id="spaWaCard" class="sheet-section-target mobile-tab-hidden">
         <div class="card-header">
           <span class="card-title">3. Laporan WA SPA</span>
         </div>
@@ -2309,6 +2310,20 @@
       if (!target) return;
       const nav = document.getElementById(navId);
       if (nav) nav.querySelectorAll(".sheet-nav-btn").forEach(btn => btn.classList.toggle("active", btn === buttonEl));
+
+      // Di HP, navigasi bekerja seperti tab: hanya satu bagian yang tampil.
+      // Tidak menggulir halaman ke atas/bawah. Di desktop perilaku lama tetap dipakai.
+      if (window.matchMedia && window.matchMedia("(max-width: 879px)").matches) {
+        const groups = {
+          wipSectionNav: ["wipInputSection", "wipListCard", "wipWaCard"],
+          spaSectionNav: ["spaInputSection", "spaListCard", "spaWaCard"]
+        };
+        (groups[navId] || []).forEach(id => {
+          const panel = document.getElementById(id);
+          if (panel) panel.classList.toggle("mobile-tab-hidden", id !== targetId);
+        });
+        return;
+      }
       target.scrollIntoView({ behavior: "smooth", block: "start" });
     }
 
