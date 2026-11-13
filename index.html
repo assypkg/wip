@@ -5551,7 +5551,7 @@
           }
           masterLeaderReady=true;
           if(masterLeaders.length)masterLeaderBootstrapQueued=true;
-          setStatusMasterLeader("warning",masterLeaders.length?"Dokumen Cloud belum ada. Data lokal akan dikirim sebagai Master Leader pusat.":"Master Leader Cloud belum dibuat. Tambahkan nomor JO untuk membuat data pusat.");
+          setStatusMasterLeader("warning",masterLeaders.length?"Dokumen Cloud belum ada. Data lokal akan dikirim sebagai Master Leader pusat.":"Master Leader Cloud belum dibuat. Tambahkan nama Leader untuk membuat data pusat.");
           return true;
         }
         if(!res.ok)throw new Error("Firestore GET gagal (HTTP "+res.status+")");
