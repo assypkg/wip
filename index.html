@@ -4869,7 +4869,7 @@
     }
 
     function hitungDurasiJamKerja(value) {
-      const match = String(value || "").trim().match(/^(\\d{1,2})[.:](\\d{2})\\s*[-–—]\\s*(\\d{1,2})[.:](\\d{2})$/);
+      const match = String(value || "").trim().match(/^(\d{1,2})[.:](\d{2})\s*[-–—]\s*(\d{1,2})[.:](\d{2})$/);
       if (!match) return 0;
       const sh = Number(match[1]), sm = Number(match[2]), eh = Number(match[3]), em = Number(match[4]);
       if (sh > 23 || eh > 23 || sm > 59 || em > 59) return 0;
