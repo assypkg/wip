@@ -5517,28 +5517,28 @@
         .sort((a,b) => new Intl.Collator("id",{numeric:true,sensitivity:"base"}).compare(a,b));
     }
 
-    function simpanMasterJobOrderLokal() {
+    function simpanMasterLeaderLokal() {
       masterLeaders = normalisasiMasterLeader(masterLeaders);
       localStorage.setItem(MASTER_LEADER_KEY,JSON.stringify(masterLeaders));
       const count=document.getElementById("masterLeaderCount");
       if(count)count.textContent=masterLeaders.length;
-      renderMasterJobOrder();
+      renderMasterLeader();
     }
 
-    function setStatusMasterJobOrder(type,message) {
+    function setStatusMasterLeader(type,message) {
       const box=document.getElementById("masterLeaderCloudStatus");
       if(!box)return;
       const styles={syncing:["#eff6ff","#1d4ed8","⏳"],success:["#ecfdf5","#166534","☁️"],warning:["#fffbeb","#92400e","⚠️"],error:["#fef2f2","#b91c1c","❌"],conflict:["#fff7ed","#9a3412","🛡️"]};
       const style=styles[type]||styles.warning;
       box.style.background=style[0];box.style.color=style[1];box.style.borderColor=style[1]+"66";box.textContent=style[2]+" "+message;
-      const backup=document.getElementById("btnBackupMasterJobOrder");
+      const backup=document.getElementById("btnBackupMasterLeader");
       if(backup)backup.style.display=localStorage.getItem(MASTER_LEADER_BACKUP_KEY)?"inline-flex":"none";
     }
 
-    async function tarikMasterJobOrderCloud() {
+    async function tarikMasterLeaderCloud() {
       if(masterLeaderBusy)return false;
       masterLeaderBusy=true;
-      setStatusMasterJobOrder("syncing","Memeriksa Master Leader di Cloud...");
+      setStatusMasterLeader("syncing","Memeriksa Master Leader di Cloud...");
       try {
         const url=getFirestoreBaseUrl()+"/"+COLLECTION_MASTER+"/master_leader";
         const res=await fetch(url,{cache:"no-store"});
@@ -5546,12 +5546,12 @@
           if(localStorage.getItem(MASTER_LEADER_UPDATE_KEY)) {
             masterLeaderConflict=true;
             localStorage.setItem(MASTER_LEADER_BACKUP_KEY,JSON.stringify({savedAt:new Date().toISOString(),leaders:masterLeaders}));
-            setStatusMasterJobOrder("conflict","Dokumen Cloud tidak ditemukan. Data Leader lokal diamankan.");
+            setStatusMasterLeader("conflict","Dokumen Cloud tidak ditemukan. Data Leader lokal diamankan.");
             return false;
           }
           masterLeaderReady=true;
           if(masterLeaders.length)masterLeaderBootstrapQueued=true;
-          setStatusMasterJobOrder("warning",masterLeaders.length?"Dokumen Cloud belum ada. Data lokal akan dikirim sebagai Master Leader pusat.":"Master Leader Cloud belum dibuat. Tambahkan nomor JO untuk membuat data pusat.");
+          setStatusMasterLeader("warning",masterLeaders.length?"Dokumen Cloud belum ada. Data lokal akan dikirim sebagai Master Leader pusat.":"Master Leader Cloud belum dibuat. Tambahkan nomor JO untuk membuat data pusat.");
           return true;
         }
         if(!res.ok)throw new Error("Firestore GET gagal (HTTP "+res.status+")");
@@ -5577,7 +5577,7 @@
           if(localChanged) {
             masterLeaderConflict=true;
             localStorage.setItem(MASTER_LEADER_BACKUP_KEY,JSON.stringify({savedAt:new Date().toISOString(),leaders:local}));
-            setStatusMasterJobOrder("conflict","Lokal dan Cloud sama-sama berubah. Data lokal diamankan; tidak ada yang ditimpa.");
+            setStatusMasterLeader("conflict","Lokal dan Cloud sama-sama berubah. Data lokal diamankan; tidak ada yang ditimpa.");
             return false;
           }
           masterLeaders=normalized;
@@ -5589,29 +5589,29 @@
         localStorage.setItem(MASTER_LEADER_UPDATE_KEY,doc.updateTime||"");
         masterLeaderReady=true;
         masterLeaderConflict=false;
-        simpanMasterJobOrderLokal();
-        setStatusMasterJobOrder("success","Sinkron dan terverifikasi • "+masterLeaders.length+" Leader.");
+        simpanMasterLeaderLokal();
+        setStatusMasterLeader("success","Sinkron dan terverifikasi • "+masterLeaders.length+" Leader.");
         return true;
       } catch(e) {
         masterLeaderReady=false;
-        setStatusMasterJobOrder("error","Tidak dapat memverifikasi Cloud: "+e.message+". Data lokal tidak diubah.");
+        setStatusMasterLeader("error","Tidak dapat memverifikasi Cloud: "+e.message+". Data lokal tidak diubah.");
         return false;
       } finally {
         masterLeaderBusy=false;
         if(masterLeaderBootstrapQueued&&masterLeaderReady&&!masterLeaderConflict) {
           masterLeaderBootstrapQueued=false;
-          simpanMasterJobOrderCloud();
+          simpanMasterLeaderCloud();
         }
       }
     }
 
-    async function simpanMasterJobOrderCloud() {
+    async function simpanMasterLeaderCloud() {
       if(!masterLeaderReady||masterLeaderBusy||masterLeaderConflict) {
-        setStatusMasterJobOrder(masterLeaderConflict?"conflict":"warning","Lokal tersimpan, tetapi Cloud belum siap atau ada konflik. Sinkronkan sebelum mencoba lagi.");
+        setStatusMasterLeader(masterLeaderConflict?"conflict":"warning","Lokal tersimpan, tetapi Cloud belum siap atau ada konflik. Sinkronkan sebelum mencoba lagi.");
         return false;
       }
       masterLeaderBusy=true;
-      setStatusMasterJobOrder("syncing","Memverifikasi versi Cloud sebelum menyimpan...");
+      setStatusMasterLeader("syncing","Memverifikasi versi Cloud sebelum menyimpan...");
       try {
         const url=getFirestoreBaseUrl()+"/"+COLLECTION_MASTER+"/master_leader";
         const check=await fetch(url,{cache:"no-store"});
@@ -5626,7 +5626,7 @@
           if(!baseTime||updateTime!==baseTime) {
             masterLeaderConflict=true;
             localStorage.setItem(MASTER_LEADER_BACKUP_KEY,JSON.stringify({savedAt:new Date().toISOString(),leaders:masterLeaders}));
-            setStatusMasterJobOrder("conflict","Versi Cloud berubah. Data lokal diamankan dan penyimpanan dihentikan.");
+            setStatusMasterLeader("conflict","Versi Cloud berubah. Data lokal diamankan dan penyimpanan dihentikan.");
             return false;
           }
         }
@@ -5654,17 +5654,17 @@
         localStorage.setItem(MASTER_LEADER_BASE_KEY,JSON.stringify(snapshot));
         localStorage.setItem(MASTER_LEADER_UPDATE_KEY,verified.updateTime||savedDoc.updateTime||"");
         masterLeaderReady=true;
-        setStatusMasterJobOrder("success","Berhasil disimpan dan diverifikasi di Cloud • "+snapshot.length+" Leader.");
+        setStatusMasterLeader("success","Berhasil disimpan dan diverifikasi di Cloud • "+snapshot.length+" Leader.");
         return true;
       } catch(e) {
-        setStatusMasterJobOrder("error","Gagal menyimpan Cloud: "+e.message+". Data lokal tetap tersedia.");
+        setStatusMasterLeader("error","Gagal menyimpan Cloud: "+e.message+". Data lokal tetap tersedia.");
         return false;
       } finally {
         masterLeaderBusy=false;
       }
     }
 
-    function renderMasterJobOrder() {
+    function renderMasterLeader() {
       const list=document.getElementById("masterLeaderList");
       const info=document.getElementById("masterLeaderInfo");
       if(!list||!info)return;
@@ -5675,54 +5675,54 @@
         list.innerHTML='<div style="padding:14px;text-align:center;color:var(--text-muted);">Belum ada Leader yang cocok.</div>';
         return;
       }
-      list.innerHTML=items.map(item=>'<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;padding:8px 4px;border-bottom:1px solid #f1f5f9;"><b style="flex:1;min-width:0;overflow-wrap:anywhere;">'+item.name.replace(/[&<>]/g,"")+'</b><div style="display:flex;gap:4px;flex-shrink:0;"><button class="btn btn-edit" onclick="editMasterJobOrder('+item.index+')">Edit</button><button class="btn btn-danger" onclick="hapusMasterJobOrder('+item.index+')">Hapus</button></div></div>').join("");
+      list.innerHTML=items.map(item=>'<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;padding:8px 4px;border-bottom:1px solid #f1f5f9;"><b style="flex:1;min-width:0;overflow-wrap:anywhere;">'+item.name.replace(/[&<>]/g,"")+'</b><div style="display:flex;gap:4px;flex-shrink:0;"><button class="btn btn-edit" onclick="editMasterLeader('+item.index+')">Edit</button><button class="btn btn-danger" onclick="hapusMasterLeader('+item.index+')">Hapus</button></div></div>').join("");
     }
 
-    function simpanItemMasterJobOrder() {
+    function simpanItemMasterLeader() {
       const input=document.getElementById("masterLeaderInput");
       const name=String(input?.value||"").trim().toUpperCase().replace(/\s+/g,"");
       if(!name){alert("Isi nomor Leader terlebih dahulu.");return;}
-      if(masterLeaders.some((value,index)=>index!==editingMasterJobOrder&&value.toLowerCase()===name.toLowerCase())) {
+      if(masterLeaders.some((value,index)=>index!==editingMasterLeader&&value.toLowerCase()===name.toLowerCase())) {
         alert("Nomor Leader sudah terdaftar di Master Leader.");
         return;
       }
-      if(editingMasterJobOrder!==null)masterLeaders[editingMasterJobOrder]=name;
+      if(editingMasterLeader!==null)masterLeaders[editingMasterLeader]=name;
       else masterLeaders.push(name);
-      batalEditMasterJobOrder();
-      simpanMasterJobOrderLokal();
-      simpanMasterJobOrderCloud();
+      batalEditMasterLeader();
+      simpanMasterLeaderLokal();
+      simpanMasterLeaderCloud();
     }
 
-    function editMasterJobOrder(index) {
+    function editMasterLeader(index) {
       const name=masterLeaders[index];
       if(!name)return;
-      editingMasterJobOrder=index;
+      editingMasterLeader=index;
       document.getElementById("masterLeaderInput").value=name;
-      document.getElementById("btnSimpanMasterJobOrder").textContent="💾 Simpan Perubahan";
-      document.getElementById("btnBatalEditMasterJobOrder").style.display="inline-flex";
+      document.getElementById("btnSimpanMasterLeader").textContent="💾 Simpan Perubahan";
+      document.getElementById("btnBatalEditMasterLeader").style.display="inline-flex";
       document.getElementById("masterLeaderInput").focus();
     }
 
-    function batalEditMasterJobOrder() {
-      editingMasterJobOrder=null;
+    function batalEditMasterLeader() {
+      editingMasterLeader=null;
       const input=document.getElementById("masterLeaderInput");
       if(input)input.value="";
-      const save=document.getElementById("btnSimpanMasterJobOrder");
+      const save=document.getElementById("btnSimpanMasterLeader");
       if(save)save.textContent="+ Tambah Leader";
-      const cancel=document.getElementById("btnBatalEditMasterJobOrder");
+      const cancel=document.getElementById("btnBatalEditMasterLeader");
       if(cancel)cancel.style.display="none";
     }
 
-    function hapusMasterJobOrder(index) {
+    function hapusMasterLeader(index) {
       const name=masterLeaders[index];
       if(!name||!confirm("Hapus Leader dari Master?\\n\\n"+name))return;
       masterLeaders.splice(index,1);
-      if(editingMasterJobOrder===index)batalEditMasterJobOrder();
-      simpanMasterJobOrderLokal();
-      simpanMasterJobOrderCloud();
+      if(editingMasterLeader===index)batalEditMasterLeader();
+      simpanMasterLeaderLokal();
+      simpanMasterLeaderCloud();
     }
 
-    function downloadBackupMasterJobOrder() {
+    function downloadBackupMasterLeader() {
       const raw=localStorage.getItem(MASTER_LEADER_BACKUP_KEY);
       if(!raw){alert("Belum ada backup Master Leader lokal.");return;}
       const url=URL.createObjectURL(new Blob([raw],{type:"application/json"}));
@@ -5731,10 +5731,10 @@
       anchor.click();URL.revokeObjectURL(url);
     }
 
-    function bukaMasterJobOrder() {
+    function bukaMasterLeader() {
       toggleModal("masterLeaderModal",true);
-      renderMasterJobOrder();
-      if(!masterLeaderReady)tarikMasterJobOrderCloud();
+      renderMasterLeader();
+      if(!masterLeaderReady)tarikMasterLeaderCloud();
     }
 
     function tutupFgLeaderSuggestions() {
