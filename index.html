@@ -872,6 +872,10 @@
     .mobile-legacy-hidden { display:none !important; }
     @media (max-width:879px) {
       .sheet-section-nav { display:grid; position:sticky; top:0; margin:0 -4px 4px; }
+      .mobile-sheet-meta { grid-template-columns:1fr 1fr; gap:6px; padding:8px; }
+      #wipMetaControls > div:first-child { grid-column:1 / -1; }
+      .mobile-sheet-meta label { font-size:.63rem; margin-bottom:3px; }
+      .mobile-sheet-meta input,.mobile-sheet-meta select { padding:8px 7px; font-size:.78rem; min-width:0; }
       .group-qty-grid input { min-width:0; padding:10px 6px; }
       .calc-panel { padding:10px; }
     }
@@ -2328,8 +2332,8 @@
       document.getElementById("selectedPart").value = part || "";
       clearWipSearch();
       simpanDraftLokal();
-      const note=document.getElementById("selectedNote");
-      if(note) note.focus();
+      const qtyInput=document.getElementById("wipQtyPerBox");
+      if(qtyInput) qtyInput.focus();
     }
 
     function tutupSpaPartSuggestions() {
@@ -2463,6 +2467,8 @@
         renderSpaCalcBoxes();
       }
       simpanDraftLokal();
+      const qtyInput=document.getElementById("spaAssyQtyPerBox");
+      if(qtyInput) qtyInput.focus();
     }
 
     document.addEventListener("click", function (e) {
