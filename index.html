@@ -932,6 +932,7 @@
       .sheet-section-nav { display:none; position:sticky; position:-webkit-sticky; top:0; align-self:stretch; width:100%; max-width:1140px; margin:0 auto 8px; padding:7px; z-index:500; background:#fff; box-shadow:0 5px 14px rgba(15,23,42,.12); scroll-margin-top:0; }
       body { overflow-anchor:none; }
       .sheet-section-nav.is-active { display:grid; }
+      .sheet-section-nav.modal-nav-hidden { display:none !important; }
       .mobile-sheet-meta { grid-template-columns:1fr 1fr; gap:6px; padding:8px; }
       #wipMetaControls > div:first-child { grid-column:1 / -1; }
       .mobile-sheet-meta label { font-size:.63rem; margin-bottom:3px; }
@@ -967,6 +968,9 @@
         </button>
         <button class="btn-header" onclick="bukaMasterProdukFg()">
           🏷️ Master Produk FG (<span id="masterProdukFgCount">0</span>)
+        </button>
+        <button class="btn-header" onclick="bukaMasterJobOrder()">
+          📋 Master Job Order (<span id="masterJobOrderCount">0</span>)
         </button>
       </div>
     </div>
@@ -1211,7 +1215,10 @@
           </div>
           <div style="grid-column: 1 / -1;">
             <label>Nomor Job Order (JO)</label>
-            <input type="text" id="fgJobOrder" placeholder="Contoh: JD26-0771" oninput="simpanDraftLokal()" />
+            <div class="fg-job-order-search-wrap" style="position:relative;">
+              <input type="text" id="fgJobOrder" placeholder="Pilih atau ketik nomor JO..." autocomplete="off" oninput="onFgJobOrderType(); simpanDraftLokal()" onfocus="onFgJobOrderType()" onkeydown="onFgJobOrderKey(event)" aria-controls="fgJobOrderSuggestions" aria-expanded="false" />
+              <div class="quick-results" id="fgJobOrderSuggestions" role="listbox" aria-label="Saran nomor Job Order"></div>
+            </div>
           </div>
           <div>
             <label>Catatan Proses / Lem (Opsional)</label>
@@ -1730,7 +1737,35 @@
   </div>
 
   <!-- =========================================================
-       MODAL 3: PANDUAN INSTALL APLIKASI
+       MODAL MASTER JOB ORDER
+       ========================================================= -->
+  <div id="masterJobOrderModal" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="card-header">
+        <span class="card-title">📋 Master Job Order</span>
+        <button class="btn btn-danger" onclick="toggleModal('masterJobOrderModal', false)">✕ Tutup</button>
+      </div>
+      <div id="masterJobOrderCloudStatus" role="status" aria-live="polite" style="padding:9px 10px;margin:0 0 12px;border:1px solid var(--border);border-radius:9px;font-size:.76rem;line-height:1.45;">⏳ Memeriksa Master Job Order Cloud...</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin:-4px 0 12px;">
+        <button class="btn btn-outline" type="button" onclick="tarikMasterJobOrderCloud()">↻ Sinkronkan</button>
+        <button class="btn btn-outline" type="button" id="btnBackupMasterJobOrder" onclick="downloadBackupMasterJobOrder()" style="display:none;">Unduh Backup Lokal</button>
+      </div>
+      <div style="display:grid;gap:8px;margin-bottom:12px;">
+        <label for="masterJobOrderInput">Nomor Job Order</label>
+        <input type="text" id="masterJobOrderInput" placeholder="Contoh: JD26-0771" autocomplete="off" />
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="btn btn-primary" id="btnSimpanMasterJobOrder" type="button" onclick="simpanItemMasterJobOrder()">+ Tambah Job Order</button>
+          <button class="btn btn-outline" id="btnBatalEditMasterJobOrder" type="button" onclick="batalEditMasterJobOrder()" style="display:none;">Batal Edit</button>
+        </div>
+      </div>
+      <input type="search" id="masterJobOrderSearch" placeholder="🔎 Cari nomor Job Order..." oninput="renderMasterJobOrder()" style="width:100%;margin-bottom:8px;" />
+      <div id="masterJobOrderInfo" style="font-size:.7rem;color:var(--text-muted);margin-bottom:6px;"></div>
+      <div id="masterJobOrderList" style="max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px;font-size:.78rem;"></div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL 4: PANDUAN INSTALL APLIKASI
        ========================================================= -->
   <div id="installGuideModal" class="modal-backdrop">
     <div class="modal-card" style="max-width:440px;">
@@ -1860,8 +1895,18 @@
     const MASTER_PRODUK_FG_BACKUP_KEY = "assy_master_produk_fg_backup_v1";
     const MASTER_PRODUK_FG_TARGET_KEY = "assy_master_produk_fg_target_v1";
     const MASTER_PRODUK_FG_TARGET_BASE_KEY = "assy_master_produk_fg_target_cloud_base_v1";
+    const MASTER_JOB_ORDER_KEY = "assy_master_job_order_v1";
+    const MASTER_JOB_ORDER_BASE_KEY = "assy_master_job_order_cloud_base_v1";
+    const MASTER_JOB_ORDER_UPDATE_KEY = "assy_master_job_order_cloud_update_v1";
+    const MASTER_JOB_ORDER_BACKUP_KEY = "assy_master_job_order_backup_v1";
     let masterProdukFg = JSON.parse(localStorage.getItem(MASTER_PRODUK_FG_KEY) || "[]");
     let masterTargetFg = JSON.parse(localStorage.getItem(MASTER_PRODUK_FG_TARGET_KEY) || "{}");
+    let masterJobOrders = JSON.parse(localStorage.getItem(MASTER_JOB_ORDER_KEY) || "[]");
+    let masterJobOrderReady = false;
+    let masterJobOrderBusy = false;
+    let masterJobOrderConflict = false;
+    let masterJobOrderBootstrapQueued = false;
+    let editingMasterJobOrder = null;
     let masterProdukFgReady = false;
     let masterProdukFgBusy = false;
     let masterProdukFgConflict = false;
