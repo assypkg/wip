@@ -1536,6 +1536,17 @@
     </div>
   </div>
 
+  <!-- MODAL EDIT SPA: DAPAT DIBUKA DARI TAB RINCIAN SPA -->
+  <div id="spaEditModal" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="card-header">
+        <span class="card-title">✏️ Edit Rincian SPA</span>
+        <button type="button" class="btn btn-danger" onclick="batalEditSpa()">✕ Tutup</button>
+      </div>
+      <div id="spaEditModalContent"></div>
+    </div>
+  </div>
+
   <!-- MODAL TAMBAH ITEM LANGSUNG DARI RINCIAN SPA -->
   <div id="spaAddItemModal" class="modal-backdrop" onclick="if(event.target===this)tutupTambahItemSpa()">
     <div class="modal-card">
@@ -2003,6 +2014,8 @@
     let currentSpaAssyBoxes = [];
     let currentSpaGudangBoxes = [];
     let editingSpaId = null;
+    let spaEditPlaceholder = null;
+    let spaEditWasMobileHidden = false;
     let activeTabMode = "wip";
 
     /********************************************************************
@@ -3488,14 +3501,14 @@
           ? `${formatNum(it.totalBox)} BOX (${formatNum(normalBoxCount)} BOX + ${formatNum(totalRecehBoxes)} RECEH)`
           : `${formatNum(it.totalBox)} BOX @${formatNum(it.pcsPerBox)}`;
         const achievementPct = Number(it.target) > 0 ? (Number(it.totalPcs || 0) / Number(it.target) * 100) : 0;
-        const hasilLines = [
-          `A : ${formatNum(it.boxA)} BOX @${formatNum(it.pcsPerBox)} = ${formatNum(it.pcsA)}`,
-          `B : ${formatNum(it.boxB)} BOX @${formatNum(it.pcsPerBox)} = ${formatNum(it.pcsB)}`
+        const hasilRows = [
+          { label: "A", value: `${formatNum(it.boxA)} BOX @${formatNum(it.pcsPerBox)} = ${formatNum(it.pcsA)} PCS` },
+          { label: "B", value: `${formatNum(it.boxB)} BOX @${formatNum(it.pcsPerBox)} = ${formatNum(it.pcsB)} PCS` }
         ];
-        if (recehA.length) hasilLines.push(`RECEH A : ${recehA.length} BOX (${recehA.map(formatNum).join(" + ")}) = ${formatNum(it.pcsRecehA || recehA.reduce((a,b)=>a+b,0))} PCS`);
-        if (recehB.length) hasilLines.push(`RECEH B : ${recehB.length} BOX (${recehB.map(formatNum).join(" + ")}) = ${formatNum(it.pcsRecehB || it.pcsReceh || recehB.reduce((a,b)=>a+b,0))} PCS`);
-        hasilLines.push(`*TOTAL : ${totalBoxLabel} = ${formatNum(it.totalPcs)} PCS | ${(achievementPct).toFixed(2)}%*`);
-        wa += hasilLines.join("\n") + "\n";
+        if (recehA.length) hasilRows.push({ label: "RECEH A", value: `${recehA.length} BOX (${recehA.map(formatNum).join(" + ")}) = ${formatNum(it.pcsRecehA || recehA.reduce((a,b)=>a+b,0))} PCS` });
+        if (recehB.length) hasilRows.push({ label: "RECEH B", value: `${recehB.length} BOX (${recehB.map(formatNum).join(" + ")}) = ${formatNum(it.pcsRecehB || it.pcsReceh || recehB.reduce((a,b)=>a+b,0))} PCS` });
+        hasilRows.push({ label: "TOTAL", value: `${totalBoxLabel} = ${formatNum(it.totalPcs)} PCS | ${achievementPct.toFixed(2)}%`, bold: true });
+        wa += formatWhatsAppQtyRows(hasilRows) + "\n";
         // Catatan tidak tercapai hanya ditampilkan sekali dan hanya jika hasil di bawah target.
         if (it.gapNote) wa += `*Catatan: ${it.gapNote}*\n`;
         wa += `\n`;
@@ -3514,11 +3527,10 @@
 
         Object.entries(groupedWip).forEach(([gName, items]) => {
           wa += `*${gName}*\n`;
-          items.forEach((w) => {
-            const partText = String(w.part || "").trim();
-            const noteStr = w.note ? ` (${w.note})` : "";
-            wa += "`" + partText + " : " + formatNum(w.qty) + "`" + noteStr + "\n";
-          });
+          wa += formatWhatsAppQtyRows(items.map(w => ({
+            label: String(w.part || "").trim() + (w.note ? " " + String(w.note).trim() : ""),
+            value: formatNum(w.qty)
+          }))) + "\n";
           wa += `\n`;
         });;
       }
@@ -4242,6 +4254,23 @@
     /********************************************************************
      * 8. RENDER REKAP WIP & GENERATE LAPORAN WA
      ********************************************************************/
+    function formatWhatsAppQtyRows(rows, options = {}) {
+      const cleanRows = (Array.isArray(rows) ? rows : []).filter(row => row && String(row.label ?? "").trim());
+      if (!cleanRows.length) return "";
+      const maxAlignedLabel = Math.max(0, ...cleanRows
+        .map(row => String(row.label).trim().length)
+        .filter(length => length <= 26));
+      const width = Math.min(26, maxAlignedLabel);
+      return cleanRows.map(row => {
+        const label = String(row.label).trim().replace(/[`]/g, "'");
+        const value = String(row.value ?? "").trim();
+        const left = label.length <= width ? label.padEnd(width, " ") : label;
+        const line = left + " : " + value;
+        const code = "`" + line + "`";
+        return row.bold ? "*" + code + "*" : code;
+      }).join("\n");
+    }
+
     function renderWipAll() {
       const container = document.getElementById("wipGroupedContainer");
       const waBox = document.getElementById("waPreviewWip");
@@ -4304,12 +4333,11 @@
 
       groupEntries.forEach(([gName, items]) => {
         wa += `*${gName}*\n`;
-        items.forEach((it) => {
-          const partText = String(it.part || "").trim();
-          const qtyText = formatNum(it.qty);
-          const noteText = it.note ? ` (${it.note})` : "";
-          wa += "`" + partText + " : " + qtyText + "`" + noteText + "\n";
-        });        wa += "\n";
+        wa += formatWhatsAppQtyRows(items.map(it => ({
+          label: String(it.part || "").trim() + (it.note ? " " + String(it.note).trim() : ""),
+          value: formatNum(it.qty)
+        }))) + "\n";
+        wa += "\n";
       });
 
       if (!waWipManuallyEdited) waBox.value = wa.trim();
@@ -4787,7 +4815,7 @@
       btnSubmit.textContent = "💾 UPDATE DATA SPA";
       btnSubmit.style.background = "var(--orange)";
 
-      document.getElementById("spaInputCard").scrollIntoView({ behavior: "smooth" });
+      bukaModalEditSpa();
     }
 
     function batalEditSpa() {
@@ -4811,6 +4839,7 @@
       const btnSubmit = document.getElementById("btnSubmitSpa");
       btnSubmit.textContent = "➕ SIMPAN KE LAPORAN SPA";
       btnSubmit.style.background = "var(--purple)";
+      tutupModalEditSpaVisual();
       simpanDraftLokal();
     }
 
@@ -5167,10 +5196,10 @@
           if (it.gudang > 0) stockLines.push(["Gudang", it.gudang]);
           (it.otherStocks || []).forEach(v => stockLines.push([v.label, v.qty]));
           if (it.waitingBeta > 0) stockLines.push(["Menunggu kirim Plant Beta", it.waitingBeta]);
-          stockLines.forEach(v => {
-            // Pertahankan blok monospace WhatsApp, tetapi tanpa padding kolom yang membuat angka turun baris di layar HP.
-            wa += "`" + String(v[0]).trim() + " : " + formatNum(v[1]) + "`\n";
-          });
+          wa += formatWhatsAppQtyRows(stockLines.map(v => ({
+            label: String(v[0]).trim(),
+            value: formatNum(v[1]) + " PCS"
+          }))) + "\n";
           if (stockLines.length > 1) wa += `  Total stok Assy + Gudang : *${formatNum(it.total)}*\n`;
         });
         wa += `\n`;
@@ -6328,12 +6357,39 @@
       toggleModal("fgEditModal", false);
     }
 
+    function bukaModalEditSpa() {
+      const card = document.getElementById("spaInputCard");
+      const target = document.getElementById("spaEditModalContent");
+      if (!card || !target) return;
+      spaEditWasMobileHidden = card.classList.contains("mobile-tab-hidden");
+      card.classList.remove("mobile-tab-hidden");
+      if (!spaEditPlaceholder && card.parentNode !== target) {
+        spaEditPlaceholder = document.createComment("Posisi asli form SPA");
+        card.parentNode.insertBefore(spaEditPlaceholder, card);
+      }
+      target.appendChild(card);
+      toggleModal("spaEditModal", true);
+    }
+
+    function tutupModalEditSpaVisual() {
+      const card = document.getElementById("spaInputCard");
+      if (card && spaEditPlaceholder && spaEditPlaceholder.parentNode) {
+        spaEditPlaceholder.parentNode.insertBefore(card, spaEditPlaceholder);
+        spaEditPlaceholder.remove();
+      }
+      if (card) card.classList.toggle("mobile-tab-hidden", spaEditWasMobileHidden);
+      spaEditWasMobileHidden = false;
+      spaEditPlaceholder = null;
+      toggleModal("spaEditModal", false);
+    }
+
     function tutupSemuaModalDenganEsc() {
       const openModals = Array.from(document.querySelectorAll(".modal-backdrop"))
         .filter((modal) => getComputedStyle(modal).display !== "none");
       openModals.forEach((modal) => {
         if (modal.id === "wipEditModal") batalEditWip();
         else if (modal.id === "fgEditModal") batalEditFg();
+        else if (modal.id === "spaEditModal") batalEditSpa();
         else toggleModal(modal.id, false);
       });
     }
@@ -6347,6 +6403,7 @@
       if (!backdrop.classList || !backdrop.classList.contains("modal-backdrop")) return;
       if (backdrop.id === "wipEditModal") batalEditWip();
       else if (backdrop.id === "fgEditModal") batalEditFg();
+      else if (backdrop.id === "spaEditModal") batalEditSpa();
       else toggleModal(backdrop.id, false);
     });
 
