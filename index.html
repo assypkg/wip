@@ -1004,7 +1004,7 @@
           </div>
           <div class="group-qty-grid">
             <div><label>Isi per box (PCS)</label><input type="text" inputmode="numeric" pattern="[0-9]*" id="wipQtyPerBox" placeholder="Contoh: 650" oninput="this.value=this.value.replace(/[^0-9]/g,''); updateGroupQtyPreview('wip'); simpanDraftLokal();"  /></div>
-            <div><label>Jumlah box sama</label><input type="text" inputmode="numeric" pattern="[0-9]*" id="wipQtyBoxCount" placeholder="Contoh: 4" oninput="this.value=this.value.replace(/[^0-9]/g,''); updateGroupQtyPreview('wip'); simpanDraftLokal();"  /></div>
+            <div><label>Jumlah box sama</label><input type="text" inputmode="numeric" pattern="[0-9]*" id="wipQtyBoxCount" placeholder="Contoh: 4" onkeydown="handleGroupQtyEnter(event,'wip')" oninput="this.value=this.value.replace(/[^0-9]/g,''); updateGroupQtyPreview('wip'); simpanDraftLokal();"  /></div>
           </div>
           <div id="wipGroupPreview" class="qty-live-total" style="margin-top:8px;"><span style="font-size:.75rem;font-weight:800;">SUBTOTAL KELOMPOK</span><b style="color:var(--emerald);">Isi PCS per box dan jumlah box</b></div>
           <div class="group-qty-actions">
@@ -1357,7 +1357,7 @@
           </div>
           <div class="group-qty-grid">
             <div><label>Isi per box (PCS)</label><input type="text" inputmode="numeric" pattern="[0-9]*" id="spaAssyQtyPerBox" placeholder="Contoh: 650" oninput="this.value=this.value.replace(/[^0-9]/g,''); updateGroupQtyPreview('spa_assy'); simpanDraftLokal();"  /></div>
-            <div><label>Jumlah box sama</label><input type="text" inputmode="numeric" pattern="[0-9]*" id="spaAssyQtyBoxCount" placeholder="Contoh: 4" oninput="this.value=this.value.replace(/[^0-9]/g,''); updateGroupQtyPreview('spa_assy'); simpanDraftLokal();"  /></div>
+            <div><label>Jumlah box sama</label><input type="text" inputmode="numeric" pattern="[0-9]*" id="spaAssyQtyBoxCount" placeholder="Contoh: 4" onkeydown="handleGroupQtyEnter(event,'spa_assy')" oninput="this.value=this.value.replace(/[^0-9]/g,''); updateGroupQtyPreview('spa_assy'); simpanDraftLokal();"  /></div>
           </div>
           <div id="spaAssyGroupPreview" class="qty-live-total" style="margin-top:8px;"><span style="font-size:.75rem;font-weight:800;">SUBTOTAL KELOMPOK</span><b style="color:var(--emerald);">Isi PCS per box dan jumlah box</b></div>
           <div class="group-qty-actions">
@@ -1377,7 +1377,7 @@
           </div>
           <div class="group-qty-grid">
             <div><label>Isi per box (PCS)</label><input type="text" inputmode="numeric" pattern="[0-9]*" id="spaGudangQtyPerBox" placeholder="Contoh: 650" oninput="this.value=this.value.replace(/[^0-9]/g,''); updateGroupQtyPreview('spa_gudang'); simpanDraftLokal();"  /></div>
-            <div><label>Jumlah box sama</label><input type="text" inputmode="numeric" pattern="[0-9]*" id="spaGudangQtyBoxCount" placeholder="Contoh: 10" oninput="this.value=this.value.replace(/[^0-9]/g,''); updateGroupQtyPreview('spa_gudang'); simpanDraftLokal();"  /></div>
+            <div><label>Jumlah box sama</label><input type="text" inputmode="numeric" pattern="[0-9]*" id="spaGudangQtyBoxCount" placeholder="Contoh: 10" onkeydown="handleGroupQtyEnter(event,'spa_gudang')" oninput="this.value=this.value.replace(/[^0-9]/g,''); updateGroupQtyPreview('spa_gudang'); simpanDraftLokal();"  /></div>
           </div>
           <div id="spaGudangGroupPreview" class="qty-live-total" style="margin-top:8px;"><span style="font-size:.75rem;font-weight:800;">SUBTOTAL KELOMPOK</span><b style="color:var(--purple);">Isi PCS per box dan jumlah box</b></div>
           <div class="group-qty-actions">
@@ -2499,6 +2499,27 @@
       }
     }
 
+    function handleGroupQtyEnter(event, mode) {
+      if (!event || event.key !== "Enter") return;
+      event.preventDefault();
+      let added = false;
+      let nextInputId = "";
+      if (mode === "wip") {
+        added = tambahKelompokWip(1);
+        nextInputId = "wipQtyPerBox";
+      } else if (mode === "spa_assy") {
+        added = tambahKelompokSpa("assy", 1);
+        nextInputId = "spaAssyQtyPerBox";
+      } else if (mode === "spa_gudang") {
+        added = tambahKelompokSpa("gudang", 1);
+        nextInputId = "spaGudangQtyPerBox";
+      }
+      if (added) {
+        const nextInput = document.getElementById(nextInputId);
+        if (nextInput) nextInput.focus();
+      }
+    }
+
     function tambahKelompokWip(multiplier = 1) {
       const qtyEl=document.getElementById("wipQtyPerBox");
       const countEl=document.getElementById("wipQtyBoxCount");
@@ -2516,6 +2537,8 @@
       qtyEl.value=""; countEl.value="";
       updateGroupQtyPreview("wip");
       renderCurrentBoxes();
+      const details=document.getElementById("wipBoxDetails");
+      if(details) details.open=false;
       simpanDraftLokal();
       return true;
     }
@@ -2554,8 +2577,6 @@
       if(mirror) mirror.textContent=formatNum(total);
       const summary=document.getElementById("wipBoxDetailsSummary");
       if(summary) summary.textContent=`Lihat rincian box (${currentBoxes.length}) • ${positiveBoxes} box fisik • ${formatNum(total)} PCS`;
-      const details=document.getElementById("wipBoxDetails");
-      if(details) details.open=currentBoxes.length>0;
       let pos=0;
       container.innerHTML=currentBoxes.map((b,i)=>{
         const neg=Number(b.val)<0;
@@ -3983,6 +4004,8 @@
       qtyEl.value=""; countEl.value="";
       updateGroupQtyPreview(targetType==="assy"?"spa_assy":"spa_gudang");
       renderSpaCalcBoxes();
+      const details=document.getElementById(targetType==="assy"?"spaAssyDetails":"spaGudangDetails");
+      if(details) details.open=false;
       simpanDraftLokal();
       return true;
     }
@@ -4027,7 +4050,6 @@
       const assyDetails=document.getElementById("spaAssyDetails");
       const assySummary=document.getElementById("spaAssyDetailsSummary");
       if(assySummary) assySummary.textContent=`Lihat rincian box Assy (${currentSpaAssyBoxes.length}) • ${formatNum(assyTotal)} PCS`;
-      if(assyDetails) assyDetails.open=currentSpaAssyBoxes.length>0;
       let ai=0;
       document.getElementById("spaAssyChips").innerHTML=currentSpaAssyBoxes.map((b,i)=>{
         const neg=Number(b.val)<0;if(!neg)ai++;
@@ -4042,7 +4064,6 @@
       const gudangDetails=document.getElementById("spaGudangDetails");
       const gudangSummary=document.getElementById("spaGudangDetailsSummary");
       if(gudangSummary) gudangSummary.textContent=`Lihat rincian box Gudang (${currentSpaGudangBoxes.length}) • ${formatNum(gudangTotal)} PCS`;
-      if(gudangDetails) gudangDetails.open=currentSpaGudangBoxes.length>0;
       let gi=0;
       document.getElementById("spaGudangChips").innerHTML=currentSpaGudangBoxes.map((b,i)=>{
         const neg=Number(b.val)<0;if(!neg)gi++;
