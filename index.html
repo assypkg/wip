@@ -3525,10 +3525,9 @@
         if (recehA.length) hasilRows.push({ label: "RECEH A", value: `${recehA.length} BOX (${recehA.map(formatNum).join(" + ")}) = ${formatNum(it.pcsRecehA || recehA.reduce((a,b)=>a+b,0))} PCS` });
         if (recehB.length) hasilRows.push({ label: "RECEH B", value: `${recehB.length} BOX (${recehB.map(formatNum).join(" + ")}) = ${formatNum(it.pcsRecehB || it.pcsReceh || recehB.reduce((a,b)=>a+b,0))} PCS` });
         hasilRows.push({ label: "TOTAL", value: `${totalBoxLabel} = ${formatNum(it.totalPcs)} PCS | ${achievementPct.toFixed(2)}%`, bold: true });
-        wa += formatWhatsAppQtyRows(hasilRows) + "\n";
-        // Catatan tidak tercapai hanya ditampilkan sekali dan hanya jika hasil di bawah target.
-        if (it.gapNote) wa += `*Catatan: ${it.gapNote}*\n`;
-        wa += `\n`;
+        // Catatan dimasukkan ke formatter yang sama agar sejajar dengan A, B, dan TOTAL.
+        if (it.gapNote) hasilRows.push({ label: "Catatan", value: it.gapNote, bold: true });
+        wa += formatWhatsAppQtyRows(hasilRows) + "\n\n";
       });
 
       const includeWip = document.getElementById("mergeWipToggle").checked;
