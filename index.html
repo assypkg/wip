@@ -1443,7 +1443,7 @@
           </div>
           <div class="group-qty-grid">
             <div><label>Isi per box (PCS)</label><input type="text" inputmode="numeric" pattern="[0-9]*" id="spaAssyQtyPerBox" placeholder="Contoh: 650" oninput="this.value=this.value.replace(/[^0-9]/g,''); updateGroupQtyPreview('spa_assy'); simpanDraftLokal();"  /></div>
-            <div><label>Jumlah box sama</label><input type="text" inputmode="numeric" pattern="[0-9]*" id="spaAssyQtyBoxCount" placeholder="Contoh: 4" onkeydown="handleGroupQtyEnter(event,'spa_assy')" oninput="this.value=this.value.replace(/[^0-9]/g,''); updateGroupQtyPreview('spa_assy'); simpanDraftLokal();"  /></div>
+            <div><label>Jumlah box sama</label><input type="text" inputmode="numeric" pattern="[0-9]*" id="spaAssyQtyBoxCount" placeholder="Contoh: 4" enterkeyhint="done" onkeydown="handleGroupQtyEnter(event,'spa_assy')" onkeyup="handleGroupQtyEnter(event,'spa_assy')" onblur="autoCommitGroupQtyOnBlur(event,'spa_assy')" oninput="this.value=this.value.replace(/[^0-9]/g,''); updateGroupQtyPreview('spa_assy'); simpanDraftLokal();"  /></div>
           </div>
           <div id="spaAssyGroupPreview" class="qty-live-total" style="margin-top:8px;"><span style="font-size:.75rem;font-weight:800;">SUBTOTAL KELOMPOK</span><b style="color:var(--emerald);">Isi PCS per box dan jumlah box</b></div>
           <div class="group-qty-actions">
@@ -1463,7 +1463,7 @@
           </div>
           <div class="group-qty-grid">
             <div><label>Isi per box (PCS)</label><input type="text" inputmode="numeric" pattern="[0-9]*" id="spaGudangQtyPerBox" placeholder="Contoh: 650" oninput="this.value=this.value.replace(/[^0-9]/g,''); updateGroupQtyPreview('spa_gudang'); simpanDraftLokal();"  /></div>
-            <div><label>Jumlah box sama</label><input type="text" inputmode="numeric" pattern="[0-9]*" id="spaGudangQtyBoxCount" placeholder="Contoh: 10" onkeydown="handleGroupQtyEnter(event,'spa_gudang')" oninput="this.value=this.value.replace(/[^0-9]/g,''); updateGroupQtyPreview('spa_gudang'); simpanDraftLokal();"  /></div>
+            <div><label>Jumlah box sama</label><input type="text" inputmode="numeric" pattern="[0-9]*" id="spaGudangQtyBoxCount" placeholder="Contoh: 10" enterkeyhint="done" onkeydown="handleGroupQtyEnter(event,'spa_gudang')" onkeyup="handleGroupQtyEnter(event,'spa_gudang')" onblur="autoCommitGroupQtyOnBlur(event,'spa_gudang')" oninput="this.value=this.value.replace(/[^0-9]/g,''); updateGroupQtyPreview('spa_gudang'); simpanDraftLokal();"  /></div>
           </div>
           <div id="spaGudangGroupPreview" class="qty-live-total" style="margin-top:8px;"><span style="font-size:.75rem;font-weight:800;">SUBTOTAL KELOMPOK</span><b style="color:var(--purple);">Isi PCS per box dan jumlah box</b></div>
           <div class="group-qty-actions">
@@ -1522,6 +1522,17 @@
         <button class="btn btn-danger" onclick="batalEditWip()">✕ Tutup</button>
       </div>
       <div id="wipEditModalContent"></div>
+    </div>
+  </div>
+
+  <!-- MODAL EDIT FINISH GOOD: FORM DIBUKA LANGSUNG DARI DAFTAR FG -->
+  <div id="fgEditModal" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="card-header">
+        <span class="card-title">✏️ Edit Hasil Produksi Finish Good</span>
+        <button type="button" class="btn btn-danger" onclick="batalEditFg()">✕ Tutup</button>
+      </div>
+      <div id="fgEditModalContent"></div>
     </div>
   </div>
 
@@ -1982,6 +1993,7 @@
     let editingFgId = null;
     let fgTargetTouched = false;
     let wipEditPlaceholder = null;
+    let fgEditPlaceholder = null;
     let editingCatalogIndex = null;
     let waWipManuallyEdited = false;
     let waSpaManuallyEdited = false;
@@ -2805,17 +2817,26 @@
     }
 
     function handleGroupQtyEnter(event, mode) {
-      if (!event || event.key !== "Enter") return;
+      if (!event || !(event.key === "Enter" || event.keyCode === 13 || event.code === "NumpadEnter")) return;
       event.preventDefault();
       let added = false;
       let nextInputId = "";
       if (mode === "wip") {
+        const qty = document.getElementById("wipQtyPerBox")?.value || "";
+        const count = document.getElementById("wipQtyBoxCount")?.value || "";
+        if (!qty && !count) return;
         added = tambahKelompokWip(1);
         nextInputId = "wipQtyPerBox";
       } else if (mode === "spa_assy") {
+        const qty = document.getElementById("spaAssyQtyPerBox")?.value || "";
+        const count = document.getElementById("spaAssyQtyBoxCount")?.value || "";
+        if (!qty && !count) return;
         added = tambahKelompokSpa("assy", 1);
         nextInputId = "spaAssyQtyPerBox";
       } else if (mode === "spa_gudang") {
+        const qty = document.getElementById("spaGudangQtyPerBox")?.value || "";
+        const count = document.getElementById("spaGudangQtyBoxCount")?.value || "";
+        if (!qty && !count) return;
         added = tambahKelompokSpa("gudang", 1);
         nextInputId = "spaGudangQtyPerBox";
       }
@@ -2823,6 +2844,17 @@
         const nextInput = document.getElementById(nextInputId);
         if (nextInput) nextInput.focus();
       }
+    }
+
+    function autoCommitGroupQtyOnBlur(event, mode) {
+      const buttonTarget = event?.relatedTarget;
+      if (buttonTarget && buttonTarget.closest && buttonTarget.closest(".group-qty-actions")) return;
+      const prefix = mode === "spa_assy" ? "spaAssy" : mode === "spa_gudang" ? "spaGudang" : "";
+      if (!prefix) return;
+      const qty = document.getElementById(prefix + "QtyPerBox")?.value || "";
+      const count = document.getElementById(prefix + "QtyBoxCount")?.value || "";
+      if (!qty && !count) return;
+      if (qty && count) tambahKelompokSpa(mode === "spa_assy" ? "assy" : "gudang", 1);
     }
 
     function tambahKelompokWip(multiplier = 1) {
@@ -3297,7 +3329,7 @@
       const btn = document.getElementById("btnSubmitFg");
       btn.textContent = "💾 UPDATE DATA FINISH GOOD";
       btn.style.background = "var(--orange)";
-      document.getElementById("fgInputCard").scrollIntoView({ behavior: "smooth" });
+      bukaModalEditFg();
     }
 
     function batalEditFg() {
@@ -3312,6 +3344,7 @@
       const btn = document.getElementById("btnSubmitFg");
       btn.textContent = "✅ TAMBAHKAN KE LAPORAN FINISH GOOD";
       btn.style.background = "var(--emerald)";
+      tutupModalEditFgVisual();
       simpanDraftLokal();
     }
 
@@ -4303,7 +4336,9 @@
       const qtyEl=document.getElementById(prefix+"QtyPerBox");
       const countEl=document.getElementById(prefix+"QtyBoxCount");
       if(!qtyEl||!countEl) return false;
-      const qty=Number(qtyEl.value), count=Number(countEl.value);
+      const rawQty=String(qtyEl.value||"").trim(), rawCount=String(countEl.value||"").trim();
+      if(!rawQty&&!rawCount) return false;
+      const qty=Number(rawQty), count=Number(rawCount);
       if(!Number.isInteger(qty)||qty<=0||!Number.isInteger(count)||count<=0){
         alert("Isi PCS per box dan jumlah box "+(targetType==="assy"?"Assy":"Gudang")+" dengan angka bulat lebih dari 0.");
         return false;
@@ -4385,6 +4420,56 @@
       }).join("");
       updateGroupQtyPreview("spa_assy");
       updateGroupQtyPreview("spa_gudang");
+    }
+
+    function getSpaItemBoxes(item, type) {
+      const listKey = type === "assy" ? "assyBoxes" : "gudangBoxes";
+      const qtyKey = type === "assy" ? "assy" : "gudang";
+      if (Array.isArray(item?.[listKey]) && item[listKey].length) {
+        return JSON.parse(JSON.stringify(item[listKey]));
+      }
+      const qty = Number(item?.[qtyKey]) || 0;
+      return qty > 0 ? [{ label: String(qty), val: qty }] : [];
+    }
+
+    function cariItemSpaSama(group, part) {
+      const g = String(group || "").trim().toLocaleLowerCase("id-ID");
+      const p = String(part || "").trim().toLocaleLowerCase("id-ID");
+      if (!g || !p) return null;
+      return spaList.find(item =>
+        String(item.group || "").trim().toLocaleLowerCase("id-ID") === g &&
+        String(item.part || "").trim().toLocaleLowerCase("id-ID") === p
+      ) || null;
+    }
+
+    function gabungkanItemSpa(existing, incoming) {
+      if (!existing || !incoming) return;
+      const assyBoxes = [...getSpaItemBoxes(existing, "assy"), ...getSpaItemBoxes(incoming, "assy")];
+      const gudangBoxes = [...getSpaItemBoxes(existing, "gudang"), ...getSpaItemBoxes(incoming, "gudang")];
+      existing.assyBoxes = assyBoxes;
+      existing.gudangBoxes = gudangBoxes;
+      existing.assy = Math.max(0, assyBoxes.reduce((sum, box) => sum + (Number(box.val) || 0), 0));
+      existing.gudang = Math.max(0, gudangBoxes.reduce((sum, box) => sum + (Number(box.val) || 0), 0));
+      existing.total = existing.assy + existing.gudang;
+      if (incoming.lineInfo) existing.lineInfo = incoming.lineInfo;
+      if (Number(incoming.baseTarget) > 0) {
+        existing.baseTarget = Number(incoming.baseTarget);
+        existing.targetBuffer = Math.round(existing.baseTarget * 1.05);
+      }
+      if (incoming.note) {
+        const oldNotes = String(existing.note || "").split(" | ").filter(Boolean);
+        if (!oldNotes.includes(incoming.note)) oldNotes.push(incoming.note);
+        existing.note = oldNotes.join(" | ");
+      }
+      existing.waitingBeta = (Number(existing.waitingBeta) || 0) + (Number(incoming.waitingBeta) || 0);
+      const stocks = Array.isArray(existing.otherStocks) ? existing.otherStocks.map(x => ({...x})) : [];
+      (Array.isArray(incoming.otherStocks) ? incoming.otherStocks : []).forEach(stock => {
+        const label = String(stock.label || "Stok khusus").trim();
+        const old = stocks.find(x => String(x.label || "").toLocaleLowerCase("id-ID") === label.toLocaleLowerCase("id-ID"));
+        if (old) old.qty = (Number(old.qty) || 0) + (Number(stock.qty) || 0);
+        else stocks.push({ label, qty: Number(stock.qty) || 0 });
+      });
+      existing.otherStocks = stocks;
     }
 
     function simpanItemSpa() {
@@ -4793,6 +4878,177 @@
       renderSpaCalcBoxes(); renderSpaAll(); simpanDraftLokal();
     }
 
+    function bersihkanImportSpa() {
+      const input = document.getElementById("waImportSpaText");
+      const preview = document.getElementById("waImportSpaPreview");
+      if (input) input.value = "";
+      if (preview) preview.innerHTML = "";
+      pendingSpaImport = [];
+      simpanDraftLokal();
+    }
+
+    function parseSpaImportNumber(value) {
+      const raw = String(value ?? "").trim().replace(/\s/g, "");
+      if (!raw) return 0;
+      const digits = raw.replace(/[.,]/g, "");
+      const number = Number(digits);
+      return Number.isFinite(number) ? Math.round(number) : 0;
+    }
+
+    function previewImportSpa() {
+      const input = document.getElementById("waImportSpaText");
+      const preview = document.getElementById("waImportSpaPreview");
+      if (!input || !preview) return;
+      const lines = String(input.value || "").replace(/\r/g, "").split("\n");
+      const rows = [];
+      const byKey = new Map();
+      let activeGroup = "";
+      let currentItem = null;
+      const ignored = /^(spa untuk|sisa barang|laporan spa|kebutuhan untuk|ketersediaan barang|target|catatan|━━━━━━━━|[-_=]{3,})/i;
+
+      const ensureItem = (group, part, note = "") => {
+        const key = group.toLocaleLowerCase("id-ID") + "||" + part.toLocaleLowerCase("id-ID");
+        let item = byKey.get(key);
+        if (!item) {
+          item = {
+            id: Date.now() + Math.random(),
+            group, lineInfo: "", baseTarget: 0, targetBuffer: 0,
+            part, note, assy: 0, gudang: 0, total: 0,
+            assyBoxes: [], gudangBoxes: [], waitingBeta: 0, otherStocks: []
+          };
+          byKey.set(key, item);
+          rows.push(item);
+        } else if (note && !item.note) item.note = note;
+        currentItem = item;
+        return item;
+      };
+
+      lines.forEach(rawLine => {
+        let line = String(rawLine || "").trim();
+        if (!line) return;
+        line = line.replace(/[\x60*_]/g, "").replace(/^>+\s*/, "").trim();
+        if (!line || ignored.test(line)) return;
+
+        // Header produk: mendukung format "*1) 8603 OMG*" dan "*1E02 PASANG MAGNET*".
+        const numberedHeader = line.match(/^\d+[.)]\s+(.+)$/);
+        const codedHeader = !/[:=]/.test(line) && line.match(/^(?:[A-Z]{1,3}\d{1,4}|\d{3,5})\s+[A-Z0-9].+$/i);
+        if (numberedHeader || codedHeader) {
+          activeGroup = String(numberedHeader ? numberedHeader[1] : line).trim();
+          currentItem = null;
+          return;
+        }
+
+        // Metadata target/line pada laporan SPA yang dibuat aplikasi.
+        if (/^\d+\s*(?:line|lines)\b/i.test(line) || /@\s*[\d.,]+/.test(line)) {
+          const targetMatch = line.match(/@\s*([\d.,]+)/);
+          if (targetMatch && activeGroup) {
+            const item = rows.find(x => x.group.toLocaleLowerCase("id-ID") === activeGroup.toLocaleLowerCase("id-ID"));
+            if (item) {
+              item.baseTarget = parseSpaImportNumber(targetMatch[1]);
+              item.targetBuffer = Math.round(item.baseTarget * 1.05);
+            }
+          }
+          return;
+        }
+
+        if (!activeGroup) return;
+
+        // Baris komponen berbentuk bullet tanpa jumlah, seperti "• Base Mold 1(002)".
+        if (/^[•\-]/.test(String(rawLine).trim()) && !/[:=]/.test(line)) {
+          const partLine = line.replace(/^[•\-]\s*/, "");
+          const splitNote = partLine.split(/\s+[—–-]\s+/, 2);
+          ensureItem(activeGroup, splitNote[0].trim(), splitNote[1]?.trim() || "");
+          return;
+        }
+
+        // Baris qty: "Assy : 48.000", "Gudang : 48.000", atau "Inbs(002) : 1.936".
+        const qtyMatch = line.replace(/^[•\-]\s*/, "").match(/^(.+?)\s*(?::|=>|=)\s*([\d.,]+)\s*(?:\((.*)\))?$/);
+        if (!qtyMatch) return;
+        const label = qtyMatch[1].trim();
+        const qty = parseSpaImportNumber(qtyMatch[2]);
+        const extraNote = String(qtyMatch[3] || "").trim();
+        if (!label || qty < 0) return;
+        const category = label.toLocaleLowerCase("id-ID");
+
+        if (currentItem && /^(assy|assembly|stok assy|stok assembly)$/.test(category)) {
+          currentItem.assy += qty;
+          currentItem.assyBoxes.push({ label: String(qty), val: qty });
+          return;
+        }
+        if (currentItem && /^(gudang|warehouse|stok gudang|stok warehouse)$/.test(category)) {
+          currentItem.gudang += qty;
+          currentItem.gudangBoxes.push({ label: String(qty), val: qty });
+          return;
+        }
+        if (currentItem && /(menunggu|tunggu|waiting).*(beta|kirim|pengiriman)|(beta).*(menunggu|tunggu|waiting)/i.test(label)) {
+          currentItem.waitingBeta += qty;
+          return;
+        }
+        if (currentItem && /(ng\s*hold|hold|stok khusus|khusus|qc hold)/i.test(label)) {
+          const old = currentItem.otherStocks.find(x => String(x.label).toLocaleLowerCase("id-ID") === category);
+          if (old) old.qty += qty;
+          else currentItem.otherStocks.push({ label, qty });
+          return;
+        }
+
+        // Format lama hanya menuliskan "Nama komponen : jumlah"; dipetakan sebagai stok Assy.
+        const item = ensureItem(activeGroup, label, extraNote);
+        item.assy += qty;
+        item.assyBoxes.push({ label: String(qty), val: qty });
+      });
+
+      rows.forEach(item => {
+        item.assy = Math.max(0, item.assy);
+        item.gudang = Math.max(0, item.gudang);
+        item.total = item.assy + item.gudang;
+        item.targetBuffer = Number(item.targetBuffer) || (item.baseTarget > 0 ? Math.round(item.baseTarget * 1.05) : 0);
+      });
+
+      pendingSpaImport = rows;
+      if (!rows.length) {
+        preview.textContent = "Belum ada data yang terbaca. Format yang didukung: nama produk sebagai judul, lalu 'Komponen : Qty' atau rincian 'Assy : Qty' dan 'Gudang : Qty'. Pastikan baris produk dan komponen tidak terpotong saat menyalin.";
+        return;
+      }
+
+      const totalAssy = rows.reduce((sum, item) => sum + item.assy, 0);
+      const totalGudang = rows.reduce((sum, item) => sum + item.gudang, 0);
+      const totalOther = rows.reduce((sum, item) => sum + (item.otherStocks || []).reduce((a, x) => a + (Number(x.qty) || 0), 0), 0);
+      const totalWaiting = rows.reduce((sum, item) => sum + (Number(item.waitingBeta) || 0), 0);
+      const safe = value => String(value ?? "").replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
+      preview.innerHTML =
+        "<div style='padding:8px;border:1px solid #86c9a0;border-radius:8px;background:#f0fdf4;margin-bottom:8px;'>" +
+        "<b>Preview: " + rows.length + " komponen</b><br>" +
+        "Assy: " + formatNum(totalAssy) + " PCS • Gudang: " + formatNum(totalGudang) + " PCS" +
+        (totalOther ? " • Stok khusus/NG Hold: " + formatNum(totalOther) + " PCS" : "") +
+        (totalWaiting ? " • Menunggu Beta: " + formatNum(totalWaiting) + " PCS" : "") +
+        "</div><div style='max-height:220px;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:8px;'>" +
+        rows.map((item, index) =>
+          "<div style='padding:6px 2px;border-bottom:1px solid #e5e7eb;'>" +
+          "<b>" + (index + 1) + ". " + safe(item.group) + " — " + safe(item.part) + "</b><br>" +
+          "<span style='color:var(--text-muted);'>Assy " + formatNum(item.assy) + " • Gudang " + formatNum(item.gudang) +
+          (item.otherStocks.length ? " • Khusus/NG " + formatNum(item.otherStocks.reduce((a,x)=>a+x.qty,0)) : "") +
+          (item.waitingBeta ? " • Menunggu " + formatNum(item.waitingBeta) : "") + "</span></div>"
+        ).join("") +
+        "</div><button type='button' class='btn btn-emerald' style='margin-top:8px;' onclick='konfirmasiImportSpa()'>✓ Simpan hasil import ke Rincian SPA</button>";
+    }
+
+    function konfirmasiImportSpa() {
+      if (!Array.isArray(pendingSpaImport) || !pendingSpaImport.length) return;
+      const imported = pendingSpaImport.map(item => JSON.parse(JSON.stringify(item)));
+      imported.forEach(incoming => {
+        const existing = cariItemSpaSama(incoming.group, incoming.part);
+        if (existing) gabungkanItemSpa(existing, incoming);
+        else spaList.push(incoming);
+      });
+      const count = imported.length;
+      pendingSpaImport = [];
+      renderSpaAll();
+      waSpaManuallyEdited = false;
+      simpanDraftLokal();
+      const preview = document.getElementById("waImportSpaPreview");
+      if (preview) preview.innerHTML = "<b style='color:var(--emerald);'>Berhasil mengimpor " + count + " komponen ke Rincian SPA.</b>";
+    }
+
     function renderSpaAll() {
       const container = document.getElementById("spaGroupedContainer");
       const waBox = document.getElementById("waPreviewSpa");
@@ -4909,7 +5165,7 @@
         });
         wa += `\n`;
       });
-      if (!waSpaManuallyEdited) waBox.value = wa.trim();
+      if (!waSpaManuallyEdited || !String(waBox.value || "").trim()) waBox.value = wa.trim();
     }
 
     function buatUlangWaSpa() {
@@ -6036,11 +6292,34 @@
       toggleModal("wipEditModal", false);
     }
 
+    function bukaModalEditFg() {
+      const card = document.getElementById("fgInputCard");
+      const target = document.getElementById("fgEditModalContent");
+      if (!card || !target) return;
+      if (!fgEditPlaceholder && card.parentNode !== target) {
+        fgEditPlaceholder = document.createComment("Posisi asli form Finish Good");
+        card.parentNode.insertBefore(fgEditPlaceholder, card);
+      }
+      target.appendChild(card);
+      toggleModal("fgEditModal", true);
+    }
+
+    function tutupModalEditFgVisual() {
+      const card = document.getElementById("fgInputCard");
+      if (card && fgEditPlaceholder && fgEditPlaceholder.parentNode) {
+        fgEditPlaceholder.parentNode.insertBefore(card, fgEditPlaceholder);
+        fgEditPlaceholder.remove();
+      }
+      fgEditPlaceholder = null;
+      toggleModal("fgEditModal", false);
+    }
+
     function tutupSemuaModalDenganEsc() {
       const openModals = Array.from(document.querySelectorAll(".modal-backdrop"))
         .filter((modal) => getComputedStyle(modal).display !== "none");
       openModals.forEach((modal) => {
         if (modal.id === "wipEditModal") batalEditWip();
+        else if (modal.id === "fgEditModal") batalEditFg();
         else toggleModal(modal.id, false);
       });
     }
@@ -6053,6 +6332,7 @@
       const backdrop = event.target;
       if (!backdrop.classList || !backdrop.classList.contains("modal-backdrop")) return;
       if (backdrop.id === "wipEditModal") batalEditWip();
+      else if (backdrop.id === "fgEditModal") batalEditFg();
       else toggleModal(backdrop.id, false);
     });
 
