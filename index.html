@@ -2942,12 +2942,24 @@
     function bersihkanImportWip(){document.getElementById("waImportWipText").value="";document.getElementById("waImportWipPreview").innerHTML="";pendingWipImport=[];}
     function previewImportWip(){
       const lines=document.getElementById("waImportWipText").value.replace(/\r/g,"").split("\n");
-      const rows=[];let group="";
+      const rows=[];
+      let group="";
+      const seenGroups=new Map();
       lines.forEach(raw=>{
-        const line=raw.replace(/[*_\x60]/g,"").trim(); // Pertahankan tanda > agar format panah => tetap terbaca.
+        const line=raw.replace(/[*_\x60]/g,"").trim();
         if(!line)return;
-        const prod=line.match(/^(\d{3,5}\s+.+)$/);
-        if(prod&&!/^(base|inbs|inner|cover|hish|mesh|tray)\b/i.test(line)){group=prod[1].trim();return;}
+
+        // Header produk mendukung kode angka (8603, 4022) dan alfanumerik (1E03, 1E02, JD26).
+        // Kode harus berada di awal baris; komponen seperti Inbs(003) tidak akan tertukar menjadi header.
+        const productHeader=line.match(/^(\d{3,5}|[A-Z]{1,2}\d[A-Z0-9]{1,5})\s+(.+)$/i);
+        if(productHeader && !/[:=]/.test(line)){
+          const candidate=(productHeader[1]+" "+productHeader[2]).trim();
+          const key=candidate.toLocaleLowerCase("id-ID");
+          if(!seenGroups.has(key))seenGroups.set(key,candidate);
+          group=seenGroups.get(key);
+          return;
+        }
+
         const m=line.replace(/^[•\-]\s*/,"").match(/^(.+?)\s*(?::|=>|=)\s*([\d.,]+)\s*(?:\((.*)\))?$/);
         if(m&&group){
           const q=Number(m[2].replace(/[.,]/g,""));
@@ -2960,8 +2972,10 @@
       });
       pendingWipImport=rows;
       const box=document.getElementById("waImportWipPreview");
-      if(!rows.length){box.textContent="Belum ada baris terbaca. Format didukung: Part : Qty, Part => Qty, atau Part = Qty. Pastikan nama produk berada di baris tersendiri.";return;}
-      box.innerHTML="<b>"+rows.length+" baris · "+formatNum(rows.reduce((a,x)=>a+x.qty,0))+" pcs</b><div>"+rows.map(x=>x.group+" — "+x.part+" "+(x.note?"("+x.note+") ":"")+formatNum(x.qty)).join("<br>")+"</div><button class='btn btn-emerald' onclick='konfirmasiImportWip()'>✓ Simpan ke Sisa Barang Bagus</button>";
+      if(!rows.length){box.textContent="Belum ada baris terbaca. Format didukung: judul produk dengan kode angka atau alfanumerik, lalu Part : Qty, Part => Qty, atau Part = Qty.";return;}
+      const total=rows.reduce((a,x)=>a+x.qty,0);
+      const safe=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
+      box.innerHTML="<b>"+rows.length+" baris · "+formatNum(total)+" PCS</b><div style='max-height:220px;overflow:auto;'>"+rows.map(x=>"<div>"+safe(x.group)+" — "+safe(x.part)+" : "+formatNum(x.qty)+"</div>").join("")+"</div><button class='btn btn-emerald' onclick='konfirmasiImportWip()'>✓ Simpan ke Sisa Barang Bagus</button>";
     }
 
     function konfirmasiImportWip(){
