@@ -3201,7 +3201,7 @@
                 A : ${formatNum(it.boxA)} BOX @${formatNum(it.pcsPerBox)} = <b>${formatNum(it.pcsA)}</b><br>
                 B : ${formatNum(it.boxB)} BOX @${formatNum(it.pcsPerBox)} = <b>${formatNum(it.pcsB)}</b><br>
                 ${(it.recehABoxes || []).length ? `RECEH A : ${it.recehABoxes.length} BOX (${it.recehABoxes.map(formatNum).join(" + ")}) = <b>${formatNum(it.pcsRecehA || it.recehABoxes.reduce((a,b)=>a+b,0))} PCS</b><br>` : ""}${(it.recehBBoxes || it.recehBoxes || []).length ? `RECEH B : ${(it.recehBBoxes || it.recehBoxes).length} BOX (${(it.recehBBoxes || it.recehBoxes).map(formatNum).join(" + ")}) = <b>${formatNum(it.pcsRecehB || it.pcsReceh || (it.recehBBoxes || it.recehBoxes).reduce((a,b)=>a+b,0))} PCS</b><br>` : ""}
-                <span style="color:var(--emerald); font-weight:800;">TOTAL : ${formatNum(it.totalBox)} BOX = ${formatNum(it.totalPcs)} PCS</span>
+                <span style="color:var(--emerald); font-weight:800;">TOTAL : ${formatNum(it.totalBox)} BOX ${( (it.recehABoxes || []).length + (it.recehBBoxes || it.recehBoxes || []).length ) > 0 ? `(${formatNum((Number(it.boxA) || 0) + (Number(it.boxB) || 0))} BOX + ${formatNum((it.recehABoxes || []).length + (it.recehBBoxes || it.recehBoxes || []).length)} RECEH)` : `@${formatNum(it.pcsPerBox)}`} = ${formatNum(it.totalPcs)} PCS</span>
               </div>
             </div>`
           )
@@ -3229,7 +3229,15 @@
         if ((it.recehABoxes || []).length) wa += `RECEH A : ${it.recehABoxes.length} BOX (${it.recehABoxes.map(formatNum).join(" + ")}) = ${formatNum(it.pcsRecehA || it.recehABoxes.reduce((a,b)=>a+b,0))} PCS\n`;
         const recehB = it.recehBBoxes || it.recehBoxes || [];
         if (recehB.length) wa += `RECEH B : ${recehB.length} BOX (${recehB.map(formatNum).join(" + ")}) = ${formatNum(it.pcsRecehB || it.pcsReceh || recehB.reduce((a,b)=>a+b,0))} PCS\n`;
-        const achievementPct = Number(it.target) > 0 ? (Number(it.totalPcs || 0) / Number(it.target) * 100) : 0;        wa += `*TOTAL : ${formatNum(it.totalBox)} BOX @${formatNum(it.pcsPerBox)} = ${formatNum(it.totalPcs)} PCS | ${(achievementPct).toFixed(2)}%*\n`;
+        const recehA = it.recehABoxes || [];
+        const recehBCount = (it.recehBBoxes || it.recehBoxes || []).length;
+        const totalRecehBoxes = recehA.length + recehBCount;
+        const normalBoxCount = (Number(it.boxA) || 0) + (Number(it.boxB) || 0);
+        const totalBoxLabel = totalRecehBoxes > 0
+          ? `${formatNum(it.totalBox)} BOX (${formatNum(normalBoxCount)} BOX + ${formatNum(totalRecehBoxes)} RECEH)`
+          : `${formatNum(it.totalBox)} BOX @${formatNum(it.pcsPerBox)}`;
+        const achievementPct = Number(it.target) > 0 ? (Number(it.totalPcs || 0) / Number(it.target) * 100) : 0;
+        wa += `*TOTAL : ${totalBoxLabel} = ${formatNum(it.totalPcs)} PCS | ${(achievementPct).toFixed(2)}%*\\n`;
         // Catatan tidak tercapai hanya ditampilkan sekali dan hanya jika hasil di bawah target.
         if (it.gapNote) wa += `*Catatan: ${it.gapNote}*\n`;
         wa += `\n`;
