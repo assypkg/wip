@@ -5508,7 +5508,7 @@
 
     function normalisasiMasterLeader(list) {
       const seen = new Set();
-      return (Array.isArray(list) ? list : []).map(value => String(value || "").trim().toUpperCase().replace(/\s+/g,""))
+      return (Array.isArray(list) ? list : []).map(value => String(value || "").trim().toUpperCase().replace(/\s+/g," "))
         .filter(value => {
           if (!value || seen.has(value)) return false;
           seen.add(value);
@@ -5606,6 +5606,7 @@
     }
 
     async function simpanMasterLeaderCloud() {
+      let cloudStep="persiapan";
       if(!masterLeaderReady||masterLeaderBusy||masterLeaderConflict) {
         setStatusMasterLeader(masterLeaderConflict?"conflict":"warning","Lokal tersimpan, tetapi Cloud belum siap atau ada konflik. Sinkronkan sebelum mencoba lagi.");
         return false;
@@ -5614,6 +5615,7 @@
       setStatusMasterLeader("syncing","Memverifikasi versi Cloud sebelum menyimpan...");
       try {
         const url=getFirestoreBaseUrl()+"/"+COLLECTION_MASTER+"/master_leader";
+        cloudStep="membaca versi dokumen Cloud";
         const check=await fetch(url,{cache:"no-store"});
         const baseTime=localStorage.getItem(MASTER_LEADER_UPDATE_KEY);
         let updateTime=null;
@@ -5636,6 +5638,7 @@
         if(updateTime)patchUrl.searchParams.set("currentDocument.updateTime",updateTime);
         else patchUrl.searchParams.set("currentDocument.exists","false");
         const payload={fields:{updatedAt:{stringValue:new Date().toISOString()},leadersJson:{stringValue:JSON.stringify(snapshot)}}};
+        cloudStep="mengirim perubahan ke Firestore";
         const saved=await fetch(patchUrl.toString(),{method:"PATCH",cache:"no-store",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
         if(saved.status===409||saved.status===412)throw new Error("Konflik versi saat menyimpan (HTTP "+saved.status+")");
         if(!saved.ok) {
@@ -5643,6 +5646,7 @@
           throw new Error("Firestore PATCH gagal (HTTP "+saved.status+")"+(detail?": "+detail:""));
         }
         const savedDoc=await saved.json();
+        cloudStep="membaca ulang untuk verifikasi";
         const verify=await fetch(url,{cache:"no-store"});
         if(!verify.ok)throw new Error("Leader tersimpan tetapi verifikasi baca ulang Cloud gagal (HTTP "+verify.status+").");
         const verified=await verify.json();
@@ -5657,7 +5661,7 @@
         setStatusMasterLeader("success","Berhasil disimpan dan diverifikasi di Cloud • "+snapshot.length+" Leader.");
         return true;
       } catch(e) {
-        setStatusMasterLeader("error","Gagal menyimpan Cloud: "+e.message+". Data lokal tetap tersedia.");
+        setStatusMasterLeader("error","Gagal saat "+cloudStep+": "+e.message+". Data lokal tetap tersedia; belum dinyatakan sinkron.");
         return false;
       } finally {
         masterLeaderBusy=false;
@@ -5680,10 +5684,10 @@
 
     function simpanItemMasterLeader() {
       const input=document.getElementById("masterLeaderInput");
-      const name=String(input?.value||"").trim().toUpperCase().replace(/\s+/g,"");
-      if(!name){alert("Isi nomor Leader terlebih dahulu.");return;}
+      const name=String(input?.value||"").trim().toUpperCase().replace(/\s+/g," ");
+      if(!name){alert("Isi nama Leader terlebih dahulu.");return;}
       if(masterLeaders.some((value,index)=>index!==editingMasterLeader&&value.toLowerCase()===name.toLowerCase())) {
-        alert("Nomor Leader sudah terdaftar di Master Leader.");
+        alert("Nama Leader sudah terdaftar di Master Leader.");
         return;
       }
       if(editingMasterLeader!==null)masterLeaders[editingMasterLeader]=name;
