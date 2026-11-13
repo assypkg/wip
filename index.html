@@ -999,9 +999,10 @@
             <span style="font-size:.75rem;font-weight:800;color:var(--navy);"><b id="liveBoxCount" style="color:var(--purple);">0</b> Box | <b id="liveCalcSum" style="color:var(--emerald);">0</b> PCS</span>
           </div>
           <div class="group-qty-grid">
-            <div><label>Isi per box (PCS)</label><input type="text" inputmode="numeric" pattern="[0-9]*" id="wipQtyPerBox" placeholder="Contoh: 650" oninput="this.value=this.value.replace(/[^0-9]/g,''); simpanDraftLokal();" /></div>
-            <div><label>Jumlah box sama</label><input type="text" inputmode="numeric" pattern="[0-9]*" id="wipQtyBoxCount" placeholder="Contoh: 4" oninput="this.value=this.value.replace(/[^0-9]/g,''); simpanDraftLokal();" /></div>
+            <div><label>Isi per box (PCS)</label><input type="text" inputmode="numeric" pattern="[0-9]*" id="wipQtyPerBox" placeholder="Contoh: 650" oninput="this.value=this.value.replace(/[^0-9]/g,''); updateGroupQtyPreview('wip'); simpanDraftLokal();"  /></div>
+            <div><label>Jumlah box sama</label><input type="text" inputmode="numeric" pattern="[0-9]*" id="wipQtyBoxCount" placeholder="Contoh: 4" oninput="this.value=this.value.replace(/[^0-9]/g,''); updateGroupQtyPreview('wip'); simpanDraftLokal();"  /></div>
           </div>
+          <div id="wipGroupPreview" class="qty-live-total" style="margin-top:8px;"><span style="font-size:.75rem;font-weight:800;">SUBTOTAL KELOMPOK</span><b style="color:var(--emerald);">Isi PCS per box dan jumlah box</b></div>
           <div class="group-qty-actions">
             <button type="button" class="btn btn-emerald" onclick="tambahKelompokWip(1)">＋ TAMBAH KELOMPOK QTY</button>
             <button type="button" class="btn btn-danger" onclick="tambahKelompokWip(-1)">− CATAT PENGAMBILAN</button>
@@ -1351,9 +1352,10 @@
             <span style="font-size:.75rem;font-weight:800;color:var(--navy);"><b id="spaAssyBoxCount" style="color:var(--purple);">0</b> Box | <b id="spaAssySum" style="color:var(--emerald);">0</b> PCS</span>
           </div>
           <div class="group-qty-grid">
-            <div><label>Isi per box (PCS)</label><input type="text" inputmode="numeric" pattern="[0-9]*" id="spaAssyQtyPerBox" placeholder="Contoh: 650" oninput="this.value=this.value.replace(/[^0-9]/g,''); simpanDraftLokal();" /></div>
-            <div><label>Jumlah box sama</label><input type="text" inputmode="numeric" pattern="[0-9]*" id="spaAssyQtyBoxCount" placeholder="Contoh: 4" oninput="this.value=this.value.replace(/[^0-9]/g,''); simpanDraftLokal();" /></div>
+            <div><label>Isi per box (PCS)</label><input type="text" inputmode="numeric" pattern="[0-9]*" id="spaAssyQtyPerBox" placeholder="Contoh: 650" oninput="this.value=this.value.replace(/[^0-9]/g,''); updateGroupQtyPreview('spa_assy'); simpanDraftLokal();"  /></div>
+            <div><label>Jumlah box sama</label><input type="text" inputmode="numeric" pattern="[0-9]*" id="spaAssyQtyBoxCount" placeholder="Contoh: 4" oninput="this.value=this.value.replace(/[^0-9]/g,''); updateGroupQtyPreview('spa_assy'); simpanDraftLokal();"  /></div>
           </div>
+          <div id="spaAssyGroupPreview" class="qty-live-total" style="margin-top:8px;"><span style="font-size:.75rem;font-weight:800;">SUBTOTAL KELOMPOK</span><b style="color:var(--emerald);">Isi PCS per box dan jumlah box</b></div>
           <div class="group-qty-actions">
             <button type="button" class="btn btn-emerald" onclick="tambahKelompokSpa('assy',1)">＋ TAMBAH KELOMPOK QTY</button>
             <button type="button" class="btn btn-danger" onclick="tambahKelompokSpa('assy',-1)">− CATAT PENGURANGAN</button>
@@ -1370,9 +1372,10 @@
             <span style="font-size:.75rem;font-weight:800;color:var(--navy);"><b id="spaGudangBoxCount" style="color:var(--purple);">0</b> Box | <b id="spaGudangSum" style="color:var(--purple);">0</b> PCS</span>
           </div>
           <div class="group-qty-grid">
-            <div><label>Isi per box (PCS)</label><input type="text" inputmode="numeric" pattern="[0-9]*" id="spaGudangQtyPerBox" placeholder="Contoh: 650" oninput="this.value=this.value.replace(/[^0-9]/g,''); simpanDraftLokal();" /></div>
-            <div><label>Jumlah box sama</label><input type="text" inputmode="numeric" pattern="[0-9]*" id="spaGudangQtyBoxCount" placeholder="Contoh: 10" oninput="this.value=this.value.replace(/[^0-9]/g,''); simpanDraftLokal();" /></div>
+            <div><label>Isi per box (PCS)</label><input type="text" inputmode="numeric" pattern="[0-9]*" id="spaGudangQtyPerBox" placeholder="Contoh: 650" oninput="this.value=this.value.replace(/[^0-9]/g,''); updateGroupQtyPreview('spa_gudang'); simpanDraftLokal();"  /></div>
+            <div><label>Jumlah box sama</label><input type="text" inputmode="numeric" pattern="[0-9]*" id="spaGudangQtyBoxCount" placeholder="Contoh: 10" oninput="this.value=this.value.replace(/[^0-9]/g,''); updateGroupQtyPreview('spa_gudang'); simpanDraftLokal();"  /></div>
           </div>
+          <div id="spaGudangGroupPreview" class="qty-live-total" style="margin-top:8px;"><span style="font-size:.75rem;font-weight:800;">SUBTOTAL KELOMPOK</span><b style="color:var(--purple);">Isi PCS per box dan jumlah box</b></div>
           <div class="group-qty-actions">
             <button type="button" class="btn btn-purple" onclick="tambahKelompokSpa('gudang',1)">＋ TAMBAH KELOMPOK QTY</button>
             <button type="button" class="btn btn-danger" onclick="tambahKelompokSpa('gudang',-1)">− CATAT PENGURANGAN</button>
@@ -2472,6 +2475,26 @@
     /********************************************************************
      * 5. AUTO-KALKULATOR WIP (PECAH RUMUS JADI BOX INDIVIDUAL)
      ********************************************************************/
+    function updateGroupQtyPreview(mode) {
+      const config = mode === "wip"
+        ? { qty:"wipQtyPerBox", count:"wipQtyBoxCount", preview:"wipGroupPreview", color:"var(--emerald)" }
+        : mode === "spa_assy"
+        ? { qty:"spaAssyQtyPerBox", count:"spaAssyQtyBoxCount", preview:"spaAssyGroupPreview", color:"var(--emerald)" }
+        : { qty:"spaGudangQtyPerBox", count:"spaGudangQtyBoxCount", preview:"spaGudangGroupPreview", color:"var(--purple)" };
+      const qty=Number(document.getElementById(config.qty)?.value||0);
+      const count=Number(document.getElementById(config.count)?.value||0);
+      const box=document.getElementById(config.preview);
+      if(!box)return;
+      const strong=box.querySelector("b");
+      if(qty>0&&count>0&&Number.isInteger(qty)&&Number.isInteger(count)){
+        strong.textContent=`${formatNum(count)} BOX × ${formatNum(qty)} PCS = ${formatNum(qty*count)} PCS`;
+        strong.style.color=config.color;
+      } else {
+        strong.textContent="Isi PCS per box dan jumlah box";
+        strong.style.color="var(--text-muted)";
+      }
+    }
+
     function tambahKelompokWip(multiplier = 1) {
       const qtyEl=document.getElementById("wipQtyPerBox");
       const countEl=document.getElementById("wipQtyBoxCount");
@@ -2487,6 +2510,7 @@
       }
       for(let i=0;i<count;i++) currentBoxes.push({label:String(qty*multiplier),val:qty*multiplier});
       qtyEl.value=""; countEl.value="";
+      updateGroupQtyPreview("wip");
       renderCurrentBoxes();
       simpanDraftLokal();
       return true;
@@ -3952,6 +3976,7 @@
       }
       for(let i=0;i<count;i++) target.push({label:String(qty*multiplier),val:qty*multiplier});
       qtyEl.value=""; countEl.value="";
+      updateGroupQtyPreview(targetType==="assy"?"spa_assy":"spa_gudang");
       renderSpaCalcBoxes();
       simpanDraftLokal();
       return true;
@@ -4945,6 +4970,7 @@
 
       renderCurrentBoxes();
       renderSpaCalcBoxes();
+      updateGroupQtyPreview("wip"); updateGroupQtyPreview("spa_assy"); updateGroupQtyPreview("spa_gudang");
       updateLiveFormulaPreview("wip");
       updateLiveFormulaPreview("spa_assy");
       updateLiveFormulaPreview("spa_gudang");
