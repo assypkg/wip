@@ -929,7 +929,7 @@
     .mobile-legacy-hidden { display:none !important; }
     @media (max-width:879px) {
       .mobile-tab-hidden { display:none !important; }
-      .sheet-section-nav { display:grid; position:sticky; top:0; margin:0 -4px 4px; }
+      .sheet-section-nav { display:grid; position:sticky; top:0; align-self:start; margin:0 -4px 8px; z-index:140; }
       .mobile-sheet-meta { grid-template-columns:1fr 1fr; gap:6px; padding:8px; }
       #wipMetaControls > div:first-child { grid-column:1 / -1; }
       .mobile-sheet-meta label { font-size:.63rem; margin-bottom:3px; }
@@ -1005,16 +1005,17 @@
        SHEET 1: SISA BARANG BAGUS ASSY (WIP)
        ========================================================= -->
   <main id="sectionWip" class="container">
-    <div class="meta-grid mobile-sheet-meta" id="wipMetaControls">
-      <div><label>Pilih Tanggal</label><input type="date" id="wipDate" onchange="simpanDraftLokal(); renderWipAll(); renderFgAll();" /></div>
-      <div><label>Shift</label><select id="wipShift" onchange="simpanDraftLokal(); renderWipAll();"><option value="shift 1">Shift 1</option><option value="shift 2">Shift 2</option><option value="shift 3">Shift 3</option></select></div>
-      <div><label>Plant</label><select id="wipPlant" onchange="simpanDraftLokal(); renderWipAll(); renderFgAll();"><option value="plant alpha">Plant Alpha</option><option value="plant beta">Plant Beta</option></select></div>
-    </div>
     <nav class="sheet-section-nav" id="wipSectionNav" aria-label="Navigasi Sisa Barang Bagus">
       <button type="button" class="sheet-nav-btn active" onclick="scrollToSheetSection('wipInputSection','wipSectionNav',this)"><span class="nav-number">1</span> INPUT WIP</button>
       <button type="button" class="sheet-nav-btn" onclick="scrollToSheetSection('wipListCard','wipSectionNav',this)"><span class="nav-number">2</span> DAFTAR WIP</button>
       <button type="button" class="sheet-nav-btn" onclick="scrollToSheetSection('wipWaCard','wipSectionNav',this)"><span class="nav-number">3</span> WHATSAPP</button>
     </nav>
+    <div class="meta-grid mobile-sheet-meta" id="wipMetaControls">
+      <div><label>Pilih Tanggal</label><input type="date" id="wipDate" onchange="simpanDraftLokal(); renderWipAll(); renderFgAll();" /></div>
+      <div><label>Shift</label><select id="wipShift" onchange="simpanDraftLokal(); renderWipAll();"><option value="shift 1">Shift 1</option><option value="shift 2">Shift 2</option><option value="shift 3">Shift 3</option></select></div>
+      <div><label>Plant</label><select id="wipPlant" onchange="simpanDraftLokal(); renderWipAll(); renderFgAll();"><option value="plant alpha">Plant Alpha</option><option value="plant beta">Plant Beta</option></select></div>
+    </div>
+    
     <!-- KOLOM KIRI: SMART SEARCH & INPUT QTY -->
     <section id="wipInputSection" class="sheet-section-target">
       <div class="card" id="wipInputCard">
@@ -1084,7 +1085,7 @@
 
     <!-- KOLOM KANAN: REKAP, SIMPAN CLOUD & SHARE LANGSUNG WA -->
     <section>
-      <div class="card sheet-section-target" id="wipListCard" class="sheet-section-target mobile-tab-hidden">
+      <div class="card sheet-section-target mobile-tab-hidden" id="wipListCard">
         <div class="card-header" style="margin-bottom:8px; border-bottom:none; padding-bottom:0;">
           <span class="card-title">2. Daftar Sisa Barang Bagus (Rincian Box & Edit)</span>
         </div>
@@ -1106,7 +1107,7 @@
         <div id="wipGroupedContainer"></div>
       </div>
 
-      <div class="card sheet-section-target" id="wipWaCard" class="sheet-section-target mobile-tab-hidden">
+      <div class="card sheet-section-target mobile-tab-hidden" id="wipWaCard">
         <div class="card-header">
           <span class="card-title">3. Laporan WhatsApp (Khusus Sisa WIP)</span>
         </div>
@@ -1341,15 +1342,16 @@
        SHEET 3: LAPORAN SPA AWAL SHIFT (MASING-MASING KOLOM ADA PAPAN KALKULATOR)
        ========================================================= -->
   <main id="sectionSpa" class="container" style="display:none;">
-    <div class="meta-grid two-cols mobile-sheet-meta" id="spaMetaControls">
-      <div><label>Pilih Tanggal SPA</label><input type="date" id="spaDate" onchange="simpanDraftLokal(); renderSpaAll();" /></div>
-      <div><label>Plant</label><select id="spaPlant" onchange="simpanDraftLokal(); renderSpaAll();"><option value="plant alpha">Plant Alpha</option><option value="plant beta">Plant Beta</option></select></div>
-    </div>
     <nav class="sheet-section-nav" id="spaSectionNav" aria-label="Navigasi SPA Awal Shift">
       <button type="button" class="sheet-nav-btn active" onclick="scrollToSheetSection('spaInputSection','spaSectionNav',this)"><span class="nav-number">1</span> INPUT SPA</button>
       <button type="button" class="sheet-nav-btn" onclick="scrollToSheetSection('spaListCard','spaSectionNav',this)"><span class="nav-number">2</span> RINCIAN SPA</button>
       <button type="button" class="sheet-nav-btn" onclick="scrollToSheetSection('spaWaCard','spaSectionNav',this)"><span class="nav-number">3</span> WHATSAPP</button>
     </nav>
+    <div class="meta-grid two-cols mobile-sheet-meta" id="spaMetaControls">
+      <div><label>Pilih Tanggal SPA</label><input type="date" id="spaDate" onchange="simpanDraftLokal(); renderSpaAll();" /></div>
+      <div><label>Plant</label><select id="spaPlant" onchange="simpanDraftLokal(); renderSpaAll();"><option value="plant alpha">Plant Alpha</option><option value="plant beta">Plant Beta</option></select></div>
+    </div>
+    
     <section id="spaInputSection" class="sheet-section-target">
       <div class="card" id="spaInputCard">
         <div class="card-header">
@@ -1455,7 +1457,7 @@
     </section>
 
     <section>
-      <div class="card sheet-section-target" id="spaListCard" class="sheet-section-target mobile-tab-hidden">
+      <div class="card sheet-section-target mobile-tab-hidden" id="spaListCard">
         <div class="card-header">
           <span class="card-title">2. Rincian SPA (Assy + Gudang & Edit)</span>
           <button class="btn btn-danger" onclick="hapusSemuaSpa()">🗑️ Reset SPA</button>
@@ -1463,7 +1465,7 @@
         <div style="border:1px solid var(--border);border-radius:10px;padding:12px;margin:10px 0;"><b>📥 Import laporan WhatsApp SPA</b><p style="font-size:.73rem;color:var(--text-muted);">Tempel laporan SPA. Stok Assy, Gudang, stok khusus, NG Hold, dan barang menunggu dari Plant Beta dipisahkan.</p><textarea id="waImportSpaText" class="wa-preview" style="min-height:150px;" placeholder="Tempel laporan SPA dari WhatsApp di sini..."></textarea><button class="btn btn-sky" onclick="previewImportSpa()">🔎 Proses & Preview</button> <button class="btn btn-outline" onclick="bersihkanImportSpa()">Bersihkan</button><div id="waImportSpaPreview" style="margin-top:8px;font-size:.78rem;"></div></div><div id="spaGroupedContainer"></div>
       </div>
 
-      <div class="card sheet-section-target" id="spaWaCard" class="sheet-section-target mobile-tab-hidden">
+      <div class="card sheet-section-target mobile-tab-hidden" id="spaWaCard">
         <div class="card-header">
           <span class="card-title">3. Laporan WA SPA</span>
         </div>
