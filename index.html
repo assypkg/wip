@@ -840,6 +840,43 @@
       color: var(--emerald);
       border: 1px solid #a5d6a7;
     }
+
+    /* MOBILE SHEET NAVIGATION + GROUPED QTY INPUT */
+    .mobile-sheet-meta { grid-column:1 / -1; margin:10px 0 8px; }
+    .sheet-section-nav { display:none; grid-column:1 / -1; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; padding:7px; background:#fff; border:1px solid #dbe2ed; border-radius:12px; box-shadow:0 4px 12px rgba(15,23,42,.10); z-index:90; }
+    .sheet-nav-btn { min-width:0; border:1px solid #dbe2ed; background:#f8fafc; color:var(--navy); border-radius:9px; min-height:42px; padding:6px 3px; display:flex; align-items:center; justify-content:center; gap:5px; font-family:'Montserrat',sans-serif; font-size:.68rem; font-weight:800; line-height:1.15; cursor:pointer; }
+    .sheet-nav-btn .nav-number { display:inline-flex; width:20px; height:20px; align-items:center; justify-content:center; border-radius:50%; background:#e2e8f0; font-size:.66rem; flex:0 0 auto; }
+    .sheet-nav-btn.active { background:var(--navy); border-color:var(--navy); color:#fff; }
+    .sheet-nav-btn.active .nav-number { background:rgba(255,255,255,.2); color:#fff; }
+    .sheet-section-target { scroll-margin-top:76px; }
+    .group-suggest-wrap { position:relative; min-width:0; }
+    .group-suggest-input { border:2px solid var(--navy); font-weight:800; }
+    .group-qty-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
+    .group-qty-grid input { min-height:48px; font-size:1.12rem; font-weight:800; text-align:center; }
+    .group-qty-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:9px; }
+    .group-qty-actions .btn { min-height:44px; white-space:normal; line-height:1.2; }
+    .box-detail-disclosure,.saved-box-details { margin-top:10px; border:1px solid #d9e2ec; border-radius:9px; background:#fff; overflow:hidden; }
+    .box-detail-disclosure>summary,.saved-box-details>summary { list-style:none; padding:10px 11px; cursor:pointer; font-size:.76rem; font-weight:800; color:var(--navy); display:flex; justify-content:space-between; align-items:center; gap:8px; }
+    .box-detail-disclosure>summary::-webkit-details-marker,.saved-box-details>summary::-webkit-details-marker { display:none; }
+    .box-detail-disclosure>summary::after,.saved-box-details>summary::after { content:"＋"; color:var(--emerald); font-size:1rem; }
+    .box-detail-disclosure[open]>summary::after,.saved-box-details[open]>summary::after { content:"−"; }
+    .box-detail-list,.saved-box-detail-list { display:grid; gap:0; padding:0 10px 9px; }
+    .box-detail-row { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 2px; border-top:1px solid #edf1f5; font-size:.78rem; }
+    .box-detail-row .box-detail-label { color:var(--text-muted); font-weight:700; }
+    .box-detail-row .box-detail-value { color:var(--text-main); font-weight:800; font-variant-numeric:tabular-nums; }
+    .box-detail-row.negative .box-detail-value { color:var(--red); }
+    .box-detail-row button { border:0; background:#fff0f1; color:var(--red); border-radius:6px; padding:3px 8px; font-weight:800; }
+    .saved-box-details { margin-top:7px; background:#f8fafc; }
+    .saved-box-details>summary { font-size:.70rem; padding:8px 9px; }
+    .saved-box-details .box-detail-row { font-size:.72rem; padding:6px 2px; }
+    .mobile-legacy-hidden { display:none !important; }
+    @media (max-width:879px) {
+      .sheet-section-nav { display:grid; position:sticky; top:0; margin:0 -4px 4px; }
+      .group-qty-grid input { min-width:0; padding:10px 6px; }
+      .calc-panel { padding:10px; }
+    }
+    @media (min-width:880px) { .sheet-section-nav { display:none !important; } }
+
   </style>
 </head>
 <body>
@@ -906,8 +943,18 @@
        SHEET 1: SISA BARANG BAGUS ASSY (WIP)
        ========================================================= -->
   <main id="sectionWip" class="container">
-    <!-- KOLOM KIRI: SMART SEARCH & AUTO KALKULATOR -->
-    <section>
+    <div class="meta-grid mobile-sheet-meta" id="wipMetaControls">
+      <div><label>Pilih Tanggal</label><input type="date" id="wipDate" onchange="simpanDraftLokal(); renderWipAll(); renderFgAll();" /></div>
+      <div><label>Shift</label><select id="wipShift" onchange="simpanDraftLokal(); renderWipAll();"><option value="shift 1">Shift 1</option><option value="shift 2">Shift 2</option><option value="shift 3">Shift 3</option></select></div>
+      <div><label>Plant</label><select id="wipPlant" onchange="simpanDraftLokal(); renderWipAll(); renderFgAll();"><option value="plant alpha">Plant Alpha</option><option value="plant beta">Plant Beta</option></select></div>
+    </div>
+    <nav class="sheet-section-nav" id="wipSectionNav" aria-label="Navigasi Sisa Barang Bagus">
+      <button type="button" class="sheet-nav-btn active" onclick="scrollToSheetSection('wipInputSection','wipSectionNav',this)"><span class="nav-number">1</span> INPUT WIP</button>
+      <button type="button" class="sheet-nav-btn" onclick="scrollToSheetSection('wipListCard','wipSectionNav',this)"><span class="nav-number">2</span> DAFTAR WIP</button>
+      <button type="button" class="sheet-nav-btn" onclick="scrollToSheetSection('wipWaCard','wipSectionNav',this)"><span class="nav-number">3</span> WHATSAPP</button>
+    </nav>
+    <!-- KOLOM KIRI: SMART SEARCH & INPUT QTY -->
+    <section id="wipInputSection" class="sheet-section-target">
       <div class="card" id="wipInputCard">
         <div class="card-header">
           <span class="card-title" id="wipFormTitle">1. Input Sisa Barang Bagus (WIP)</span>
@@ -923,51 +970,12 @@
           <button type="button" class="btn btn-danger" onclick="batalEditWip()">Batal Edit</button>
         </div>
 
-        <!-- INFO TANGGAL, SHIFT, PLANT -->
-        <div class="meta-grid">
-          <div>
-            <label>Pilih Tanggal</label>
-            <input type="date" id="wipDate" onchange="simpanDraftLokal(); renderWipAll(); renderFgAll();" />
-          </div>
-          <div>
-            <label>Shift</label>
-            <select id="wipShift" onchange="simpanDraftLokal(); renderWipAll();">
-              <option value="shift 1">Shift 1</option>
-              <option value="shift 2">Shift 2</option>
-              <option value="shift 3">Shift 3</option>
-            </select>
-          </div>
-          <div>
-            <label>Plant</label>
-            <select id="wipPlant" onchange="simpanDraftLokal(); renderWipAll(); renderFgAll();">
-              <option value="plant alpha">Plant Alpha</option>
-              <option value="plant beta">Plant Beta</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- SMART SEARCH BAR (HANYA MUNCUL SAAT DIKETIK) -->
-        <div class="search-box-wrapper" id="wipSearchWrapper">
-          <label>🔍 Smart Search (Ketik Kode / Nama Part / Produk)</label>
-          <div class="search-input-container">
-            <input
-              type="text"
-              id="smartSearchInput"
-              class="search-input"
-              placeholder="Ketik misal: 009, 8603, inbs, wardah, 1e03..."
-              oninput="onWipSearchType()"
-              autocomplete="off"
-            />
-            <button type="button" id="clearWipSearchBtn" class="btn-clear-search" onclick="clearWipSearch()">✕</button>
-          </div>
-          <div class="quick-results" id="smartSearchResults"></div>
-        </div>
-
         <!-- FORM ITEM TERPILIH -->
         <div class="form-row-responsive">
-          <div>
-            <label>Kelompok Produk</label>
-            <input type="text" id="selectedGroup" placeholder="Misal: 8603 OMG" oninput="simpanDraftLokal()" required />
+          <div class="group-suggest-wrap" id="wipGroupSearchWrap">
+            <label>Kelompok Produk / Cari Produk & Part</label>
+            <input type="text" id="selectedGroup" class="group-suggest-input" placeholder="Ketik kode atau nama produk..." oninput="onWipSearchType(); simpanDraftLokal();" autocomplete="off" required />
+            <div class="quick-results" id="wipGroupSuggestions"></div>
           </div>
           <div>
             <label>Nama Komponen & Kode</label>
@@ -984,76 +992,25 @@
           </div>
         </div>
 
-        <!-- AUTO KALKULATOR MULTI-BOX DENGAN PECAH BOX OTOMATIS (650×4+120 -> 5 BOX) -->
+        <!-- INPUT KELOMPOK QTY WIP -->
         <div class="calc-panel">
-          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">
-            <label style="color:var(--emerald); margin:0;">🧮 Auto-Kalkulator Box (+ − × ÷):</label>
-            <span style="font-size:0.75rem; font-weight:700; color:var(--navy);">
-              Aktual: <b id="liveBoxCount" style="color:var(--purple);">0</b> Box | Total: <b id="liveCalcSum" style="font-size:1rem; color:var(--emerald);">0</b> PCS
-            </span>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+            <label style="color:var(--emerald);margin:0;">📦 Input Jumlah Aktual Per Box</label>
+            <span style="font-size:.75rem;font-weight:800;color:var(--navy);"><b id="liveBoxCount" style="color:var(--purple);">0</b> Box | <b id="liveCalcSum" style="color:var(--emerald);">0</b> PCS</span>
           </div>
-
-          <div class="calc-input-row">
-            <input
-              type="text"
-              inputmode="none"
-              id="calcBoxInput"
-              class="input-calc"
-              placeholder="Contoh: 650×4+120"
-              oninput="filterHanyaAngkaKalkulator(this); updateLiveFormulaPreview('wip'); simpanDraftLokal();"
-              onkeydown="if(event.key==='Enter'){event.preventDefault(); tambahAngkaBox(1);}"
-            />
-            <button type="button" class="btn btn-primary" onclick="tambahAngkaBox(1)">
-              + Tambah Box
-            </button>
-            <button type="button" class="btn btn-danger" onclick="tambahAngkaBox(-1)" title="Gunakan jika diambil helper">
-              ➖ Kurangi Qty
-            </button>
+          <div class="group-qty-grid">
+            <div><label>Isi per box (PCS)</label><input type="text" inputmode="numeric" pattern="[0-9]*" id="wipQtyPerBox" placeholder="Contoh: 650" oninput="this.value=this.value.replace(/[^0-9]/g,''); simpanDraftLokal();" /></div>
+            <div><label>Jumlah box sama</label><input type="text" inputmode="numeric" pattern="[0-9]*" id="wipQtyBoxCount" placeholder="Contoh: 4" oninput="this.value=this.value.replace(/[^0-9]/g,''); simpanDraftLokal();" /></div>
           </div>
-
-          <!-- PAPAN KETIK KALKULATOR LENGKAP (+ - × ÷ ENTER) -->
-          <div class="calc-keypad-wrapper">
-            <div class="calc-keypad-top">
-              <span>🧮 Contoh: <b>650×4+120</b> &rarr; otomatis jadi 5 Box</span>
-              <span class="calc-live-result" id="wipFormulaPreview">= 0 Box (0 PCS)</span>
-              <button
-                type="button"
-                onclick="toggleKeyboardHpMode('calcBoxInput', this)"
-                style="background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.25); color:#fff; padding:3px 7px; border-radius:5px; font-size:0.66rem; cursor:pointer;"
-              >
-                ⌨️ Keyboard HP: OFF
-              </button>
-            </div>
-
-            <div class="calc-keypad-grid">
-              <button type="button" class="key-btn key-clear" onclick="tekanTombolKalkulator('wip', 'C')">C</button>
-              <button type="button" class="key-btn key-op" onclick="tekanTombolKalkulator('wip', '(')">(</button>
-              <button type="button" class="key-btn key-op" onclick="tekanTombolKalkulator('wip', ')')">)</button>
-              <button type="button" class="key-btn key-op" onclick="tekanTombolKalkulator('wip', '÷')">÷</button>
-
-              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('wip', '7')">7</button>
-              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('wip', '8')">8</button>
-              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('wip', '9')">9</button>
-              <button type="button" class="key-btn key-op" onclick="tekanTombolKalkulator('wip', '×')">×</button>
-
-              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('wip', '4')">4</button>
-              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('wip', '5')">5</button>
-              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('wip', '6')">6</button>
-              <button type="button" class="key-btn key-op" onclick="tekanTombolKalkulator('wip', '-')">−</button>
-
-              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('wip', '1')">1</button>
-              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('wip', '2')">2</button>
-              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('wip', '3')">3</button>
-              <button type="button" class="key-btn key-op" onclick="tekanTombolKalkulator('wip', '+')">+</button>
-
-              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('wip', '0')">0</button>
-              <button type="button" class="key-btn" style="font-size:0.95rem;" onclick="tekanTombolKalkulator('wip', '00')">00</button>
-              <button type="button" class="key-btn key-back" onclick="tekanTombolKalkulator('wip', 'BACK')">⌫</button>
-              <button type="button" class="key-btn key-enter" onclick="tekanTombolKalkulator('wip', 'ENTER')">ENTER ↵</button>
-            </div>
+          <div class="group-qty-actions">
+            <button type="button" class="btn btn-emerald" onclick="tambahKelompokWip(1)">＋ TAMBAH KELOMPOK QTY</button>
+            <button type="button" class="btn btn-danger" onclick="tambahKelompokWip(-1)">− CATAT PENGAMBILAN</button>
           </div>
-
-          <div class="box-chips-container" id="boxChipsList"></div>
+          <details class="box-detail-disclosure" id="wipBoxDetails">
+            <summary id="wipBoxDetailsSummary">Lihat rincian box (0)</summary>
+            <div class="box-detail-list" id="boxChipsList"></div>
+          </details>
+          <input type="hidden" id="calcBoxInput" value="" /><span id="wipFormulaPreview" class="mobile-legacy-hidden">= 0 Box (0 PCS)</span>
         </div>
 
         <button type="button" id="btnSubmitWip" class="btn btn-emerald" style="margin-top:12px;" onclick="simpanItemWip()">
@@ -1064,7 +1021,7 @@
 
     <!-- KOLOM KANAN: REKAP, SIMPAN CLOUD & SHARE LANGSUNG WA -->
     <section>
-      <div class="card">
+      <div class="card sheet-section-target" id="wipListCard">
         <div class="card-header" style="margin-bottom:8px; border-bottom:none; padding-bottom:0;">
           <span class="card-title">2. Daftar Sisa Barang Bagus (Rincian Box & Edit)</span>
         </div>
@@ -1086,7 +1043,7 @@
         <div id="wipGroupedContainer"></div>
       </div>
 
-      <div class="card">
+      <div class="card sheet-section-target" id="wipWaCard">
         <div class="card-header">
           <span class="card-title">3. Laporan WhatsApp (Khusus Sisa WIP)</span>
         </div>
@@ -1321,7 +1278,16 @@
        SHEET 3: LAPORAN SPA AWAL SHIFT (MASING-MASING KOLOM ADA PAPAN KALKULATOR)
        ========================================================= -->
   <main id="sectionSpa" class="container" style="display:none;">
-    <section>
+    <div class="meta-grid two-cols mobile-sheet-meta" id="spaMetaControls">
+      <div><label>Pilih Tanggal SPA</label><input type="date" id="spaDate" onchange="simpanDraftLokal(); renderSpaAll();" /></div>
+      <div><label>Plant</label><select id="spaPlant" onchange="simpanDraftLokal(); renderSpaAll();"><option value="plant alpha">Plant Alpha</option><option value="plant beta">Plant Beta</option></select></div>
+    </div>
+    <nav class="sheet-section-nav" id="spaSectionNav" aria-label="Navigasi SPA Awal Shift">
+      <button type="button" class="sheet-nav-btn active" onclick="scrollToSheetSection('spaInputSection','spaSectionNav',this)"><span class="nav-number">1</span> INPUT SPA</button>
+      <button type="button" class="sheet-nav-btn" onclick="scrollToSheetSection('spaListCard','spaSectionNav',this)"><span class="nav-number">2</span> RINCIAN SPA</button>
+      <button type="button" class="sheet-nav-btn" onclick="scrollToSheetSection('spaWaCard','spaSectionNav',this)"><span class="nav-number">3</span> WHATSAPP</button>
+    </nav>
+    <section id="spaInputSection" class="sheet-section-target">
       <div class="card" id="spaInputCard">
         <div class="card-header">
           <span class="card-title" id="spaFormTitle">1. Input SPA & Ketersediaan</span>
@@ -1336,41 +1302,14 @@
           <button type="button" class="btn btn-danger" onclick="batalEditSpa()">Batal Edit</button>
         </div>
 
-        <div class="meta-grid two-cols">
-          <div>
-            <label>Pilih Tanggal SPA</label>
-            <input type="date" id="spaDate" onchange="simpanDraftLokal(); renderSpaAll();" />
-          </div>
-          <div>
-            <label>Plant</label>
-            <select id="spaPlant" onchange="simpanDraftLokal(); renderSpaAll();">
-              <option value="plant alpha">Plant Alpha</option>
-              <option value="plant beta">Plant Beta</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="search-box-wrapper" id="spaSearchWrapper">
-          <label>🔍 Cari Cepat Produk / Komponen untuk SPA:</label>
-          <div class="search-input-container">
-            <input
-              type="text"
-              id="spaSearchInput"
-              class="search-input"
-              placeholder="Ketik 8603, 8604, 4022, 1e02, inbs..."
-              oninput="onSpaSearchType()"
-              autocomplete="off"
-            />
-            <button type="button" id="clearSpaSearchBtn" class="btn-clear-search" onclick="clearSpaSearch()">✕</button>
-          </div>
-          <div class="quick-results" id="spaSearchResults"></div>
-        </div>
-
         <div style="background:#f8fafc; padding:12px; border-radius:10px; border:1px solid var(--border);">
           <div class="form-row-responsive" style="margin-top:0;">
             <div style="grid-column: 1 / -1;">
               <label>Nama Produk Utama (Header SPA)</label>
-              <input type="text" id="spaGroup" placeholder="Contoh: 8603 OMG" oninput="simpanDraftLokal()" />
+              <div class="group-suggest-wrap" id="spaGroupSearchWrap">
+                <input type="text" id="spaGroup" class="group-suggest-input" placeholder="Ketik kode atau nama produk..." autocomplete="off" oninput="onSpaSearchType(); simpanDraftLokal();" />
+                <div class="quick-results" id="spaGroupSuggestions"></div>
+              </div>
             </div>
             <div>
               <label>Info Line & Shift (Opsional)</label>
@@ -1406,145 +1345,44 @@
           </div>
         </div>
 
-        <!-- =====================================================
-             KOLOM 1: AUTO-KALKULATOR STOK ASSY (DENGAN PAPAN KETIK DI DALAMNYA)
-             ===================================================== -->
         <div class="calc-panel">
-          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">
-            <label style="color:var(--emerald); margin:0;">🧮 Auto-Kalkulator Stok ASSY:</label>
-            <span style="font-size:0.74rem; font-weight:700; color:var(--navy);">
-              <b id="spaAssyBoxCount" style="color:var(--purple);">0</b> Box | Total Assy: <b id="spaAssySum" style="font-size:0.95rem; color:var(--emerald);">0</b> PCS
-            </span>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+            <label style="color:var(--emerald);margin:0;">📦 INPUT STOK ASSY</label>
+            <span style="font-size:.75rem;font-weight:800;color:var(--navy);"><b id="spaAssyBoxCount" style="color:var(--purple);">0</b> Box | <b id="spaAssySum" style="color:var(--emerald);">0</b> PCS</span>
           </div>
-          <div class="calc-input-row">
-            <input
-              type="text"
-              inputmode="none"
-              id="spaCalcAssyInput"
-              class="input-calc"
-              placeholder="Contoh: 650×6+159"
-              oninput="filterHanyaAngkaKalkulator(this); updateLiveFormulaPreview('spa_assy');"
-              onkeydown="if(event.key==='Enter'){event.preventDefault(); tambahBoxSpa('assy', 1);}"
-            />
-            <button type="button" class="btn btn-primary" onclick="tambahBoxSpa('assy', 1)">+ Box Assy</button>
-            <button type="button" class="btn btn-danger" onclick="tambahBoxSpa('assy', -1)">➖ Kurangi</button>
+          <div class="group-qty-grid">
+            <div><label>Isi per box (PCS)</label><input type="text" inputmode="numeric" pattern="[0-9]*" id="spaAssyQtyPerBox" placeholder="Contoh: 650" oninput="this.value=this.value.replace(/[^0-9]/g,''); simpanDraftLokal();" /></div>
+            <div><label>Jumlah box sama</label><input type="text" inputmode="numeric" pattern="[0-9]*" id="spaAssyQtyBoxCount" placeholder="Contoh: 4" oninput="this.value=this.value.replace(/[^0-9]/g,''); simpanDraftLokal();" /></div>
           </div>
-
-          <!-- PAPAN KALKULATOR KHUSUS STOK ASSY (TEPAT DI BAWAH INPUT ASSY) -->
-          <div class="calc-keypad-wrapper">
-            <div class="calc-keypad-top">
-              <span>🧮 Papan Kalkulator STOK ASSY</span>
-              <span class="calc-live-result" id="spaAssyFormulaPreview">= 0 Box (0 PCS)</span>
-              <button
-                type="button"
-                onclick="toggleKeyboardHpMode('spaCalcAssyInput', this)"
-                style="background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.25); color:#fff; padding:3px 7px; border-radius:5px; font-size:0.66rem; cursor:pointer;"
-              >
-                ⌨️ Keyboard HP: OFF
-              </button>
-            </div>
-            <div class="calc-keypad-grid">
-              <button type="button" class="key-btn key-clear" onclick="tekanTombolKalkulator('spa_assy', 'C')">C</button>
-              <button type="button" class="key-btn key-op" onclick="tekanTombolKalkulator('spa_assy', '(')">(</button>
-              <button type="button" class="key-btn key-op" onclick="tekanTombolKalkulator('spa_assy', ')')">)</button>
-              <button type="button" class="key-btn key-op" onclick="tekanTombolKalkulator('spa_assy', '÷')">÷</button>
-
-              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('spa_assy', '7')">7</button>
-              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('spa_assy', '8')">8</button>
-              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('spa_assy', '9')">9</button>
-              <button type="button" class="key-btn key-op" onclick="tekanTombolKalkulator('spa_assy', '×')">×</button>
-
-              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('spa_assy', '4')">4</button>
-              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('spa_assy', '5')">5</button>
-              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('spa_assy', '6')">6</button>
-              <button type="button" class="key-btn key-op" onclick="tekanTombolKalkulator('spa_assy', '-')">−</button>
-
-              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('spa_assy', '1')">1</button>
-              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('spa_assy', '2')">2</button>
-              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('spa_assy', '3')">3</button>
-              <button type="button" class="key-btn key-op" onclick="tekanTombolKalkulator('spa_assy', '+')">+</button>
-
-              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('spa_assy', '0')">0</button>
-              <button type="button" class="key-btn" style="font-size:0.95rem;" onclick="tekanTombolKalkulator('spa_assy', '00')">00</button>
-              <button type="button" class="key-btn key-back" onclick="tekanTombolKalkulator('spa_assy', 'BACK')">⌫</button>
-              <button type="button" class="key-btn key-enter" onclick="tekanTombolKalkulator('spa_assy', 'ENTER')">ENTER ↵</button>
-            </div>
+          <div class="group-qty-actions">
+            <button type="button" class="btn btn-emerald" onclick="tambahKelompokSpa('assy',1)">＋ TAMBAH KELOMPOK QTY</button>
+            <button type="button" class="btn btn-danger" onclick="tambahKelompokSpa('assy',-1)">− CATAT PENGURANGAN</button>
           </div>
-
-          <!-- DAFTAR BOX ASSY DI BAWAH KALKULATOR AGAR TIDAK MENDORONG LAYAR INPUT -->
-          <div class="box-chips-container" id="spaAssyChips"></div>
+          <details class="box-detail-disclosure" id="spaAssyDetails">
+            <summary id="spaAssyDetailsSummary">Lihat rincian box Assy (0)</summary>
+            <div class="box-detail-list" id="spaAssyChips"></div>
+          </details>
+          <input type="hidden" id="spaCalcAssyInput" value="" /><span id="spaAssyFormulaPreview" class="mobile-legacy-hidden">= 0 Box (0 PCS)</span>
         </div>
-
-        <!-- =====================================================
-             KOLOM 2: AUTO-KALKULATOR STOK GUDANG (DENGAN PAPAN KETIK DI DALAMNYA)
-             ===================================================== -->
         <div class="calc-panel purple-calc">
-          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px;">
-            <label style="color:var(--purple); margin:0;">🧮 Auto-Kalkulator Stok GUDANG:</label>
-            <span style="font-size:0.74rem; font-weight:700; color:var(--navy);">
-              <b id="spaGudangBoxCount" style="color:var(--purple);">0</b> Box | Total Gudang: <b id="spaGudangSum" style="font-size:0.95rem; color:var(--purple);">0</b> PCS
-            </span>
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+            <label style="color:var(--purple);margin:0;">📦 INPUT STOK GUDANG</label>
+            <span style="font-size:.75rem;font-weight:800;color:var(--navy);"><b id="spaGudangBoxCount" style="color:var(--purple);">0</b> Box | <b id="spaGudangSum" style="color:var(--purple);">0</b> PCS</span>
           </div>
-          <div class="calc-input-row">
-            <input
-              type="text"
-              inputmode="none"
-              id="spaCalcGudangInput"
-              class="input-calc"
-              style="color:var(--purple);"
-              placeholder="Contoh: 650×10+420"
-              oninput="filterHanyaAngkaKalkulator(this); updateLiveFormulaPreview('spa_gudang');"
-              onkeydown="if(event.key==='Enter'){event.preventDefault(); tambahBoxSpa('gudang', 1);}"
-            />
-            <button type="button" class="btn btn-purple" onclick="tambahBoxSpa('gudang', 1)">+ Box Gudang</button>
-            <button type="button" class="btn btn-danger" onclick="tambahBoxSpa('gudang', -1)">➖ Kurangi</button>
+          <div class="group-qty-grid">
+            <div><label>Isi per box (PCS)</label><input type="text" inputmode="numeric" pattern="[0-9]*" id="spaGudangQtyPerBox" placeholder="Contoh: 650" oninput="this.value=this.value.replace(/[^0-9]/g,''); simpanDraftLokal();" /></div>
+            <div><label>Jumlah box sama</label><input type="text" inputmode="numeric" pattern="[0-9]*" id="spaGudangQtyBoxCount" placeholder="Contoh: 10" oninput="this.value=this.value.replace(/[^0-9]/g,''); simpanDraftLokal();" /></div>
           </div>
-
-          <!-- PAPAN KALKULATOR KHUSUS STOK GUDANG (TEPAT DI BAWAH INPUT GUDANG) -->
-          <div class="calc-keypad-wrapper">
-            <div class="calc-keypad-top">
-              <span style="color:#d8b4fe;">🧮 Papan Kalkulator STOK GUDANG</span>
-              <span class="calc-live-result" id="spaGudangFormulaPreview">= 0 Box (0 PCS)</span>
-              <button
-                type="button"
-                onclick="toggleKeyboardHpMode('spaCalcGudangInput', this)"
-                style="background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.25); color:#fff; padding:3px 7px; border-radius:5px; font-size:0.66rem; cursor:pointer;"
-              >
-                ⌨️ Keyboard HP: OFF
-              </button>
-            </div>
-            <div class="calc-keypad-grid">
-              <button type="button" class="key-btn key-clear" onclick="tekanTombolKalkulator('spa_gudang', 'C')">C</button>
-              <button type="button" class="key-btn key-op" onclick="tekanTombolKalkulator('spa_gudang', '(')">(</button>
-              <button type="button" class="key-btn key-op" onclick="tekanTombolKalkulator('spa_gudang', ')')">)</button>
-              <button type="button" class="key-btn key-op" onclick="tekanTombolKalkulator('spa_gudang', '÷')">÷</button>
-
-              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('spa_gudang', '7')">7</button>
-              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('spa_gudang', '8')">8</button>
-              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('spa_gudang', '9')">9</button>
-              <button type="button" class="key-btn key-op" onclick="tekanTombolKalkulator('spa_gudang', '×')">×</button>
-
-              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('spa_gudang', '4')">4</button>
-              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('spa_gudang', '5')">5</button>
-              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('spa_gudang', '6')">6</button>
-              <button type="button" class="key-btn key-op" onclick="tekanTombolKalkulator('spa_gudang', '-')">−</button>
-
-              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('spa_gudang', '1')">1</button>
-              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('spa_gudang', '2')">2</button>
-              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('spa_gudang', '3')">3</button>
-              <button type="button" class="key-btn key-op" onclick="tekanTombolKalkulator('spa_gudang', '+')">+</button>
-
-              <button type="button" class="key-btn" onclick="tekanTombolKalkulator('spa_gudang', '0')">0</button>
-              <button type="button" class="key-btn" style="font-size:0.95rem;" onclick="tekanTombolKalkulator('spa_gudang', '00')">00</button>
-              <button type="button" class="key-btn key-back" onclick="tekanTombolKalkulator('spa_gudang', 'BACK')">⌫</button>
-              <button type="button" class="key-btn key-enter" onclick="tekanTombolKalkulator('spa_gudang', 'ENTER')">ENTER ↵</button>
-            </div>
+          <div class="group-qty-actions">
+            <button type="button" class="btn btn-purple" onclick="tambahKelompokSpa('gudang',1)">＋ TAMBAH KELOMPOK QTY</button>
+            <button type="button" class="btn btn-danger" onclick="tambahKelompokSpa('gudang',-1)">− CATAT PENGURANGAN</button>
           </div>
-
-          <!-- DAFTAR BOX GUDANG DI BAWAH KALKULATOR AGAR TIDAK MENDORONG LAYAR INPUT -->
-          <div class="box-chips-container" id="spaGudangChips"></div>
+          <details class="box-detail-disclosure" id="spaGudangDetails">
+            <summary id="spaGudangDetailsSummary">Lihat rincian box Gudang (0)</summary>
+            <div class="box-detail-list" id="spaGudangChips"></div>
+          </details>
+          <input type="hidden" id="spaCalcGudangInput" value="" /><span id="spaGudangFormulaPreview" class="mobile-legacy-hidden">= 0 Box (0 PCS)</span>
         </div>
-
         <button type="button" id="btnSubmitSpa" class="btn btn-emerald" style="margin-top:14px; background:var(--purple);" onclick="simpanItemSpa()">
           ➕ SIMPAN KE LAPORAN SPA
         </button>
@@ -1552,7 +1390,7 @@
     </section>
 
     <section>
-      <div class="card">
+      <div class="card sheet-section-target" id="spaListCard">
         <div class="card-header">
           <span class="card-title">2. Rincian SPA (Assy + Gudang & Edit)</span>
           <button class="btn btn-danger" onclick="hapusSemuaSpa()">🗑️ Reset SPA</button>
@@ -1560,7 +1398,7 @@
         <div style="border:1px solid var(--border);border-radius:10px;padding:12px;margin:10px 0;"><b>📥 Import laporan WhatsApp SPA</b><p style="font-size:.73rem;color:var(--text-muted);">Tempel laporan SPA. Stok Assy, Gudang, stok khusus, NG Hold, dan barang menunggu dari Plant Beta dipisahkan.</p><textarea id="waImportSpaText" class="wa-preview" style="min-height:150px;" placeholder="Tempel laporan SPA dari WhatsApp di sini..."></textarea><button class="btn btn-sky" onclick="previewImportSpa()">🔎 Proses & Preview</button> <button class="btn btn-outline" onclick="bersihkanImportSpa()">Bersihkan</button><div id="waImportSpaPreview" style="margin-top:8px;font-size:.78rem;"></div></div><div id="spaGroupedContainer"></div>
       </div>
 
-      <div class="card">
+      <div class="card sheet-section-target" id="spaWaCard">
         <div class="card-header">
           <span class="card-title">3. Laporan WA SPA</span>
         </div>
