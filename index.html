@@ -935,6 +935,9 @@
     .wa-import-body { border-top:1px solid var(--border); padding:12px; }
     .wa-import-body > p { margin:0 0 8px; }
     .wa-import-body textarea { display:block; width:100%; margin-bottom:8px; }
+    .fg-break-presets { display:flex; flex-wrap:wrap; gap:6px; margin-top:7px; }
+    .fg-break-preset { min-height:34px; padding:6px 10px; font-size:.7rem; }
+    .fg-break-preset.selected { background:var(--navy); color:#fff; border-color:var(--navy); }
     .mobile-legacy-hidden { display:none !important; }
     @media (max-width:879px) {
       .mobile-tab-hidden { display:none !important; }
@@ -1214,7 +1217,12 @@
           <div>
             <label>Durasi Istirahat (Menit)</label>
             <input type="number" id="fgBreakMinutes" inputmode="numeric" min="0" step="1" placeholder="Kosongkan jika tidak istirahat" oninput="onFgDurationInput()" />
-            <div style="font-size:.66rem;color:var(--text-muted);margin-top:3px;">Contoh: 60 untuk istirahat 1 jam. Kosong = 0 menit.</div>
+            <div class="fg-break-presets" aria-label="Pilihan cepat durasi istirahat">
+              <button type="button" class="btn btn-outline fg-break-preset" data-minutes="0" onclick="pilihDurasiIstirahat(0)">0 • Tidak istirahat</button>
+              <button type="button" class="btn btn-outline fg-break-preset" data-minutes="30" onclick="pilihDurasiIstirahat(30)">30 menit</button>
+              <button type="button" class="btn btn-outline fg-break-preset" data-minutes="60" onclick="pilihDurasiIstirahat(60)">60 menit</button>
+            </div>
+            <div style="font-size:.66rem;color:var(--text-muted);margin-top:3px;">Pilih saran di atas atau isi durasi istirahat secara manual.</div>
           </div>
           <div style="grid-column: 1 / -1;">
             <label>Nama Produk</label>
@@ -5364,6 +5372,18 @@
       targetInput.value = String(calculated);
       fgTargetTouched = false;
       return calculated;
+    }
+
+    function pilihDurasiIstirahat(menit) {
+      const value = Number(menit);
+      if (![0, 30, 60].includes(value)) return;
+      const input = document.getElementById("fgBreakMinutes");
+      if (!input) return;
+      input.value = String(value);
+      document.querySelectorAll(".fg-break-preset").forEach(button => {
+        button.classList.toggle("selected", Number(button.dataset.minutes) === value);
+      });
+      onFgDurationInput();
     }
 
     function onFgDurationInput() {
