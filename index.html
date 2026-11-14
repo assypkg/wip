@@ -1227,7 +1227,7 @@
           <div style="grid-column: 1 / -1;">
             <label>Nama Produk</label>
             <div class="fg-product-search-wrap" style="position:relative;">
-              <input type="text" id="fgProductName" placeholder="Ketik kode atau nama produk FG..." autocomplete="off" oninput="onFgProductSearchType(); hitungTargetFgOtomatis(true); simpanDraftLokal();" onfocus="onFgProductSearchType()" onkeydown="onFgProductSearchKey(event)" aria-controls="fgProductSuggestions" aria-expanded="false" />
+              <input type="text" id="fgProductName" placeholder="Ketik kode atau nama produk FG..." autocomplete="off" oninput="onFgProductInput()" onfocus="onFgProductSearchType()" onkeydown="onFgProductSearchKey(event)" aria-controls="fgProductSuggestions" aria-expanded="false" />
               <div class="quick-results" id="fgProductSuggestions" role="listbox" aria-label="Saran nama produk Finish Good"></div>
             </div>
             <div style="font-size:0.68rem; color:var(--text-muted); margin-top:3px;">Pilih dari Master Produk FG atau ketik nama produk.</div>
@@ -1783,6 +1783,9 @@
         <label for="masterProdukFgTarget8h">Target Standar Produksi (8 Jam / PCS)</label>
         <input type="text" inputmode="numeric" id="masterProdukFgTarget8h" placeholder="Contoh: 22440" oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
         <div style="font-size:.68rem;color:var(--text-muted);margin-top:-4px;">Target ini menjadi dasar perhitungan otomatis sesuai durasi jam kerja pada input Finish Good.</div>
+        <label for="masterProdukFgPcsPerBox">Qty Standar per Box (PCS)</label>
+        <input type="text" inputmode="numeric" id="masterProdukFgPcsPerBox" placeholder="Contoh: 550" oninput="this.value=this.value.replace(/[^0-9]/g,'')" />
+        <div style="font-size:.68rem;color:var(--text-muted);margin-top:-4px;">Qty ini otomatis mengisi kolom Isi Per Box pada kalkulator Finish Good.</div>
         <div style="display:flex; gap:6px; flex-wrap:wrap;">
           <button class="btn btn-primary" id="btnSimpanMasterProdukFg" type="button" onclick="simpanItemMasterProdukFg()">+ Tambah Produk</button>
           <button class="btn btn-outline" id="btnBatalEditMasterProdukFg" type="button" onclick="batalEditMasterProdukFg()" style="display:none;">Batal Edit</button>
@@ -1981,6 +1984,8 @@
     const MASTER_PRODUK_FG_BACKUP_KEY = "assy_master_produk_fg_backup_v1";
     const MASTER_PRODUK_FG_TARGET_KEY = "assy_master_produk_fg_target_v1";
     const MASTER_PRODUK_FG_TARGET_BASE_KEY = "assy_master_produk_fg_target_cloud_base_v1";
+    const MASTER_PRODUK_FG_PCS_PER_BOX_KEY = "assy_master_produk_fg_pcs_per_box_v1";
+    const MASTER_PRODUK_FG_PCS_PER_BOX_BASE_KEY = "assy_master_produk_fg_pcs_per_box_cloud_base_v1";
     const MASTER_JOB_ORDER_KEY = "assy_master_job_order_v1";
     const MASTER_JOB_ORDER_BASE_KEY = "assy_master_job_order_cloud_base_v1";
     const MASTER_JOB_ORDER_UPDATE_KEY = "assy_master_job_order_cloud_update_v1";
@@ -1998,6 +2003,7 @@
     let editingMasterLeader = null;
     let masterProdukFg = JSON.parse(localStorage.getItem(MASTER_PRODUK_FG_KEY) || "[]");
     let masterTargetFg = JSON.parse(localStorage.getItem(MASTER_PRODUK_FG_TARGET_KEY) || "{}");
+    let masterPcsPerBoxFg = JSON.parse(localStorage.getItem(MASTER_PRODUK_FG_PCS_PER_BOX_KEY) || "{}");
     let masterJobOrders = JSON.parse(localStorage.getItem(MASTER_JOB_ORDER_KEY) || "[]");
     let masterJobOrderReady = false;
     let masterJobOrderBusy = false;
@@ -2028,6 +2034,7 @@
     let editingWipId = null;
     let editingFgId = null;
     let fgTargetTouched = false;
+    let fgPcsPerBoxAutoFilled = false;
     let wipEditPlaceholder = null;
     let fgEditPlaceholder = null;
     let fgEditWasMobileHidden = false;
@@ -3251,6 +3258,7 @@
       document.getElementById("fgDuration").value = last.duration;
       document.getElementById("fgTarget").value = last.target;
       document.getElementById("fgPcsPerBox").value = last.pcsPerBox;
+      fgPcsPerBoxAutoFilled = false;
       hitungPreviewFg();
       simpanDraftLokal();
       document.getElementById("fgLeader").focus();
@@ -3370,6 +3378,7 @@
       document.getElementById("fgTarget").value = item.target;
       fgTargetTouched = true;
       document.getElementById("fgPcsPerBox").value = item.pcsPerBox;
+      fgPcsPerBoxAutoFilled = false;
       document.getElementById("fgBoxA").value = item.boxA;
       document.getElementById("fgBoxB").value = item.boxB;
       document.getElementById("fgRecehAQty").value = (item.recehABoxes || []).join("+");
@@ -5328,6 +5337,64 @@
       return found ? Math.max(0, Math.round(Number(found[1]) || 0)) : 0;
     }
 
+    function normalisasiPcsPerBoxMasterFg(raw, products = masterProdukFg) {
+      const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+      const lookup = new Map();
+      (Array.isArray(products) ? products : []).forEach(name => {
+        const clean = String(name || "").trim().replace(/\\s+/g, " ");
+        const key = kunciNamaMasterProdukFg(clean);
+        if (!key) return;
+        if (lookup.has(key) && lookup.get(key) !== clean) lookup.set(key, null);
+        else if (!lookup.has(key)) lookup.set(key, clean);
+      });
+      const result = {};
+      Object.entries(source).forEach(([name, value]) => {
+        const cleanName = String(name || "").normalize("NFKC")
+          .replace(/[\\u200B-\\u200D\\uFEFF]/g, "").trim().replace(/\\s+/g, " ");
+        if (!cleanName) return;
+        const canonicalName = lookup.get(kunciNamaMasterProdukFg(cleanName));
+        const qty = Math.round(Number(typeof value === "number" ? value : String(value ?? "").replace(/[^0-9]/g, "")) || 0);
+        if (Number.isSafeInteger(qty) && qty > 0) result[canonicalName || cleanName] = qty;
+      });
+      return Object.fromEntries(Object.entries(result).sort((a,b) =>
+        new Intl.Collator("id",{numeric:true,sensitivity:"base"}).compare(a[0],b[0])
+      ));
+    }
+
+    function ambilPcsPerBoxStandarFg(productName) {
+      const key = kunciNamaMasterProdukFg(productName);
+      if (!key) return 0;
+      const found = Object.entries(masterPcsPerBoxFg || {}).find(([name]) => kunciNamaMasterProdukFg(name) === key);
+      return found ? Math.max(0, Math.round(Number(found[1]) || 0)) : 0;
+    }
+
+    function terapkanPcsPerBoxMasterFg(productName, resetIfMissing = false) {
+      const input = document.getElementById("fgPcsPerBox");
+      if (!input) return 0;
+      const standard = ambilPcsPerBoxStandarFg(productName);
+      if (standard > 0) {
+        input.value = String(standard);
+        fgPcsPerBoxAutoFilled = true;
+      } else if (resetIfMissing && fgPcsPerBoxAutoFilled) {
+        input.value = "550";
+        fgPcsPerBoxAutoFilled = false;
+      }
+      hitungPreviewFg();
+      return standard;
+    }
+
+    function onFgProductInput() {
+      onFgProductSearchType();
+      hitungTargetFgOtomatis(true);
+      const input = document.getElementById("fgProductName");
+      const exactProduct = masterProdukFg.find(name =>
+        kunciNamaMasterProdukFg(name) === kunciNamaMasterProdukFg(input?.value || "")
+      );
+      if (exactProduct) terapkanPcsPerBoxMasterFg(exactProduct, true);
+      else if (fgPcsPerBoxAutoFilled) terapkanPcsPerBoxMasterFg("", true);
+      simpanDraftLokal();
+    }
+
     function hitungDurasiJamKerja(value, breakMinutes = 0) {
       const match = String(value || "").trim().match(/^(\d{1,2})[.:](\d{2})\s*[-–—]\s*(\d{1,2})[.:](\d{2})$/);
       if (!match) return 0;
@@ -5403,13 +5470,19 @@
     function simpanMasterProdukFgLokal() {
       masterProdukFg = normalisasiMasterProdukFg(masterProdukFg);
       masterTargetFg = normalisasiTargetMasterFg(masterTargetFg, masterProdukFg);
+      masterPcsPerBoxFg = normalisasiPcsPerBoxMasterFg(masterPcsPerBoxFg, masterProdukFg);
       localStorage.setItem(MASTER_PRODUK_FG_KEY,JSON.stringify(masterProdukFg));
       localStorage.setItem(MASTER_PRODUK_FG_TARGET_KEY,JSON.stringify(masterTargetFg));
+      localStorage.setItem(MASTER_PRODUK_FG_PCS_PER_BOX_KEY,JSON.stringify(masterPcsPerBoxFg));
       const count=document.getElementById("masterProdukFgCount"); if(count)count.textContent=masterProdukFg.length;
       const dl=document.getElementById("fgProductMasterList");
       if(dl)dl.innerHTML=masterProdukFg.map(name=>'<option value="'+name.replace(/[&<>"]/g,"")+'"></option>').join("");
       renderMasterProdukFg();
       hitungTargetFgOtomatis(false);
+      const currentProduct = document.getElementById("fgProductName")?.value || "";
+      if (currentProduct && ambilPcsPerBoxStandarFg(currentProduct) > 0) {
+        terapkanPcsPerBoxMasterFg(currentProduct, false);
+      }
     }
 
     function setStatusMasterProdukFg(type,message) {
@@ -5419,7 +5492,7 @@
       const btn=document.getElementById("btnBackupMasterProdukFg");if(btn)btn.style.display=localStorage.getItem(MASTER_PRODUK_FG_BACKUP_KEY)?"inline-flex":"none";
     }
 
-    function gabungkanMasterProdukFgTigaArah(baseProducts, baseTargets, localProducts, localTargets, remoteProducts, remoteTargets) {
+    function gabungkanMasterProdukFgTigaArah(baseProducts, baseTargets, localProducts, localTargets, remoteProducts, remoteTargets, basePcsPerBox = {}, localPcsPerBox = {}, remotePcsPerBox = {}) {
       const normalizeProducts = list => normalisasiMasterProdukFg(list);
       const baseList = normalizeProducts(baseProducts);
       const localList = normalizeProducts(localProducts);
@@ -5442,110 +5515,134 @@
         if (keep) mergedNames.push(lMap.get(key) || rMap.get(key) || bMap.get(key));
       });
 
-      const normalizeTargets = (targets, products) => {
-        const normalized = normalisasiTargetMasterFg(targets, products);
-        return new Map(Object.entries(normalized).map(([name, value]) => [name.toLocaleLowerCase("id"), Number(value)]));
+      const mergeMetric = (baseValues, localValues, remoteValues, metricLabel, normalize) => {
+        const bm = normalize(baseValues, baseList);
+        const lm = normalize(localValues, localList);
+        const rm = normalize(remoteValues, remoteList);
+        const keyed = object => new Map(Object.entries(object).map(([name,value]) => [kunciNamaMasterProdukFg(name), {name,value:Number(value)}]));
+        const bValues = keyed(bm), lValues = keyed(lm), rValues = keyed(rm);
+        const keys = new Set([...bValues.keys(), ...lValues.keys(), ...rValues.keys()]);
+        const merged = {};
+        keys.forEach(key => {
+          const b = bValues.has(key) ? bValues.get(key).value : null;
+          const l = lValues.has(key) ? lValues.get(key).value : null;
+          const r = rValues.has(key) ? rValues.get(key).value : null;
+          let value;
+          if (l === b) value = r;
+          else if (r === b || l === r) value = l;
+          else {
+            const name = lValues.get(key)?.name || rValues.get(key)?.name || bValues.get(key)?.name || key;
+            conflicts.push(metricLabel + " berbeda untuk: " + name);
+            return;
+          }
+          if (value !== null && Number.isFinite(value) && value > 0) {
+            const canonical = mergedNames.find(name => kunciNamaMasterProdukFg(name) === key);
+            const name = canonical || lValues.get(key)?.name || rValues.get(key)?.name || bValues.get(key)?.name;
+            if (name) merged[name] = value;
+          }
+        });
+        return merged;
       };
-      const bt = normalizeTargets(baseTargets, baseList);
-      const lt = normalizeTargets(localTargets, localList);
-      const rt = normalizeTargets(remoteTargets, remoteList);
-      const mergedTargets = {};
 
-      mergedNames.forEach(name => {
-        const key = name.toLocaleLowerCase("id");
-        const b = bt.has(key) ? bt.get(key) : null;
-        const l = lt.has(key) ? lt.get(key) : null;
-        const r = rt.has(key) ? rt.get(key) : null;
-        let value;
-        if (l === b) value = r;
-        else if (r === b || l === r) value = l;
-        else {
-          conflicts.push("Target 8 jam berbeda untuk: " + name);
-          return;
-        }
-        if (value !== null && Number.isFinite(value) && value > 0) mergedTargets[name] = value;
-      });
-
+      const mergedTargets = mergeMetric(baseTargets, localTargets, remoteTargets, "Target 8 jam", normalisasiTargetMasterFg);
+      const mergedPcsPerBox = mergeMetric(basePcsPerBox, localPcsPerBox, remotePcsPerBox, "Qty per box", normalisasiPcsPerBoxMasterFg);
       if (conflicts.length) return { ok: false, conflicts };
       const products = normalizeProducts(mergedNames);
-      return { ok: true, products, targets: normalisasiTargetMasterFg(mergedTargets, products) };
+      return {
+        ok: true,
+        products,
+        targets: normalisasiTargetMasterFg(mergedTargets, products),
+        pcsPerBox: normalisasiPcsPerBoxMasterFg(mergedPcsPerBox, products)
+      };
     }
 
     async function tarikMasterProdukFgCloud() {
       if(masterProdukFgBusy)return false;
       masterProdukFgBusy=true;
-      setStatusMasterProdukFg("syncing","Memeriksa produk dan target standar di Cloud...");
+      setStatusMasterProdukFg("syncing","Memeriksa produk, target, dan qty per box di Cloud...");
       try {
         const url=getFirestoreBaseUrl()+"/"+COLLECTION_MASTER+"/master_produk_finishgood";
         const res=await fetch(url,{cache:"no-store"});
         if(res.status===404){
           if(localStorage.getItem(MASTER_PRODUK_FG_UPDATE_KEY)){
             masterProdukFgConflict=true;
-            localStorage.setItem(MASTER_PRODUK_FG_BACKUP_KEY,JSON.stringify({savedAt:new Date().toISOString(),products:masterProdukFg,targets:masterTargetFg}));
-            setStatusMasterProdukFg("conflict","Dokumen Cloud tidak ditemukan. Produk dan target lokal diamankan.");
+            localStorage.setItem(MASTER_PRODUK_FG_BACKUP_KEY,JSON.stringify({savedAt:new Date().toISOString(),products:masterProdukFg,targets:masterTargetFg,pcsPerBox:masterPcsPerBoxFg}));
+            setStatusMasterProdukFg("conflict","Dokumen Cloud tidak ditemukan. Produk, target, dan qty per box lokal diamankan.");
             return false;
           }
           masterProdukFgReady=true;
-          if(masterProdukFg.length>0 || Object.keys(masterTargetFg).length>0) masterProdukFgBootstrapQueued=true;
-          setStatusMasterProdukFg("warning",masterProdukFg.length?"Dokumen Cloud belum ada. Produk dan target lokal akan dikirim sebagai Master FG pusat.":"Master FG Cloud belum dibuat. Tambahkan produk dan target 8 jam.");
+          if(masterProdukFg.length>0 || Object.keys(masterTargetFg).length>0 || Object.keys(masterPcsPerBoxFg).length>0) masterProdukFgBootstrapQueued=true;
+          setStatusMasterProdukFg("warning",masterProdukFg.length?"Dokumen Cloud belum ada. Data Master FG lokal akan dikirim sebagai Master FG pusat.":"Master FG Cloud belum dibuat. Tambahkan produk beserta target atau qty per box.");
           return true;
         }
         if(!res.ok)throw new Error("Firestore GET gagal (HTTP "+res.status+")");
         const doc=await res.json();
-        let remoteProducts, remoteTargets;
+        let remoteProducts, remoteTargets, remotePcsPerBox;
         try {
           remoteProducts=JSON.parse(doc.fields?.productsJson?.stringValue||"[]");
           remoteTargets=JSON.parse(doc.fields?.targetsJson?.stringValue||"{}");
-        } catch(e) { throw new Error("Format data Master Produk/Target Cloud tidak valid."); }
-        if(!Array.isArray(remoteProducts) || !remoteTargets || typeof remoteTargets!=="object" || Array.isArray(remoteTargets)) {
-          throw new Error("Struktur data Master Produk/Target Cloud tidak valid.");
+          remotePcsPerBox=JSON.parse(doc.fields?.pcsPerBoxJson?.stringValue||"{}");
+        } catch(e) { throw new Error("Format data Master Produk/Target/Qty per Box Cloud tidak valid."); }
+        if(!Array.isArray(remoteProducts) || !remoteTargets || typeof remoteTargets!=="object" || Array.isArray(remoteTargets) ||
+           !remotePcsPerBox || typeof remotePcsPerBox!=="object" || Array.isArray(remotePcsPerBox)) {
+          throw new Error("Struktur data Master Produk/Target/Qty per Box Cloud tidak valid.");
         }
         const normalized=normalisasiMasterProdukFg(remoteProducts);
         const normalizedTargets=normalisasiTargetMasterFg(remoteTargets,normalized);
+        const normalizedPcsPerBox=normalisasiPcsPerBoxMasterFg(remotePcsPerBox,normalized);
         const baseTime=localStorage.getItem(MASTER_PRODUK_FG_UPDATE_KEY);
         const baseRaw=localStorage.getItem(MASTER_PRODUK_FG_BASE_KEY);
         const targetBaseRaw=localStorage.getItem(MASTER_PRODUK_FG_TARGET_BASE_KEY);
+        const pcsPerBoxBaseRaw=localStorage.getItem(MASTER_PRODUK_FG_PCS_PER_BOX_BASE_KEY);
         const base=baseRaw?JSON.parse(baseRaw):null;
         const targetBase=targetBaseRaw?JSON.parse(targetBaseRaw):{};
+        const pcsPerBoxBase=pcsPerBoxBaseRaw?JSON.parse(pcsPerBoxBaseRaw):{};
         const localProducts=normalisasiMasterProdukFg(masterProdukFg);
         const localTargets=normalisasiTargetMasterFg(masterTargetFg,localProducts);
+        const localPcsPerBox=normalisasiPcsPerBoxMasterFg(masterPcsPerBoxFg,localProducts);
         const localChanged=!!base && (
           JSON.stringify(localProducts)!==JSON.stringify(normalisasiMasterProdukFg(base)) ||
-          JSON.stringify(localTargets)!==JSON.stringify(normalisasiTargetMasterFg(targetBase,localProducts))
+          JSON.stringify(localTargets)!==JSON.stringify(normalisasiTargetMasterFg(targetBase,localProducts)) ||
+          JSON.stringify(localPcsPerBox)!==JSON.stringify(normalisasiPcsPerBoxMasterFg(pcsPerBoxBase,localProducts))
         );
 
         if(!baseTime || !base) {
           const differs = JSON.stringify(localProducts)!==JSON.stringify(normalized) ||
-            JSON.stringify(localTargets)!==JSON.stringify(normalisasiTargetMasterFg(normalizedTargets,normalized));
-          if((localProducts.length>0 || Object.keys(localTargets).length>0) && differs) {
+            JSON.stringify(localTargets)!==JSON.stringify(normalizedTargets) ||
+            JSON.stringify(localPcsPerBox)!==JSON.stringify(normalizedPcsPerBox);
+          if((localProducts.length>0 || Object.keys(localTargets).length>0 || Object.keys(localPcsPerBox).length>0) && differs) {
             localStorage.setItem(MASTER_PRODUK_FG_BACKUP_KEY,JSON.stringify({
-              savedAt:new Date().toISOString(),products:localProducts,targets:localTargets,
-              reason:"Backup lokal sebelum mengikuti Master Produk/Target Cloud"
+              savedAt:new Date().toISOString(),products:localProducts,targets:localTargets,pcsPerBox:localPcsPerBox,
+              reason:"Backup lokal sebelum mengikuti Master Produk/Target/Qty per Box Cloud"
             }));
           }
           masterProdukFg=normalized;
           masterTargetFg=normalizedTargets;
+          masterPcsPerBoxFg=normalizedPcsPerBox;
         } else if(doc.updateTime!==baseTime) {
           if(localChanged) {
-            const merge = gabungkanMasterProdukFgTigaArah(base, targetBase, localProducts, localTargets, normalized, normalizedTargets);
+            const merge = gabungkanMasterProdukFgTigaArah(
+              base,targetBase,localProducts,localTargets,normalized,normalizedTargets,
+              pcsPerBoxBase,localPcsPerBox,normalizedPcsPerBox
+            );
             if(!merge.ok) {
               masterProdukFgConflict=true;
               localStorage.setItem(MASTER_PRODUK_FG_BACKUP_KEY,JSON.stringify({
                 savedAt:new Date().toISOString(),
-                products:localProducts,targets:localTargets,
-                cloudProducts:normalized,cloudTargets:normalizedTargets,
-                baseProducts:base,baseTargets:targetBase,
+                products:localProducts,targets:localTargets,pcsPerBox:localPcsPerBox,
+                cloudProducts:normalized,cloudTargets:normalizedTargets,cloudPcsPerBox:normalizedPcsPerBox,
+                baseProducts:base,baseTargets:targetBase,basePcsPerBox:pcsPerBoxBase,
                 conflicts:merge.conflicts
               }));
-              setStatusMasterProdukFg("conflict","Ada perubahan pada produk/target yang sama. Data lokal dan Cloud sudah diamankan; perlu pemeriksaan sebelum digabungkan.");
+              setStatusMasterProdukFg("conflict","Ada perubahan Master FG/target/qty per box yang bertabrakan. Data lokal dan Cloud diamankan untuk diperiksa.");
               return false;
             }
-            // Perubahan lokal dan Cloud yang tidak bertabrakan digabungkan.
-            // Versi Cloud terbaru dijadikan dasar sebelum mengirim hasil gabungan dengan precondition.
             masterProdukFg=merge.products;
             masterTargetFg=merge.targets;
+            masterPcsPerBoxFg=merge.pcsPerBox;
             localStorage.setItem(MASTER_PRODUK_FG_BASE_KEY,JSON.stringify(normalized));
             localStorage.setItem(MASTER_PRODUK_FG_TARGET_BASE_KEY,JSON.stringify(normalizedTargets));
+            localStorage.setItem(MASTER_PRODUK_FG_PCS_PER_BOX_BASE_KEY,JSON.stringify(normalizedPcsPerBox));
             localStorage.setItem(MASTER_PRODUK_FG_UPDATE_KEY,doc.updateTime||"");
             masterProdukFgMergeQueued=true;
             masterProdukFgReady=true;
@@ -5556,19 +5653,21 @@
           }
           masterProdukFg=normalized;
           masterTargetFg=normalizedTargets;
+          masterPcsPerBoxFg=normalizedPcsPerBox;
         } else {
-          // Dokumen Cloud tidak berubah; pastikan field target legacy yang belum ada tetap kompatibel.
           masterProdukFg=localProducts;
           masterTargetFg=localTargets;
+          masterPcsPerBoxFg=localPcsPerBox;
         }
 
         localStorage.setItem(MASTER_PRODUK_FG_BASE_KEY,JSON.stringify(normalized));
         localStorage.setItem(MASTER_PRODUK_FG_TARGET_BASE_KEY,JSON.stringify(normalizedTargets));
+        localStorage.setItem(MASTER_PRODUK_FG_PCS_PER_BOX_BASE_KEY,JSON.stringify(normalizedPcsPerBox));
         localStorage.setItem(MASTER_PRODUK_FG_UPDATE_KEY,doc.updateTime||"");
         masterProdukFgReady=true;
         masterProdukFgConflict=false;
         simpanMasterProdukFgLokal();
-        setStatusMasterProdukFg("success","Sinkron dan terverifikasi • "+masterProdukFg.length+" produk • "+Object.keys(masterTargetFg).length+" target standar.");
+        setStatusMasterProdukFg("success","Sinkron dan terverifikasi • "+masterProdukFg.length+" produk • "+Object.keys(masterTargetFg).length+" target standar • "+Object.keys(masterPcsPerBoxFg).length+" qty/box.");
         return true;
       } catch(e) {
         masterProdukFgReady=false;
@@ -5592,7 +5691,7 @@
         return false;
       }
       masterProdukFgBusy=true;
-      setStatusMasterProdukFg("syncing","Memverifikasi versi Cloud sebelum menyimpan produk dan target...");
+      setStatusMasterProdukFg("syncing","Memverifikasi versi Cloud sebelum menyimpan produk, target, dan qty per box...");
       try {
         const url=getFirestoreBaseUrl()+"/"+COLLECTION_MASTER+"/master_produk_finishgood";
         const check=await fetch(url,{cache:"no-store"});
@@ -5606,21 +5705,23 @@
           updateTime=current.updateTime;
           if(!baseTime||updateTime!==baseTime) {
             masterProdukFgConflict=true;
-            localStorage.setItem(MASTER_PRODUK_FG_BACKUP_KEY,JSON.stringify({savedAt:new Date().toISOString(),products:masterProdukFg,targets:masterTargetFg}));
-            setStatusMasterProdukFg("conflict","Versi Cloud berubah. Produk dan target lokal diamankan; penyimpanan dihentikan.");
+            localStorage.setItem(MASTER_PRODUK_FG_BACKUP_KEY,JSON.stringify({savedAt:new Date().toISOString(),products:masterProdukFg,targets:masterTargetFg,pcsPerBox:masterPcsPerBoxFg}));
+            setStatusMasterProdukFg("conflict","Versi Cloud berubah. Produk, target, dan qty per box lokal diamankan; penyimpanan dihentikan.");
             return false;
           }
         }
 
         const productsSnapshot=normalisasiMasterProdukFg(masterProdukFg);
         const targetsSnapshot=normalisasiTargetMasterFg(masterTargetFg,productsSnapshot);
+        const pcsPerBoxSnapshot=normalisasiPcsPerBoxMasterFg(masterPcsPerBoxFg,productsSnapshot);
         const patchUrl=new URL(url);
         if(updateTime)patchUrl.searchParams.set("currentDocument.updateTime",updateTime);
         else patchUrl.searchParams.set("currentDocument.exists","false");
         const payload={fields:{
           updatedAt:{stringValue:new Date().toISOString()},
           productsJson:{stringValue:JSON.stringify(productsSnapshot)},
-          targetsJson:{stringValue:JSON.stringify(targetsSnapshot)}
+          targetsJson:{stringValue:JSON.stringify(targetsSnapshot)},
+          pcsPerBoxJson:{stringValue:JSON.stringify(pcsPerBoxSnapshot)}
         }};
         const saved=await fetch(patchUrl.toString(),{method:"PATCH",cache:"no-store",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
         if(saved.status===409||saved.status===412)throw new Error("Konflik versi saat menyimpan (HTTP "+saved.status+")");
@@ -5630,19 +5731,22 @@
         }
         const savedDoc=await saved.json();
         const verify=await fetch(url,{cache:"no-store"});
-        if(!verify.ok)throw new Error("Produk tersimpan tetapi verifikasi baca ulang Cloud gagal (HTTP "+verify.status+").");
+        if(!verify.ok)throw new Error("Master FG tersimpan tetapi verifikasi baca ulang Cloud gagal (HTTP "+verify.status+").");
         const verified=await verify.json();
         const remoteProducts=JSON.parse(verified.fields?.productsJson?.stringValue||"[]");
         const remoteTargets=JSON.parse(verified.fields?.targetsJson?.stringValue||"{}");
+        const remotePcsPerBox=JSON.parse(verified.fields?.pcsPerBoxJson?.stringValue||"{}");
         if(JSON.stringify(normalisasiMasterProdukFg(remoteProducts))!==JSON.stringify(productsSnapshot) ||
-           JSON.stringify(normalisasiTargetMasterFg(remoteTargets,productsSnapshot))!==JSON.stringify(targetsSnapshot)) {
-          throw new Error("Verifikasi Cloud tidak cocok dengan produk/target yang dikirim.");
+           JSON.stringify(normalisasiTargetMasterFg(remoteTargets,productsSnapshot))!==JSON.stringify(targetsSnapshot) ||
+           JSON.stringify(normalisasiPcsPerBoxMasterFg(remotePcsPerBox,productsSnapshot))!==JSON.stringify(pcsPerBoxSnapshot)) {
+          throw new Error("Verifikasi Cloud tidak cocok dengan produk/target/qty per box yang dikirim.");
         }
         localStorage.setItem(MASTER_PRODUK_FG_BASE_KEY,JSON.stringify(productsSnapshot));
         localStorage.setItem(MASTER_PRODUK_FG_TARGET_BASE_KEY,JSON.stringify(targetsSnapshot));
+        localStorage.setItem(MASTER_PRODUK_FG_PCS_PER_BOX_BASE_KEY,JSON.stringify(pcsPerBoxSnapshot));
         localStorage.setItem(MASTER_PRODUK_FG_UPDATE_KEY,verified.updateTime||savedDoc.updateTime||"");
         masterProdukFgReady=true;
-        setStatusMasterProdukFg("success","Produk dan target berhasil disimpan serta diverifikasi di Cloud • "+productsSnapshot.length+" produk • "+Object.keys(targetsSnapshot).length+" target.");
+        setStatusMasterProdukFg("success","Master FG berhasil disimpan dan diverifikasi di Cloud • "+productsSnapshot.length+" produk • "+Object.keys(targetsSnapshot).length+" target • "+Object.keys(pcsPerBoxSnapshot).length+" qty/box.");
         return true;
       } catch(e) {
         setStatusMasterProdukFg("error","Gagal menyimpan Cloud: "+e.message+". Data lokal tetap tersedia.");
@@ -6281,6 +6385,7 @@
             input.value = name;
             tutupFgProductSuggestions();
             hitungTargetFgOtomatis(true);
+            terapkanPcsPerBoxMasterFg(name, true);
             simpanDraftLokal();
           });
           box.appendChild(item);
@@ -6310,36 +6415,47 @@
       const list=document.getElementById("masterProdukFgList"),info=document.getElementById("masterProdukFgInfo");
       if(!list||!info)return;
       const q=(document.getElementById("masterProdukFgSearch")?.value||"").trim().toLowerCase();
-      const items=masterProdukFg.map((name,index)=>({name,index,target:ambilTargetStandarFg(name)})).filter(x=>!q||x.name.toLowerCase().includes(q));
+      const items=masterProdukFg.map((name,index)=>({
+        name,index,target:ambilTargetStandarFg(name),pcsPerBox:ambilPcsPerBoxStandarFg(name)
+      })).filter(x=>!q||x.name.toLowerCase().includes(q));
       info.textContent=q
         ? "Ditemukan "+items.length+" dari "+masterProdukFg.length+" produk."
-        : "Total "+masterProdukFg.length+" produk • "+Object.keys(masterTargetFg).length+" target 8 jam.";
+        : "Total "+masterProdukFg.length+" produk • "+Object.keys(masterTargetFg).length+" target 8 jam • "+Object.keys(masterPcsPerBoxFg).length+" qty/box.";
       if(!items.length){
         list.innerHTML='<div style="padding:14px;text-align:center;color:var(--text-muted);">Belum ada produk yang cocok.</div>';
         return;
       }
       list.innerHTML=items.map(x=>'<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;align-items:center;padding:9px 4px;border-bottom:1px solid #f1f5f9;">'+
-        '<div style="min-width:0;overflow-wrap:anywhere;"><b>'+x.name.replace(/[&<>]/g,"")+'</b><div style="font-size:.7rem;color:var(--text-muted);margin-top:3px;">Target 8 jam: <b style="color:var(--emerald);">'+(x.target?formatNum(x.target)+" PCS":"Belum diatur")+'</b></div></div>'+
+        '<div style="min-width:0;overflow-wrap:anywhere;"><b>'+x.name.replace(/[&<>]/g,"")+'</b><div style="font-size:.7rem;color:var(--text-muted);margin-top:3px;">Target 8 jam: <b style="color:var(--emerald);">'+(x.target?formatNum(x.target)+" PCS":"Belum diatur")+'</b><br>Qty per box: <b style="color:var(--navy);">'+(x.pcsPerBox?formatNum(x.pcsPerBox)+" PCS/BOX":"Belum diatur")+'</b></div></div>'+
         '<div style="display:flex;gap:4px;flex-shrink:0;"><button class="btn btn-edit" onclick="editMasterProdukFg('+x.index+')">Edit</button><button class="btn btn-danger" onclick="hapusMasterProdukFg('+x.index+')">Hapus</button></div></div>').join("");
     }
 
     function simpanItemMasterProdukFg(){
       const input=document.getElementById("masterProdukFgInput");
       const targetInput=document.getElementById("masterProdukFgTarget8h");
-      const name=input.value.trim().replace(/\s+/g," ");
+      const pcsPerBoxInput=document.getElementById("masterProdukFgPcsPerBox");
+      const name=input.value.trim().replace(/\\s+/g," ");
       const targetRaw=String(targetInput?.value||"").trim();
       const target=targetRaw?Number(targetRaw):0;
+      const pcsPerBoxRaw=String(pcsPerBoxInput?.value||"").trim();
+      const pcsPerBox=pcsPerBoxRaw?Number(pcsPerBoxRaw):0;
       if(!name){alert("Isi nama produk terlebih dahulu.");return;}
       if(targetRaw&&(!Number.isSafeInteger(target)||target<=0)){alert("Target 8 jam harus berupa angka bulat lebih dari 0.");return;}
+      if(pcsPerBoxRaw&&(!Number.isSafeInteger(pcsPerBox)||pcsPerBox<=0)){alert("Qty per box harus berupa angka bulat lebih dari 0.");return;}
       if(masterProdukFg.some((x,i)=>i!==editingMasterProdukFg&&x.toLowerCase()===name.toLowerCase())){
         alert("Produk sudah terdaftar di Master Produk Finish Good.");return;
       }
       const previousName=editingMasterProdukFg!==null?masterProdukFg[editingMasterProdukFg]:null;
       if(editingMasterProdukFg!==null)masterProdukFg[editingMasterProdukFg]=name;
       else masterProdukFg.push(name);
-      if(previousName&&previousName.toLowerCase()!==name.toLowerCase())delete masterTargetFg[previousName];
+      if(previousName&&kunciNamaMasterProdukFg(previousName)!==kunciNamaMasterProdukFg(name)) {
+        delete masterTargetFg[previousName];
+        delete masterPcsPerBoxFg[previousName];
+      }
       if(target>0)masterTargetFg[name]=target;
       else delete masterTargetFg[name];
+      if(pcsPerBox>0)masterPcsPerBoxFg[name]=pcsPerBox;
+      else delete masterPcsPerBoxFg[name];
       batalEditMasterProdukFg();
       simpanMasterProdukFgLokal();
       simpanMasterProdukFgCloud();
@@ -6351,6 +6467,7 @@
       editingMasterProdukFg=index;
       document.getElementById("masterProdukFgInput").value=name;
       document.getElementById("masterProdukFgTarget8h").value=ambilTargetStandarFg(name)||"";
+      document.getElementById("masterProdukFgPcsPerBox").value=ambilPcsPerBoxStandarFg(name)||"";
       document.getElementById("btnSimpanMasterProdukFg").textContent="💾 Simpan Perubahan";
       document.getElementById("btnBatalEditMasterProdukFg").style.display="inline-flex";
       document.getElementById("masterProdukFgInput").focus();
@@ -6360,8 +6477,10 @@
       editingMasterProdukFg=null;
       const input=document.getElementById("masterProdukFgInput");
       const target=document.getElementById("masterProdukFgTarget8h");
+      const pcsPerBox=document.getElementById("masterProdukFgPcsPerBox");
       if(input)input.value="";
       if(target)target.value="";
+      if(pcsPerBox)pcsPerBox.value="";
       const save=document.getElementById("btnSimpanMasterProdukFg");
       if(save)save.textContent="+ Tambah Produk";
       const cancel=document.getElementById("btnBatalEditMasterProdukFg");
@@ -6373,11 +6492,12 @@
       if(!name||!confirm("Hapus produk dari Master Produk Finish Good?\\n\\n"+name))return;
       masterProdukFg.splice(index,1);
       delete masterTargetFg[name];
+      delete masterPcsPerBoxFg[name];
       if(editingMasterProdukFg===index)batalEditMasterProdukFg();
       simpanMasterProdukFgLokal();
       simpanMasterProdukFgCloud();
     }
-    function downloadBackupMasterProdukFg(){const raw=localStorage.getItem(MASTER_PRODUK_FG_BACKUP_KEY);if(!raw){alert("Belum ada backup Master Produk lokal.");return;}const url=URL.createObjectURL(new Blob([raw],{type:"application/json"})),a=document.createElement("a");a.href=url;a.download="backup-master-produk-fg-"+getTodayWibIso()+".json";a.click();URL.revokeObjectURL(url);}
+        function downloadBackupMasterProdukFg(){const raw=localStorage.getItem(MASTER_PRODUK_FG_BACKUP_KEY);if(!raw){alert("Belum ada backup Master Produk lokal.");return;}const url=URL.createObjectURL(new Blob([raw],{type:"application/json"})),a=document.createElement("a");a.href=url;a.download="backup-master-produk-fg-"+getTodayWibIso()+".json";a.click();URL.revokeObjectURL(url);}
 
     function syncSheetNavModalVisibility() {
       const anyModalOpen=Array.from(document.querySelectorAll(".modal-backdrop"))
