@@ -963,17 +963,8 @@
         <button class="btn-header cloud-btn" onclick="bukaModalCloud()">
           ☁️ Cloud (<span id="cloudCountHeader">0</span>)
         </button>
-        <button class="btn-header" onclick="toggleModal('masterModal', true)">
-          📂 Master WIP (<span id="masterCount">0</span>)
-        </button>
-        <button class="btn-header" onclick="bukaMasterProdukFg()">
-          🏷️ Master Produk FG (<span id="masterProdukFgCount">0</span>)
-        </button>
-        <button class="btn-header" onclick="bukaMasterJobOrder()">
-          📋 Master Job Order (<span id="masterJobOrderCount">0</span>)
-        </button>
-        <button class="btn-header" onclick="bukaMasterLeader()">
-          👤 Master Leader (<span id="masterLeaderCount">0</span>)
+        <button class="btn-header" onclick="toggleModal('masterHubModal', true)">
+          📂 Master
         </button>
       </div>
     </div>
@@ -1701,6 +1692,23 @@
   <!-- =========================================================
        MODAL 2: MASTER KATALOG WIP & UPLOAD EXCEL
        ========================================================= -->
+  <!-- MENU UTAMA MASTER -->
+  <div id="masterHubModal" class="modal-backdrop">
+    <div class="modal-card" style="max-width:480px;">
+      <div class="card-header">
+        <span class="card-title">📂 MENU MASTER</span>
+        <button class="btn btn-danger" onclick="toggleModal('masterHubModal', false)">✕ Tutup</button>
+      </div>
+      <p style="font-size:.78rem;color:var(--text-muted);margin:0 0 12px;">Pilih master data yang ingin dibuka.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;">
+        <button class="btn btn-outline" style="min-height:64px;justify-content:flex-start;" onclick="bukaSubmenuMaster('fg')">🏷️ Master FG <b id="masterProdukFgCount">0</b></button>
+        <button class="btn btn-outline" style="min-height:64px;justify-content:flex-start;" onclick="bukaSubmenuMaster('wip')">📦 Master WIP <b id="masterCount">0</b></button>
+        <button class="btn btn-outline" style="min-height:64px;justify-content:flex-start;" onclick="bukaSubmenuMaster('leader')">👤 Master Leader <b id="masterLeaderCount">0</b></button>
+        <button class="btn btn-outline" style="min-height:64px;justify-content:flex-start;" onclick="bukaSubmenuMaster('jo')">📋 Master JO <b id="masterJobOrderCount">0</b></button>
+      </div>
+    </div>
+  </div>
+
   <div id="masterModal" class="modal-backdrop">
     <div class="modal-card">
       <div class="card-header">
@@ -5261,15 +5269,35 @@
     /********************************************************************
      * 11. PENGATURAN MASTER KATALOG (BLOKIR DUPLIKAT & SYNC FIREBASE)
      ********************************************************************/
+    function kunciNamaMasterProdukFg(value) {
+      return String(value || "").normalize("NFKC")
+        .replace(/[\\u200B-\\u200D\\uFEFF]/g, "")
+        .toLocaleLowerCase("id")
+        .replace(/[‐‑‒–—−]/g, "-")
+        .replace(/[^\\p{L}\\p{N}]/gu, "");
+    }
+
     function normalisasiTargetMasterFg(raw, products = masterProdukFg) {
       const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
-      const lookup = new Map((Array.isArray(products) ? products : []).map(name => [String(name).trim().toLocaleLowerCase("id"), String(name).trim()]));
+      const lookup = new Map();
+      (Array.isArray(products) ? products : []).forEach(name => {
+        const clean = String(name || "").trim().replace(/\\s+/g, " ");
+        const key = kunciNamaMasterProdukFg(clean);
+        if (!key) return;
+        if (lookup.has(key) && lookup.get(key) !== clean) lookup.set(key, null);
+        else if (!lookup.has(key)) lookup.set(key, clean);
+      });
       const result = {};
       Object.entries(source).forEach(([name, value]) => {
-        const cleanName = String(name || "").trim();
-        const canonicalName = lookup.get(cleanName.toLocaleLowerCase("id"));
-        const qty = Math.round(Number(String(value ?? "").replace(/[^0-9]/g, "")) || 0);
-        if (canonicalName && Number.isFinite(qty) && qty > 0) result[canonicalName] = qty;
+        const cleanName = String(name || "").normalize("NFKC")
+          .replace(/[\\u200B-\\u200D\\uFEFF]/g, "").trim().replace(/\\s+/g, " ");
+        if (!cleanName) return;
+        const canonicalName = lookup.get(kunciNamaMasterProdukFg(cleanName));
+        const qty = Math.round(Number(typeof value === "number" ? value : String(value ?? "").replace(/[^0-9]/g, "")) || 0);
+        if (Number.isFinite(qty) && qty > 0) {
+          // Pertahankan target yang belum cocok dengan nama produk agar tidak hilang saat sinkronisasi.
+          result[canonicalName || cleanName] = qty;
+        }
       });
       return Object.fromEntries(Object.entries(result).sort((a,b) =>
         new Intl.Collator("id",{numeric:true,sensitivity:"base"}).compare(a[0],b[0])
@@ -5277,9 +5305,9 @@
     }
 
     function ambilTargetStandarFg(productName) {
-      const q = String(productName || "").trim().toLocaleLowerCase("id");
-      if (!q) return 0;
-      const found = Object.entries(masterTargetFg || {}).find(([name]) => String(name).trim().toLocaleLowerCase("id") === q);
+      const key = kunciNamaMasterProdukFg(productName);
+      if (!key) return 0;
+      const found = Object.entries(masterTargetFg || {}).find(([name]) => kunciNamaMasterProdukFg(name) === key);
       return found ? Math.max(0, Math.round(Number(found[1]) || 0)) : 0;
     }
 
@@ -6178,6 +6206,14 @@
       if(!event.target.closest(".fg-job-order-search-wrap"))tutupFgJobOrderSuggestions();
       if(!event.target.closest(".fg-leader-search-wrap"))tutupFgLeaderSuggestions();
     });
+
+    function bukaSubmenuMaster(type) {
+      toggleModal("masterHubModal", false);
+      if (type === "fg") bukaMasterProdukFg();
+      else if (type === "wip") toggleModal("masterModal", true);
+      else if (type === "leader") bukaMasterLeader();
+      else if (type === "jo") bukaMasterJobOrder();
+    }
 
     function bukaMasterProdukFg(){toggleModal("masterProdukFgModal",true);renderMasterProdukFg();if(!masterProdukFgReady)tarikMasterProdukFgCloud();}
     function tutupFgProductSuggestions() {
