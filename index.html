@@ -1283,7 +1283,7 @@
                 id="fgPcsPerBox"
                 value="550"
                 placeholder="550"
-                oninput="this.value=this.value.replace(/[^0-9]/g,''); hitungPreviewFg(); simpanDraftLokal();"
+                oninput="this.value=this.value.replace(/[^0-9]/g,''); fgPcsPerBoxAutoFilled=false; hitungPreviewFg(); simpanDraftLokal();"
               />
             </div>
             <div>
@@ -5341,7 +5341,7 @@
       const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
       const lookup = new Map();
       (Array.isArray(products) ? products : []).forEach(name => {
-        const clean = String(name || "").trim().replace(/\\s+/g, " ");
+        const clean = String(name || "").trim().replace(/\s+/g, " ");
         const key = kunciNamaMasterProdukFg(clean);
         if (!key) return;
         if (lookup.has(key) && lookup.get(key) !== clean) lookup.set(key, null);
@@ -5350,7 +5350,7 @@
       const result = {};
       Object.entries(source).forEach(([name, value]) => {
         const cleanName = String(name || "").normalize("NFKC")
-          .replace(/[\\u200B-\\u200D\\uFEFF]/g, "").trim().replace(/\\s+/g, " ");
+          .replace(/[\u200B-\u200D\uFEFF]/g, "").trim().replace(/\s+/g, " ");
         if (!cleanName) return;
         const canonicalName = lookup.get(kunciNamaMasterProdukFg(cleanName));
         const qty = Math.round(Number(typeof value === "number" ? value : String(value ?? "").replace(/[^0-9]/g, "")) || 0);
