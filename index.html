@@ -6434,7 +6434,7 @@
       const input=document.getElementById("masterProdukFgInput");
       const targetInput=document.getElementById("masterProdukFgTarget8h");
       const pcsPerBoxInput=document.getElementById("masterProdukFgPcsPerBox");
-      const name=input.value.trim().replace(/\\s+/g," ");
+      const name=input.value.trim().replace(/\s+/g," ");
       const targetRaw=String(targetInput?.value||"").trim();
       const target=targetRaw?Number(targetRaw):0;
       const pcsPerBoxRaw=String(pcsPerBoxInput?.value||"").trim();
