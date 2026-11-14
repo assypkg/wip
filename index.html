@@ -1175,10 +1175,6 @@
             <input type="date" id="fgDate" onchange="simpanDraftLokal(); renderFgAll();" />
           </div>
           <div>
-            <label>Jam Laporan</label>
-            <input type="text" id="fgTime" value="23.00" placeholder="23.00" oninput="simpanDraftLokal(); renderFgAll();" />
-          </div>
-          <div>
             <label>Shift</label>
             <select id="fgShift" onchange="onFgShiftChange()">
               <optgroup label="5 HARI KERJA — 2 SHIFT">
@@ -1191,6 +1187,10 @@
                 <option value="SHIFT 1">SHIFT 1</option><option value="SHIFT 2" selected>SHIFT 2</option><option value="SHIFT 3">SHIFT 3</option>
               </optgroup>
             </select>
+          </div>
+          <div>
+            <label>Jam Laporan</label>
+            <input type="text" id="fgTime" value="23.00" placeholder="23.00" oninput="simpanDraftLokal(); renderFgAll();" />
           </div>
           <div>
             <label>Plant</label>
