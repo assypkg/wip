@@ -941,8 +941,29 @@
     .mobile-legacy-hidden { display:none !important; }
     @media (max-width:879px) {
       .mobile-tab-hidden { display:none !important; }
-      .sheet-section-nav { display:none; position:sticky; position:-webkit-sticky; top:0; align-self:stretch; width:100%; max-width:1140px; margin:0 auto 8px; padding:7px; z-index:500; background:#fff; box-shadow:0 5px 14px rgba(15,23,42,.12); scroll-margin-top:0; }
-      body { overflow-anchor:none; }
+      /* Navigasi panel aktif menetap di bawah layar pada semua sheet mobile. */
+      .sheet-section-nav {
+        display:none;
+        position:fixed;
+        top:auto;
+        bottom:0;
+        left:50%;
+        right:auto;
+        transform:translateX(-50%);
+        align-self:stretch;
+        width:100%;
+        max-width:1140px;
+        margin:0;
+        padding:8px 8px calc(8px + env(safe-area-inset-bottom, 0px));
+        border:1px solid #dbe2ed;
+        border-bottom:0;
+        border-radius:14px 14px 0 0;
+        z-index:100;
+        background:#fff;
+        box-shadow:0 -5px 18px rgba(15,23,42,.14);
+        scroll-margin-top:0;
+      }
+      body { overflow-anchor:none; padding-bottom:calc(108px + env(safe-area-inset-bottom, 0px)); }
       .sheet-section-nav.is-active { display:grid; }
       .sheet-section-nav.modal-nav-hidden { display:none !important; }
       .mobile-sheet-meta { grid-template-columns:1fr 1fr; gap:6px; padding:8px; }
@@ -2485,13 +2506,14 @@
       return !!(window.matchMedia && window.matchMedia("(max-width: 879px)").matches);
     }
 
-    function alignSheetNavToTop(nav) {
-      if (!nav) return;
-      nav.classList.add("is-active");
-      // Gunakan elemen scroll utama agar konsisten pada Chrome Android/PWA.
+    function alignSheetPanelToTop(panelId) {
+      const panel = document.getElementById(panelId);
+      if (!panel) return;
+      // Tab sekarang fixed di bawah, jadi gulir panel aktif ke awal layar,
+      // bukan menggulir elemen navigasi ke atas seperti perilaku lama.
       const root = document.scrollingElement || document.documentElement || document.body;
       const currentTop = Number(root.scrollTop || window.pageYOffset || 0);
-      const targetTop = Math.max(0, currentTop + nav.getBoundingClientRect().top);
+      const targetTop = Math.max(0, currentTop + panel.getBoundingClientRect().top - 12);
       root.scrollTop = targetTop;
       window.scrollTo(0, targetTop);
     }
@@ -2519,9 +2541,9 @@
         });
       }
 
-      if (mobile && alignToTop && nav) {
+      if (mobile && alignToTop) {
         // Jalankan setelah browser menyelesaikan perubahan display panel.
-        requestAnimationFrame(() => alignSheetNavToTop(nav));
+        requestAnimationFrame(() => alignSheetPanelToTop(activePanelId));
       }
       return activePanelId;
     }
