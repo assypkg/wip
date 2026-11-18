@@ -811,23 +811,69 @@
     #spaAddItemModal .modal-card { max-width: 560px; }
     .spa-add-item-btn { white-space:nowrap; padding:6px 9px; font-size:.68rem; }
 
+    /* Cloud Archive: tampilan halaman penuh, bukan pop-up/modal mengambang. */
+    #cloudModal {
+      position:fixed;
+      inset:0;
+      display:none;
+      align-items:stretch;
+      justify-content:stretch;
+      width:100%;
+      height:100%;
+      padding:0;
+      border:0;
+      border-radius:0;
+      background:var(--bg-main);
+      z-index:1000;
+    }
     #cloudModal .modal-card.cloud-modal-card {
       display:flex;
       flex-direction:column;
-      max-height:92vh;
+      width:100%;
+      max-width:none;
+      height:100vh;
+      height:100dvh;
+      min-height:0;
+      max-height:100vh;
+      max-height:100dvh;
+      margin:0;
+      padding:calc(14px + env(safe-area-inset-top, 0px)) 14px calc(14px + env(safe-area-inset-bottom, 0px));
+      border:0;
+      border-radius:0;
+      box-shadow:none;
       overflow:hidden;
       overscroll-behavior:contain;
     }
+    #cloudModal .cloud-page-toolbar {
+      display:flex;
+      justify-content:flex-end;
+      gap:8px;
+      flex-wrap:wrap;
+      margin:0 0 12px;
+      padding-bottom:10px;
+      border-bottom:1px solid var(--border);
+      flex:0 0 auto;
+    }
+    #cloudModal .cloud-page-title {
+      min-width:0;
+      overflow-wrap:anywhere;
+      font-size:.92rem;
+      font-weight:800;
+      color:var(--navy);
+      font-family:'Montserrat',sans-serif;
+      text-transform:uppercase;
+    }
     #cloudModal #cloudArchiveContainer {
       flex:1 1 auto;
-      min-height:120px;
+      min-height:0;
       max-height:none !important;
       overflow-y:auto;
       overscroll-behavior:contain;
       -webkit-overflow-scrolling:touch;
       scrollbar-width:thin;
-      padding-right:3px;
+      padding:0 3px 8px 0;
     }
+    body.cloud-page-open { overflow:hidden; }
     .cloud-item-detail {
       margin-top:8px;
       padding:7px 8px;
@@ -1672,27 +1718,12 @@
        ========================================================= -->
   <div id="cloudModal" class="modal-backdrop">
     <div class="modal-card cloud-modal-card">
-      <div class="card-header">
-        <span class="card-title">☁️ Database Cloud & Audit Selisih Gudang</span>
+      <div class="card-header" style="flex:0 0 auto;">
+        <span class="cloud-page-title">☁️ Database Cloud & Audit Selisih Gudang</span>
         <button class="btn btn-danger" onclick="toggleModal('cloudModal', false)">✕ Tutup</button>
       </div>
-
-      <div style="background:#f8fafc; border:1px solid var(--border); border-radius:10px; padding:10px; margin-bottom:12px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
-          <label style="margin:0;">🔗 Status Database Cloud:</label>
-          <span id="firebaseConnBadge" class="cloud-badge">🟢 Cloud Aktif: wipassembly-cd66b</span>
-        </div>
-        <div style="display:flex; gap:6px; margin-top:8px; flex-wrap:wrap;">
-          <input
-            type="text"
-            id="firebaseProjectIdInput"
-            value="wipassembly-cd66b"
-            placeholder="Project ID Firebase"
-            style="flex:1; min-width:180px; font-size:0.8rem;"
-          />
-          <button class="btn btn-primary" onclick="simpanKonfigurasiFirebase()">💾 Simpan ID</button>
-          <button class="btn btn-sky" onclick="sinkronTarikDariFirebase(true)">🔄 Segarkan & Sync Cloud</button>
-        </div>
+      <div class="cloud-page-toolbar">
+        <button class="btn btn-sky" type="button" onclick="sinkronTarikDariFirebase(true)">🔄 Segarkan & Sync Cloud</button>
       </div>
 
       <div class="form-row-responsive" style="margin-bottom:12px; margin-top:0;">
@@ -1949,12 +1980,9 @@
     const COLLECTION_MASTER = "wip_master_config";
 
     function getActiveProjectId() {
-      let saved = (localStorage.getItem("assy_firebase_project_id") || "").trim();
-      if (!saved || saved === "wipassembly") {
-        saved = DEFAULT_FIREBASE_PROJECT_ID;
-        localStorage.setItem("assy_firebase_project_id", saved);
-      }
-      return saved;
+      // Master dan arsip WIP menggunakan satu project Cloud pusat.
+      localStorage.setItem("assy_firebase_project_id", DEFAULT_FIREBASE_PROJECT_ID);
+      return DEFAULT_FIREBASE_PROJECT_ID;
     }
 
     function getFirestoreBaseUrl() {
@@ -4141,16 +4169,10 @@
     }
 
     function bukaModalCloud() {
-      document.getElementById("firebaseProjectIdInput").value = getActiveProjectId();
+      getActiveProjectId();
       renderCloudArchiveList();
       toggleModal("cloudModal", true);
       sinkronTarikDariFirebase(false);
-    }
-
-    function simpanKonfigurasiFirebase() {
-      const pid = document.getElementById("firebaseProjectIdInput").value.trim() || DEFAULT_FIREBASE_PROJECT_ID;
-      localStorage.setItem("assy_firebase_project_id", pid);
-      sinkronTarikDariFirebase(true);
     }
 
     function resetFilterCloud() {
@@ -6533,6 +6555,7 @@
       const modal = document.getElementById(id);
       if (!modal) return;
       modal.style.display = show ? "flex" : "none";
+      if (id === "cloudModal") document.body.classList.toggle("cloud-page-open", !!show);
       if (show && id === "masterModal") renderMasterModalList();
       if (show && id === "masterProdukFgModal") renderMasterProdukFg();
       if (show && id === "masterJobOrderModal") renderMasterJobOrder();
