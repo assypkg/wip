@@ -2006,7 +2006,7 @@
       </div>
 
       <div style="margin:10px 0 7px;">
-        <input type="search" id="masterSearchInput" placeholder="🔎 Cari produk / kode part..." oninput="renderMasterModalList()" style="width:100%;" />
+        <input type="search" id="masterSearchInput" placeholder="🔎 Cari produk / kode part..." oninput="resetCariMaster('catalog')" style="width:100%;" />
         <div id="masterSearchInfo" style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Cari berdasarkan nama produk, nama part, atau kode.</div>
       </div>
       <div id="masterModalList" style="max-height:300px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:8px; font-size:0.78rem;"></div>
@@ -2284,6 +2284,7 @@
 
     let catalog = JSON.parse(localStorage.getItem("assy_catalog_v3")) || DEFAULT_CATALOG;
     let catalogSearchIndex = [];
+    let catalogMasterListIndex = [];
     const MASTER_BASE_CATALOG_KEY = "assy_master_cloud_base_v1";
     const MASTER_BASE_UPDATE_KEY = "assy_master_cloud_update_time_v1";
     const MASTER_RECOVERY_KEY = "assy_master_local_recovery_v1";
@@ -2335,6 +2336,7 @@
     let masterErpMappingConflict = false;
     let masterErpEditingMappingIndex = null;
     const MASTER_LIST_PAGE_SIZE = 40;
+    let masterCatalogVisibleLimit = MASTER_LIST_PAGE_SIZE;
     let masterProdukFgVisibleLimit = MASTER_LIST_PAGE_SIZE;
     let masterJobOrderVisibleLimit = MASTER_LIST_PAGE_SIZE;
     let masterLeaderVisibleLimit = MASTER_LIST_PAGE_SIZE;
@@ -2995,18 +2997,20 @@
      * 4. SMART SEARCH: HANYA MUNCUL SAAT DIKETIK
      ********************************************************************/
     function rebuildCatalogSearchIndex() {
-      catalogSearchIndex = (Array.isArray(catalog) ? catalog : []).map(item => {
+      catalogSearchIndex = (Array.isArray(catalog) ? catalog : []).map((item,index) => {
         const group = String(item?.group || "").trim();
         const part = String(item?.part || "").trim();
         const keywords = String(item?.keywords || (group + " " + part));
         return {
-          item, group, part,
+          item, index, group, part,
           groupSearch: group.toLocaleLowerCase("id-ID").replace(/\s+/g, " "),
           partSearch: part.toLocaleLowerCase("id-ID"),
           searchText: (group + " " + part + " " + keywords).toLocaleLowerCase("id-ID"),
           groupPartKey: group.toLowerCase() + "\u0000" + part.toLowerCase()
         };
       }).filter(row => row.group && row.part);
+      const collator=new Intl.Collator("id",{numeric:true,sensitivity:"base"});
+      catalogMasterListIndex=catalogSearchIndex.slice().sort((a,b)=>collator.compare(a.group,b.group)||collator.compare(a.part,b.part));
     }
 
     function getCatalogComponentsForProduct(groupValue, partQuery = "", limit = 40) {
@@ -4606,7 +4610,7 @@
       localStorage.setItem("assy_catalog_v3", JSON.stringify(catalog));
       const count = document.getElementById("masterCount");
       if (count) count.textContent = catalog.length;
-      if (document.getElementById("masterModalList")) renderMasterModalList();
+      if (document.getElementById("masterModal")?.style.display==="flex") renderMasterModalList();
     }
 
     function simpanMasterBaseline(remoteCatalog, updateTime) {
@@ -4858,8 +4862,8 @@
 
     function bukaModalCloud() {
       getActiveProjectId();
-      renderCloudArchiveList();
       toggleModal("cloudModal", true);
+      renderCloudArchiveList();
       sinkronTarikDariFirebase(false);
     }
 
@@ -4870,6 +4874,8 @@
     }
 
     function renderCloudArchiveList() {
+      const cloudModal=document.getElementById("cloudModal");
+      if(cloudModal&&cloudModal.style.display!=="flex")return;
       const filterDate = document.getElementById("cloudFilterDate").value;
       const keyword = document.getElementById("cloudFilterKeyword").value.toLowerCase().trim();
       const container = document.getElementById("cloudArchiveContainer");
@@ -6243,9 +6249,7 @@
       localStorage.setItem(MASTER_PRODUK_FG_TARGET_KEY,JSON.stringify(masterTargetFg));
       localStorage.setItem(MASTER_PRODUK_FG_PCS_PER_BOX_KEY,JSON.stringify(masterPcsPerBoxFg));
       const count=document.getElementById("masterProdukFgCount"); if(count)count.textContent=masterProdukFg.length;
-      const dl=document.getElementById("fgProductMasterList");
-      if(dl)dl.innerHTML=masterProdukFg.map(name=>'<option value="'+name.replace(/[&<>"]/g,"")+'"></option>').join("");
-      renderMasterProdukFg();
+      if(document.getElementById("masterProdukFgModal")?.style.display==="flex")renderMasterProdukFg();
       hitungTargetFgOtomatis(false);
       const currentProduct = document.getElementById("fgProductName")?.value || "";
       if (currentProduct && ambilPcsPerBoxStandarFg(currentProduct) > 0) {
@@ -6553,9 +6557,11 @@
     function simpanMasterErpMappingLokal() {
       masterErpMappings=normalisasiMasterErpMappings(masterErpMappings);
       localStorage.setItem(MASTER_ERP_MAPPING_KEY,JSON.stringify(masterErpMappings));
-      renderMasterErpMappingList();
       const erpModal=document.getElementById("masterErpModal");
-      if(erpModal?.style.display==="flex")renderMasterErpJoStatusList();
+      if(erpModal?.style.display==="flex") {
+        renderMasterErpMappingList();
+        renderMasterErpJoStatusList();
+      }
     }
 
     function setStatusMasterErpMapping(type,message) {
@@ -6688,7 +6694,8 @@
     function simpanMasterErpJoStatusLokal() {
       masterErpDisabledJOs=normalisasiMasterErpJoStatus(masterErpDisabledJOs);
       localStorage.setItem(MASTER_ERP_JO_STATUS_KEY,JSON.stringify(masterErpDisabledJOs));
-      renderMasterErpJoStatusList();
+      const erpModal=document.getElementById("masterErpModal");
+      if(erpModal?.style.display==="flex")renderMasterErpJoStatusList();
     }
 
     async function tarikMasterErpJoStatusCloud() {
@@ -6879,7 +6886,8 @@
 
 
     function resetCariMaster(listName) {
-      if(listName==="produkFg"){masterProdukFgVisibleLimit=MASTER_LIST_PAGE_SIZE;renderMasterProdukFg();}
+      if(listName==="catalog"){masterCatalogVisibleLimit=MASTER_LIST_PAGE_SIZE;renderMasterModalList();}
+      else if(listName==="produkFg"){masterProdukFgVisibleLimit=MASTER_LIST_PAGE_SIZE;renderMasterProdukFg();}
       else if(listName==="jobOrder"){masterJobOrderVisibleLimit=MASTER_LIST_PAGE_SIZE;renderMasterJobOrder();}
       else if(listName==="leader"){masterLeaderVisibleLimit=MASTER_LIST_PAGE_SIZE;renderMasterLeader();}
       else if(listName==="erpMapping"){masterErpMappingVisibleLimit=MASTER_LIST_PAGE_SIZE;renderMasterErpMappingList();}
@@ -6887,7 +6895,8 @@
     }
 
     function muatLebihBanyakMaster(listName) {
-      if(listName==="produkFg"){masterProdukFgVisibleLimit+=MASTER_LIST_PAGE_SIZE;renderMasterProdukFg();}
+      if(listName==="catalog"){masterCatalogVisibleLimit+=MASTER_LIST_PAGE_SIZE;renderMasterModalList();}
+      else if(listName==="produkFg"){masterProdukFgVisibleLimit+=MASTER_LIST_PAGE_SIZE;renderMasterProdukFg();}
       else if(listName==="jobOrder"){masterJobOrderVisibleLimit+=MASTER_LIST_PAGE_SIZE;renderMasterJobOrder();}
       else if(listName==="leader"){masterLeaderVisibleLimit+=MASTER_LIST_PAGE_SIZE;renderMasterLeader();}
       else if(listName==="erpMapping"){masterErpMappingVisibleLimit+=MASTER_LIST_PAGE_SIZE;renderMasterErpMappingList();}
@@ -7709,7 +7718,7 @@
       localStorage.setItem(MASTER_JOB_ORDER_KEY,JSON.stringify(masterJobOrders));
       const count=document.getElementById("masterJobOrderCount");
       if(count)count.textContent=masterJobOrders.length;
-      renderMasterJobOrder();
+      if(document.getElementById("masterJobOrderModal")?.style.display==="flex")renderMasterJobOrder();
     }
 
     function setStatusMasterJobOrder(type,message) {
@@ -7953,7 +7962,7 @@
       localStorage.setItem(MASTER_LEADER_KEY,JSON.stringify(masterLeaders));
       const count=document.getElementById("masterLeaderCount");
       if(count)count.textContent=masterLeaders.length;
-      renderMasterLeader();
+      if(document.getElementById("masterLeaderModal")?.style.display==="flex")renderMasterLeader();
     }
 
     function setStatusMasterLeader(type,message) {
@@ -8770,34 +8779,29 @@
     });
 
     function renderMasterModalList() {
-      document.getElementById("masterCount").textContent = catalog.length;
-      const box = document.getElementById("masterModalList");
-      const info = document.getElementById("masterSearchInfo");
-      const query = (document.getElementById("masterSearchInput")?.value || "").trim().toLowerCase();
-      const collator = new Intl.Collator("id", { numeric: true, sensitivity: "base" });
-      const sorted = catalog
-        .map((item, index) => ({ item, index }))
-        .filter(({ item }) => !query || `${item.group} ${item.part}`.toLowerCase().includes(query))
-        .sort((a, b) => collator.compare(a.item.group, b.item.group) || collator.compare(a.item.part, b.item.part));
-
-      if (info) info.textContent = query
-        ? `Ditemukan ${sorted.length} dari ${catalog.length} data master.`
-        : `Total ${catalog.length} data • Diurutkan berdasarkan produk dan kode part.`;
-
-      if (!sorted.length) {
-        box.innerHTML = `<div style="padding:16px 8px; text-align:center; color:var(--text-muted);">Tidak ada produk atau kode part yang cocok dengan "${query.replace(/[&<>"']/g, "")}".</div>`;
+      const count=document.getElementById("masterCount");
+      if(count)count.textContent=catalog.length;
+      const box=document.getElementById("masterModalList");
+      const info=document.getElementById("masterSearchInfo");
+      if(!box||!info)return;
+      const query=(document.getElementById("masterSearchInput")?.value||"").trim().toLowerCase();
+      const sorted=catalogMasterListIndex.filter(row=>!query||(row.groupSearch+" "+row.partSearch).includes(query));
+      const displayed=sorted.slice(0,masterCatalogVisibleLimit);
+      info.textContent=query
+        ? "Ditemukan "+sorted.length+" dari "+catalog.length+" data master • Ditampilkan "+displayed.length+"."
+        : "Total "+catalog.length+" data • Diurutkan berdasarkan produk dan kode part • Ditampilkan "+displayed.length+".";
+      if(!sorted.length) {
+        box.innerHTML='<div style="padding:16px 8px;text-align:center;color:var(--text-muted);">Tidak ada produk atau kode part yang cocok dengan "'+query.replace(/[&<>"']/g,"")+'".</div>';
         return;
       }
-
-      box.innerHTML = sorted.map(({ item: c, index: i }) => `
-        <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; padding:7px 4px; border-bottom:1px solid #f1f5f9;">
-          <span style="flex:1; min-width:0; overflow-wrap:anywhere;"><b>${c.group}</b> &mdash; ${c.part}</span>
-          <div style="display:flex; gap:4px; flex-shrink:0;">
-            <button class="btn btn-edit" onclick="mulaiEditKatalog(${i})">Edit</button>
-            <button class="btn btn-danger" onclick="hapusKatalog(${i})">Hapus</button>
+      box.innerHTML=displayed.map(row=>`
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;padding:7px 4px;border-bottom:1px solid #f1f5f9;">
+          <span style="flex:1;min-width:0;overflow-wrap:anywhere;"><b>${row.group}</b> &mdash; ${row.part}</span>
+          <div style="display:flex;gap:4px;flex-shrink:0;">
+            <button class="btn btn-edit" onclick="mulaiEditKatalog(${row.index})">Edit</button>
+            <button class="btn btn-danger" onclick="hapusKatalog(${row.index})">Hapus</button>
           </div>
-        </div>`
-      ).join("");
+        </div>`).join("")+htmlTombolMuatLebihBanyak("catalog",sorted.length,displayed.length);
     }
 
     function mulaiEditKatalog(idx) {
@@ -8846,9 +8850,10 @@
         document.getElementById("newCatGroup").value = "";
         document.getElementById("newCatPart").value = "";
       }
+      rebuildCatalogSearchIndex();
       localStorage.setItem("assy_catalog_v3", JSON.stringify(catalog));
       document.getElementById("masterCount").textContent = catalog.length;
-      renderMasterModalList();
+      if(document.getElementById("masterModal")?.style.display==="flex")renderMasterModalList();
       simpanMasterKeFirebase();
       alert(isEdit
         ? `Perubahan master tersimpan di perangkat:\n${g} — ${p}\n\nPeriksa status Cloud pada bagian atas Master Katalog untuk memastikan sinkronisasi berhasil.`
@@ -8860,9 +8865,10 @@
       else if (editingCatalogIndex !== null && idx < editingCatalogIndex) editingCatalogIndex--;
       const removed = catalog[idx];
       catalog.splice(idx, 1);
+      rebuildCatalogSearchIndex();
       localStorage.setItem("assy_catalog_v3", JSON.stringify(catalog));
       document.getElementById("masterCount").textContent = catalog.length;
-      renderMasterModalList();
+      if(document.getElementById("masterModal")?.style.display==="flex")renderMasterModalList();
       simpanMasterKeFirebase();
       if (removed) alert(`Master dihapus dari perangkat:\n${removed.group} — ${removed.part}\n\nPeriksa status Cloud untuk memastikan perubahan sudah tersinkron.`);
     }
