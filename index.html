@@ -3470,31 +3470,39 @@
     }
 
         function copySpekFgTerakhir() {
-      if (fgList.length === 0) {
-        alert("Belum ada input Finish Good sebelumnya untuk disalin.");
-        return;
-      }
-      const last = fgList[fgList.length - 1];
-      const lastProduct = last.productName !== undefined ? { productName: last.productName, jobOrder: last.jobOrder || "" } : pisahProdukDanJo(last.productJo);
-      document.getElementById("fgProductName").value = lastProduct.productName;
-      document.getElementById("fgJobOrder").value = lastProduct.jobOrder;
-      document.getElementById("fgNote").value = last.note;
-      document.getElementById("fgDuration").value = last.duration;
-      document.getElementById("fgTarget").value = last.target;
-      document.getElementById("fgPcsPerBox").value = last.pcsPerBox;
-      fgPcsPerBoxAutoFilled = false;
+      if(fgList.length===0){alert("Belum ada input Finish Good sebelumnya untuk disalin.");return;}
+      const last=fgList[fgList.length-1];
+      const product=last.productName!==undefined?{productName:last.productName,jobOrder:last.jobOrder||""}:pisahProdukDanJo(last.productJo);
+      document.getElementById("fgProductName").value=product.productName;
+      document.getElementById("fgNote").value=last.note||"";
+      document.getElementById("fgDuration").value=last.duration||"";
+      document.getElementById("fgTarget").value=last.target||"";
+      document.getElementById("fgPcsPerBox").value=last.pcsPerBox||"550";
+      fgPcsPerBoxAutoFilled=false;
+      const jobs=ambilRincianJobOrderFg(last);
+      [1,2,3,4].forEach(index=>{
+        const jo=jobs[index-1];
+        const suffix=index===1?"":String(index);
+        const set=(kind,value)=>{const el=document.getElementById("fg"+kind+suffix);if(el)el.value=value??"";};
+        set("JobOrder",jo?.jobOrder||"");
+        set("BoxA","");set("BoxB","");set("RecehAQty","");set("RecehBQty","");
+      });
+      document.getElementById("fgSecondJoPanel").open=jobs.length>1;
+      document.getElementById("fgThirdJoPanel").open=jobs.length>2;
+      document.getElementById("fgFourthJoPanel").open=jobs.length>3;
+      document.getElementById("fgLeader").focus();
       hitungPreviewFg();
       simpanDraftLokal();
-      document.getElementById("fgLeader").focus();
     }
 
-    function pisahProdukDanJo(value) {
+        function pisahProdukDanJo(value) {
       const raw = String(value || "").trim();
       const match = raw.match(new RegExp("^(.*?)\\s*\\(([^()]*)\\)\\s*$"));
       return match ? { productName: match[1].trim(), jobOrder: match[2].trim() } : { productName: raw, jobOrder: "" };
     }
 
     function simpanItemFg() {
+      const formWasInModal=document.getElementById("fgEditModal")?.style.display==="flex";
       const leader=document.getElementById("fgLeader").value.trim().toUpperCase();
       const productName=document.getElementById("fgProductName").value.trim().toUpperCase();
       const note=document.getElementById("fgNote").value.trim();
@@ -3516,6 +3524,13 @@
         const existingSegments=fgList.filter(item=>normalisasiKunciLeaderFg(item.leader)===normalisasiKunciLeaderFg(leader)).length;
         if(existingSegments>=5){
           alert("Kepala line ini sudah mencapai batas 4 kali pergantian produk (5 produk termasuk produk awal).");
+          return;
+        }
+      }
+      for(let index=1;index<4;index++){
+        const current=jobs[index],previous=jobs[index-1];
+        if((current.jobOrder||current.totalBox>0)&&!previous.jobOrder){
+          alert("Isi nomor JO secara berurutan. JO ke-"+(index+1)+" tidak bisa diisi sebelum JO ke-"+index+".");
           return;
         }
       }
@@ -3576,6 +3591,9 @@
       document.getElementById("fgThirdJoPanel").open=false;
       document.getElementById("fgFourthJoPanel").open=false;
       ["fgBoxA","fgBoxB","fgRecehAQty","fgRecehBQty"].forEach(id=>document.getElementById(id).value="");
+      document.getElementById("btnSubmitFg").textContent="✅ TAMBAHKAN KE LAPORAN FINISH GOOD";
+      document.getElementById("btnSubmitFg").style.background="var(--emerald)";
+      if(formWasInModal)tutupModalEditFgVisual();
       hitungPreviewFg();
       renderFgAll();
       simpanDraftLokal();
@@ -3882,7 +3900,8 @@
               wa+=formatWhatsAppQtyRows(hasilRows)+"\n\n";
             });
             const pct=Number(it.target)>0?(Number(it.totalPcs||0)/Number(it.target)*100):0;
-            wa+="*TOTAL PRODUK: "+formatNum(it.totalPcs)+" PCS | "+pct.toFixed(2)+"%*\n";
+            wa+=(multipleProducts?"*TOTAL PRODUK: ":"*TOTAL FG : ")+formatNum(it.totalPcs)+" PCS | "+pct.toFixed(2)+"%*\n";
+            if(it.gapNote)wa+="*NOTE : "+it.gapNote+"*\n";
           }else{
             const jo=jobs[0];
             const recehA=jo.recehABoxes||[];
@@ -7004,6 +7023,8 @@
       if (card) card.classList.toggle("mobile-tab-hidden", fgEditWasMobileHidden);
       fgEditWasMobileHidden = false;
       fgEditPlaceholder = null;
+      const title=document.getElementById("fgEditModalTitle");
+      if(title)title.textContent="✏️ Edit Hasil Produksi Finish Good";
       toggleModal("fgEditModal", false);
     }
 
