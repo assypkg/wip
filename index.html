@@ -3666,6 +3666,10 @@
           alert("Nomor Job Order tidak boleh duplikat dalam satu produk: "+jo.jobOrder);return;
         }
         const erpLink=cariMappingErpDariJo(jo.jobOrder);
+        if(erpLink&&!erpLink.fgProductName) {
+          alert("JO "+jo.jobOrder+" belum dipetakan ke Master FG. Buka Master > Import ERP untuk menyelesaikan pemetaan Item Code.");
+          return;
+        }
         if(erpLink?.fgProductName&&kunciNamaMasterProdukFg(erpLink.fgProductName)!==kunciNamaMasterProdukFg(productName)){
           alert("JO "+jo.jobOrder+" pada ERP terhubung ke produk "+erpLink.fgProductName+". Periksa pilihan produk atau nomor JO.");
           return;
@@ -6423,9 +6427,12 @@
 
     function daftarJoErpUntukProduk(productName,exclude=[]) {
       const normalizedExclude=new Set(exclude.map(jo=>String(jo||"").trim().toUpperCase().replace(/\s+/g,"")));
-      const rows=productName?cariMappingErpDariProduk(productName):masterErpMappings;
+      let rows;
+      if(productName)rows=cariMappingErpDariProduk(productName);
+      else if(masterErpMappings.length)rows=masterErpMappings.filter(record=>record.fgProductName);
+      else rows=[];
       if(!rows.length) {
-        if(masterErpMappings.length)return [];
+        if(productName||masterErpMappings.length)return [];
         return normalisasiMasterJobOrder(masterJobOrders).filter(jo=>!normalizedExclude.has(jo));
       }
       const set=new Set();
@@ -6459,8 +6466,26 @@
       hitungTargetFgOtomatis(true);
       const perBox=terapkanPcsPerBoxMasterFg(next,true);
       if(changed) {
-        const list=daftarJoErpUntukProduk(next);
-        document.getElementById("fgJobOrder").value=list.length===1?list[0]:"";
+        const jo1Input=document.getElementById("fgJobOrder");
+        const currentJo1=String(jo1Input?.value||"").trim().toUpperCase().replace(/\s+/g,"");
+        if(currentJo1) {
+          const joMapping=cariMappingErpDariJo(currentJo1);
+          if(joMapping&&!joMapping.fgProductName) {
+            alert("JO "+currentJo1+" belum dipetakan ke Master FG. Petakan dahulu sebelum memilih produk.");
+            input.value=current;
+            fgLastSelectedProductName=current;
+            return false;
+          }
+          if(joMapping?.fgProductName&&kunciNamaMasterProdukFg(joMapping.fgProductName)!==kunciNamaMasterProdukFg(next)) {
+            alert("JO "+currentJo1+" terhubung ke produk "+joMapping.fgProductName+". Pilih produk yang sesuai atau kosongkan JO terlebih dahulu.");
+            input.value=current;
+            fgLastSelectedProductName=current;
+            return false;
+          }
+        } else {
+          const list=daftarJoErpUntukProduk(next);
+          if(list.length===1)jo1Input.value=list[0];
+        }
       }
       const target=ambilTargetStandarFg(next);
       if(!target||!perBox) {
@@ -6490,6 +6515,10 @@
         return false;
       }
       const mapping=cariMappingErpDariJo(jo);
+      if(mapping&&!mapping.fgProductName) {
+        alert("JO "+jo+" sudah ada di ERP, tetapi Item Code-nya belum dipetakan ke Master FG. Selesaikan pemetaan terlebih dahulu.");
+        return false;
+      }
       if(mapping?.fgProductName) {
         if(currentProduct&&kunciNamaMasterProdukFg(currentProduct)!==kunciNamaMasterProdukFg(mapping.fgProductName)) {
           alert("JO "+jo+" terhubung ke produk "+mapping.fgProductName+", bukan produk yang sedang dipilih.");
