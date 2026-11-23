@@ -1683,7 +1683,7 @@
   <div id="fgEditModal" class="modal-backdrop">
     <div class="modal-card">
       <div class="card-header">
-        <span class="card-title">✏️ Edit Hasil Produksi Finish Good</span>
+        <span class="card-title" id="fgEditModalTitle">✏️ Edit Hasil Produksi Finish Good</span>
         <button type="button" class="btn btn-danger" onclick="batalEditFg()">✕ Tutup</button>
       </div>
       <div id="fgEditModalContent"></div>
@@ -3512,6 +3512,13 @@
         alert("Mohon isi Nama Leader/Operator, Nama Produk, dan Nomor JO pertama.");
         return;
       }
+      if(editingFgId===null){
+        const existingSegments=fgList.filter(item=>normalisasiKunciLeaderFg(item.leader)===normalisasiKunciLeaderFg(leader)).length;
+        if(existingSegments>=5){
+          alert("Kepala line ini sudah mencapai batas 4 kali pergantian produk (5 produk termasuk produk awal).");
+          return;
+        }
+      }
       const usedJobs=jobs.filter((jo,index)=>index===0||jo.jobOrder||jo.totalBox>0);
       if(usedJobs.length>4){alert("Maksimal 4 Job Order untuk satu produk.");return;}
       for(let i=0;i<usedJobs.length;i++){
@@ -3531,8 +3538,15 @@
       const totalBox=usedJobs.reduce((sum,jo)=>sum+jo.totalBox,0);
       const totalPcs=usedJobs.reduce((sum,jo)=>sum+jo.totalPcs,0);
       const productJo=productName+" ("+usedJobs.map(jo=>jo.jobOrder).join(" dan ")+")";
+      const existingLeaderSegments=fgList.filter(item=>normalisasiKunciLeaderFg(item.leader)===normalisasiKunciLeaderFg(leader));
+      if(editingFgId===null && existingLeaderSegments.length>=5){
+        alert("Kepala line ini sudah mencapai batas 4 kali pergantian produk (5 produk termasuk produk awal).");
+        return;
+      }
+      const previousRecord=editingFgId!==null?fgList.find(item=>item.id===editingFgId):null;
       const record={
         id:editingFgId!==null?editingFgId:Date.now()+Math.random(),
+        productSequence:previousRecord?.productSequence || (existingLeaderSegments.length+1),
         leader,productName,jobOrder:usedJobs[0].jobOrder,productJo,
         jobOrders:usedJobs,
         note,gapNote,duration,target,pcsPerBox,
@@ -3600,6 +3614,7 @@
       document.getElementById("fgInputCard").classList.add("editing-mode");
       document.getElementById("fgEditBanner").style.display="flex";
       document.getElementById("fgEditBannerText").innerHTML="✏️ <b>MODE EDIT FG: "+item.leader+"</b>";
+      document.getElementById("fgEditModalTitle").textContent="✏️ Edit Segmen Produk Finish Good";
       const btn=document.getElementById("btnSubmitFg");
       btn.textContent="💾 UPDATE DATA FINISH GOOD";
       btn.style.background="var(--orange)";
@@ -3629,11 +3644,76 @@
       const btn=document.getElementById("btnSubmitFg");
       btn.textContent="✅ TAMBAHKAN KE LAPORAN FINISH GOOD";
       btn.style.background="var(--emerald)";
+      document.getElementById("fgEditModalTitle").textContent="➕ Input Finish Good";
       tutupModalEditFgVisual();
       simpanDraftLokal();
     }
 
-        function hapusItemFg(id) {
+        function normalisasiKunciLeaderFg(value) {
+      return String(value || "").trim().replace(/\s+/g," ").toLocaleUpperCase("id-ID");
+    }
+
+    function kelompokkanFgPerLeader() {
+      const groups=[];
+      const map=new Map();
+      fgList.forEach((item,index)=>{
+        const leader=String(item.leader||"TANPA LEADER").trim()||"TANPA LEADER";
+        const key=normalisasiKunciLeaderFg(leader);
+        if(!map.has(key)){
+          const group={leader,items:[],firstIndex:index,totalPcs:0,totalTarget:0};
+          map.set(key,group);groups.push(group);
+        }
+        const group=map.get(key);
+        group.items.push(item);
+        group.totalPcs+=Number(item.totalPcs)||0;
+        group.totalTarget+=Number(item.target)||0;
+      });
+      return groups;
+    }
+
+    function mulaiPergantianProdukFgById(recordId) {
+      if(editingFgId!==null){
+        alert("Selesaikan atau batalkan mode edit yang sedang terbuka sebelum menambah pergantian produk.");
+        return;
+      }
+      const source=fgList.find(item=>item.id===recordId);
+      if(!source)return;
+      const leader=source.leader;
+      const count=fgList.filter(item=>normalisasiKunciLeaderFg(item.leader)===normalisasiKunciLeaderFg(leader)).length;
+      if(count>=5){
+        alert("Maksimal 4 kali pergantian produk untuk satu kepala line (5 produk termasuk produk awal).");
+        return;
+      }
+
+      document.getElementById("fgLeader").value=leader;
+      document.getElementById("fgProductName").value="";
+      document.getElementById("fgJobOrder").value="";
+      document.getElementById("fgNote").value="";
+      document.getElementById("fgGapNote").value="";
+      document.getElementById("fgDuration").value="";
+      document.getElementById("fgTarget").value="";
+      fgTargetTouched=false;
+      document.getElementById("fgPcsPerBox").value="550";
+      fgPcsPerBoxAutoFilled=false;
+      const breakInput=document.getElementById("fgBreakMinutes");
+      if(breakInput)breakInput.value="";
+      kosongkanInputJobOrderTambahanFg();
+      document.getElementById("fgSecondJoPanel").open=false;
+      document.getElementById("fgThirdJoPanel").open=false;
+      document.getElementById("fgFourthJoPanel").open=false;
+      document.getElementById("fgEditBanner").style.display="none";
+      document.getElementById("fgInputCard").classList.remove("editing-mode");
+      document.getElementById("btnSubmitFg").textContent="✅ SIMPAN PERGANTIAN PRODUK";
+      document.getElementById("btnSubmitFg").style.background="var(--emerald)";
+      document.getElementById("fgEditModalTitle").textContent="➕ Pergantian Produk ke-"+count;
+      document.getElementById("btnSubmitFg").textContent="✅ SIMPAN PERGANTIAN PRODUK";
+      tutupFgProductSuggestions();
+      hitungPreviewFg();
+      bukaModalEditFg();
+      simpanDraftLokal();
+    }
+
+    function hapusItemFg(id) {
       if (editingFgId === id) batalEditFg();
       fgList = fgList.filter((x) => x.id !== id);
       renderFgAll();
@@ -3716,130 +3796,131 @@
     }
 
     function renderFgAll() {
-      const container = document.getElementById("fgListContainer");
-      const waBox = document.getElementById("waPreviewFg");
+      const container=document.getElementById("fgListContainer");
+      const waBox=document.getElementById("waPreviewFg");
+      const groups=kelompokkanFgPerLeader();
 
-      if (fgList.length === 0) {
-        container.innerHTML = "<div style=\"text-align:center; padding:20px; color:var(--text-muted); font-size:0.82rem;\">Belum ada data Finish Good. Isi form di sebelah kiri atau klik tombol <b>\"⚡ Contoh FG\"</b> di atas.</div>";
-      } else {
-        container.innerHTML = fgList.map((it, idx) => {
-          const joList = ambilRincianJobOrderFg(it);
-          const multiJo = joList.length > 1;
-          const productName = it.productName || pisahProdukDanJo(it.productJo).productName;
-          let detailHtml = "";
-          if (multiJo) {
-            detailHtml = joList.map((jo, index) => {
-              const rows = [];
-              if (jo.boxA > 0) rows.push("Lot A: " + formatNum(jo.boxA) + " BOX @" + formatNum(it.pcsPerBox) + " = " + formatNum(jo.pcsA) + " PCS");
-              if (jo.boxB > 0) rows.push("Lot B: " + formatNum(jo.boxB) + " BOX @" + formatNum(it.pcsPerBox) + " = " + formatNum(jo.pcsB) + " PCS");
-              if (jo.recehABoxes.length) rows.push("Receh A: " + jo.recehABoxes.length + " BOX (" + jo.recehABoxes.map(formatNum).join(" + ") + ") = " + formatNum(jo.pcsRecehA) + " PCS");
-              if (jo.recehBBoxes.length) rows.push("Receh B: " + jo.recehBBoxes.length + " BOX (" + jo.recehBBoxes.map(formatNum).join(" + ") + ") = " + formatNum(jo.pcsRecehB) + " PCS");
-              return "<div style=\"margin-top:7px;padding:8px;border:1px solid #e2e8f0;border-radius:8px;background:#f8fafc;\">" +
-                "<b style=\"color:var(--navy);\">" + (index + 1) + ". " + jo.jobOrder + "</b>" +
-                "<div style=\"font-size:.72rem;line-height:1.55;margin-top:4px;\">" + rows.join("<br>") +
-                "<br><b style=\"color:var(--emerald);\">TOTAL: " + formatNum(jo.totalBox) + " BOX = " + formatNum(jo.totalPcs) + " PCS</b></div></div>";
+      if(!groups.length){
+        container.innerHTML="<div style=\"text-align:center;padding:20px;color:var(--text-muted);font-size:.82rem;\">Belum ada data Finish Good. Isi form terlebih dahulu.</div>";
+      }else{
+        container.innerHTML=groups.map((group,groupIndex)=>{
+          const productCards=group.items.map((it,productIndex)=>{
+            const jobs=ambilRincianJobOrderFg(it);
+            const joHtml=jobs.map((jo,joIndex)=>{
+              const rows=[];
+              if(jo.boxA>0)rows.push("Lot A: "+formatNum(jo.boxA)+" BOX @"+formatNum(it.pcsPerBox)+" = "+formatNum(jo.pcsA)+" PCS");
+              if(jo.boxB>0)rows.push("Lot B: "+formatNum(jo.boxB)+" BOX @"+formatNum(it.pcsPerBox)+" = "+formatNum(jo.pcsB)+" PCS");
+              if(jo.recehABoxes.length)rows.push("Receh A: "+jo.recehABoxes.length+" BOX ("+jo.recehABoxes.map(formatNum).join(" + ")+") = "+formatNum(jo.pcsRecehA)+" PCS");
+              if(jo.recehBBoxes.length)rows.push("Receh B: "+jo.recehBBoxes.length+" BOX ("+jo.recehBBoxes.map(formatNum).join(" + ")+") = "+formatNum(jo.pcsRecehB)+" PCS");
+              return "<div style=\"margin-top:6px;padding:7px 8px;border:1px solid #e2e8f0;border-radius:8px;background:#f8fafc;\">" +
+                "<b style=\"color:var(--navy);font-size:.73rem;\">"+(joIndex+1)+". "+jo.jobOrder+"</b>"+
+                "<div style=\"font-size:.7rem;line-height:1.5;margin-top:3px;\">"+rows.join("<br>")+
+                "<br><b style=\"color:var(--emerald);\">TOTAL JO: "+formatNum(jo.totalPcs)+" PCS • "+formatNum(jo.totalBox)+" BOX</b></div></div>";
             }).join("");
-          } else {
-            detailHtml = "<div class=\"box-breakdown-info\" style=\"margin-top:6px;\">" +
-              "A : " + formatNum(it.boxA) + " BOX @" + formatNum(it.pcsPerBox) + " = <b>" + formatNum(it.pcsA) + "</b><br>" +
-              "B : " + formatNum(it.boxB) + " BOX @" + formatNum(it.pcsPerBox) + " = <b>" + formatNum(it.pcsB) + "</b><br>" +
-              ((it.recehABoxes || []).length ? "RECEH A : " + it.recehABoxes.length + " BOX (" + it.recehABoxes.map(formatNum).join(" + ") + ") = <b>" + formatNum(it.pcsRecehA || it.recehABoxes.reduce((x,y)=>x+y,0)) + " PCS</b><br>" : "") +
-              (((it.recehBBoxes || it.recehBoxes || []).length) ? "RECEH B : " + (it.recehBBoxes || it.recehBoxes).length + " BOX (" + (it.recehBBoxes || it.recehBoxes).map(formatNum).join(" + ") + ") = <b>" + formatNum(it.pcsRecehB || it.pcsReceh || (it.recehBBoxes || it.recehBoxes).reduce((x,y)=>x+y,0)) + " PCS</b><br>" : "") +
-              "<span style=\"color:var(--emerald);font-weight:800;\">TOTAL : " + formatNum(it.totalBox) + " BOX = " + formatNum(it.totalPcs) + " PCS</span></div>";
-          }
-          const totalPct = Number(it.target) > 0 ? (Number(it.totalPcs || 0) / Number(it.target) * 100) : 0;
-          const joHeader = joList.map(jo=>jo.jobOrder).filter(Boolean).join(" dan ");
-          return "<div class=\"group-card fg-mode\">" +
-            "<div class=\"group-header\"><span class=\"group-name\">" + (idx + 1) + ". " + it.leader + "</span>" +
-            "<div style=\"display:flex;gap:4px;\"><button class=\"btn btn-edit\" onclick=\"mulaiEditFg(" + it.id + ")\">✏️ Edit</button>" +
-            "<button class=\"btn btn-danger\" onclick=\"hapusItemFg(" + it.id + ")\">✕</button></div></div>" +
-            "<div style=\"font-size:.8rem;font-weight:700;color:var(--text-main);\">" + productName + "</div>" +
-            "<div style=\"font-size:.75rem;color:var(--text-muted);margin-top:2px;\">JO: <b>" + (joHeader || it.jobOrder || "-") + "</b></div>" +
-            (it.note ? "<div style=\"font-size:.74rem;color:var(--purple);font-weight:700;margin-top:2px;\">*" + it.note + "*</div>" : "") +
-            "<div style=\"font-size:.74rem;color:var(--text-muted);margin-top:4px;\">DURASI: <b>" + it.duration + "</b> &nbsp;|&nbsp; TARGET: <b>" + formatNum(it.target) + "</b></div>" +
-            detailHtml +
-            (multiJo ? "<div style=\"margin-top:8px;color:var(--emerald);font-weight:800;font-size:.78rem;\">TOTAL FG: " + formatNum(it.totalPcs) + " PCS | " + totalPct.toFixed(2) + "%</div>" : "") +
-            "</div>";
+            const pct=Number(it.target)>0?(Number(it.totalPcs||0)/Number(it.target)*100):0;
+            const productName=it.productName||pisahProdukDanJo(it.productJo).productName;
+            return "<div style=\"border:1px solid #dbe2ed;border-radius:10px;padding:10px;margin-top:9px;background:#fff;\">"+
+              "<div style=\"display:flex;justify-content:space-between;align-items:flex-start;gap:8px;\">"+
+                "<div style=\"min-width:0;overflow-wrap:anywhere;\"><div style=\"font-size:.65rem;color:var(--text-muted);font-weight:800;\">PRODUK "+(productIndex+1)+"</div>"+
+                "<b style=\"font-size:.8rem;color:var(--navy);\">"+productName+"</b></div>"+
+                "<div style=\"display:flex;gap:4px;flex-shrink:0;\"><button class=\"btn btn-edit\" onclick=\"mulaiEditFg("+it.id+")\">Edit</button><button class=\"btn btn-danger\" onclick=\"hapusItemFg("+it.id+")\">✕</button></div>"+
+              "</div>"+
+              "<div style=\"font-size:.72rem;color:var(--text-muted);margin-top:5px;\">Durasi: <b>"+(it.duration||"-")+"</b> • Target: <b>"+formatNum(it.target)+" PCS</b> • Isi/box: <b>"+formatNum(it.pcsPerBox)+"</b></div>"+
+              (it.note?"<div style=\"font-size:.7rem;color:var(--purple);font-weight:700;margin-top:3px;\">*"+it.note+"*</div>":"")+
+              joHtml+
+              "<div style=\"display:flex;justify-content:space-between;gap:8px;align-items:center;margin-top:8px;border-top:1px dashed #cbd5e1;padding-top:7px;\">"+
+                "<b style=\"color:var(--emerald);font-size:.78rem;\">TOTAL PRODUK: "+formatNum(it.totalPcs)+" PCS</b>"+
+                "<b style=\"color:var(--emerald);font-size:.78rem;\">"+pct.toFixed(2)+"%</b>"+
+              "</div>"+
+              (it.gapNote?"<div style=\"font-size:.7rem;color:var(--text-muted);margin-top:4px;\">NOTE: "+it.gapNote+"</div>":"")+
+              "</div>";
+          }).join("");
+          const count=group.items.length;
+          const lastId=group.items[group.items.length-1].id;
+          const canChange=count<5;
+          const pct=group.totalTarget>0?(group.totalPcs/group.totalTarget*100):0;
+          return "<div class=\"group-card fg-mode\" style=\"margin-bottom:12px;\">"+
+            "<div class=\"group-header\"><span class=\"group-name\">"+(groupIndex+1)+". "+group.leader+"</span>"+
+            "<span style=\"font-size:.7rem;color:var(--text-muted);font-weight:700;\">"+count+"/5 Produk</span></div>"+
+            productCards+
+            "<div style=\"display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px;padding-top:9px;border-top:1px solid #e2e8f0;\">"+
+              "<div style=\"font-size:.74rem;font-weight:800;color:var(--navy);\">TOTAL KEPALA LINE: "+formatNum(group.totalPcs)+" PCS<br><span style=\"font-size:.68rem;color:var(--text-muted);\">Pencapaian gabungan: "+pct.toFixed(2)+"%</span></div>"+
+              (canChange?"<button class=\"btn btn-emerald\" style=\"flex-shrink:0;font-size:.72rem;\" onclick=\"mulaiPergantianProdukFgById("+lastId+")\">＋ Tambah Pergantian Produk</button>":"<span style=\"font-size:.65rem;color:var(--text-muted);text-align:right;\">Batas 4 kali pergantian tercapai</span>")+
+            "</div></div>";
         }).join("");
       }
 
-      const tgl = formatTanggalLaporan(document.getElementById("fgDate").value);
-      const jam = document.getElementById("fgTime").value.trim() || "23.00";
-      const shift = document.getElementById("fgShift").value;
-      const plant = document.getElementById("fgPlant").value;
-      let wa = "*LAPORAN HASIL PRODUKSI " + plant + " JAM " + jam + " TANGGAL " + tgl + " (" + shift + ")*\n━━━━━━━━━━━━━━━━━━━━\n\n";
+      const tgl=formatTanggalLaporan(document.getElementById("fgDate").value);
+      const jam=document.getElementById("fgTime").value.trim()||"23.00";
+      const shift=document.getElementById("fgShift").value;
+      const plant=document.getElementById("fgPlant").value;
+      let wa="*LAPORAN HASIL PRODUKSI "+plant+" JAM "+jam+" TANGGAL "+tgl+" ("+shift+")*\n━━━━━━━━━━━━━━━━━━━━\n\n";
 
-      fgList.forEach((it, idx) => {
-        const joList = ambilRincianJobOrderFg(it);
-        const multiJo = joList.length > 1;
-        const productName = it.productName || pisahProdukDanJo(it.productJo).productName;
-        wa += (idx + 1) + ". " + it.leader + "\n";
-        if (multiJo) {
-          wa += productName + " (" + joList.map(jo=>jo.jobOrder).join(" dan ") + ")\n";
-        } else {
-          wa += (it.productJo || [productName, it.jobOrder ? "(" + it.jobOrder + ")" : ""].filter(Boolean).join(" ")) + "\n";
-        }
-        if (it.note) wa += "*" + it.note + "*\n";
-        wa += "DURASI  : " + it.duration + "\n";
-        wa += "TARGET : " + formatNum(it.target) + "\n";
-        wa += "HASIL\n";
+      groups.forEach((group,groupIndex)=>{
+        wa+=(groupIndex+1)+". "+group.leader+"\n";
+        const multipleProducts=group.items.length>1;
+        group.items.forEach((it,productIndex)=>{
+          const jobs=ambilRincianJobOrderFg(it);
+          const productName=it.productName||pisahProdukDanJo(it.productJo).productName;
+          const productHeader=productName+" ("+jobs.map(jo=>jo.jobOrder).join(" dan ")+")";
+          if(multipleProducts)wa+="\n*PRODUK "+(productIndex+1)+": "+productHeader+"*\n";
+          else wa+=productHeader+"\n";
+          if(it.note)wa+="*"+it.note+"*\n";
+          wa+="DURASI  : "+it.duration+"\n";
+          wa+="TARGET : "+formatNum(it.target)+"\n";
+          wa+="HASIL\n";
 
-        if (multiJo) {
-          joList.forEach(jo => {
-            wa += jo.jobOrder + "\n";
-            const hasilRows = [];
-            if (jo.boxA > 0) hasilRows.push({label:"A",value:formatNum(jo.boxA) + " BOX @" + formatNum(it.pcsPerBox) + " = " + formatNum(jo.pcsA) + " PCS"});
-            if (jo.boxB > 0) hasilRows.push({label:"B",value:formatNum(jo.boxB) + " BOX @" + formatNum(it.pcsPerBox) + " = " + formatNum(jo.pcsB) + " PCS"});
-            if (jo.recehABoxes.length) hasilRows.push({label:"RECEH A",value:jo.recehABoxes.length + " BOX (" + jo.recehABoxes.map(formatNum).join(" + ") + ") = " + formatNum(jo.pcsRecehA) + " PCS"});
-            if (jo.recehBBoxes.length) hasilRows.push({label:"RECEH B",value:jo.recehBBoxes.length + " BOX (" + jo.recehBBoxes.map(formatNum).join(" + ") + ") = " + formatNum(jo.pcsRecehB) + " PCS"});
-            hasilRows.push({label:"TOTAL",value:formatTotalBoxJoFg(jo) + " = " + formatNum(jo.totalPcs) + " PCS",bold:true});
-            wa += formatWhatsAppQtyRows(hasilRows) + "\n\n";
-          });
-          const achievementPct = Number(it.target) > 0 ? (Number(it.totalPcs || 0) / Number(it.target) * 100) : 0;
-          wa += "*TOTAL FG : " + formatNum(it.totalPcs) + " | " + achievementPct.toFixed(2) + "%*\n\n";
-          if (it.gapNote) wa += "*NOTE : " + it.gapNote + "*\n\n";
-        } else {
-          const recehA = it.recehABoxes || [];
-          const recehB = it.recehBBoxes || it.recehBoxes || [];
-          const totalRecehBoxes = recehA.length + recehB.length;
-          const normalBoxCount = (Number(it.boxA) || 0) + (Number(it.boxB) || 0);
-          const totalBoxLabel = totalRecehBoxes > 0
-            ? formatNum(it.totalBox) + " BOX (" + formatNum(normalBoxCount) + " BOX + " + formatNum(totalRecehBoxes) + " RECEH)"
-            : formatNum(it.totalBox) + " BOX @" + formatNum(it.pcsPerBox);
-          const achievementPct = Number(it.target) > 0 ? (Number(it.totalPcs || 0) / Number(it.target) * 100) : 0;
-          const hasilRows = [
-            { label:"A", value:formatNum(it.boxA) + " BOX @" + formatNum(it.pcsPerBox) + " = " + formatNum(it.pcsA) + " PCS" }
-          ];
-          if ((Number(it.boxB) || 0) > 0 || recehB.length > 0) {
-            hasilRows.push({label:"B",value:formatNum(it.boxB) + " BOX @" + formatNum(it.pcsPerBox) + " = " + formatNum(it.pcsB) + " PCS"});
+          if(jobs.length>1||multipleProducts){
+            jobs.forEach(jo=>{
+              wa+=jo.jobOrder+"\n";
+              const hasilRows=[];
+              if(jo.boxA>0)hasilRows.push({label:"A",value:formatNum(jo.boxA)+" BOX @"+formatNum(it.pcsPerBox)+" = "+formatNum(jo.pcsA)+" PCS"});
+              if(jo.boxB>0)hasilRows.push({label:"B",value:formatNum(jo.boxB)+" BOX @"+formatNum(it.pcsPerBox)+" = "+formatNum(jo.pcsB)+" PCS"});
+              if(jo.recehABoxes.length)hasilRows.push({label:"RECEH A",value:jo.recehABoxes.length+" BOX ("+jo.recehABoxes.map(formatNum).join(" + ")+") = "+formatNum(jo.pcsRecehA)+" PCS"});
+              if(jo.recehBBoxes.length)hasilRows.push({label:"RECEH B",value:jo.recehBBoxes.length+" BOX ("+jo.recehBBoxes.map(formatNum).join(" + ")+") = "+formatNum(jo.pcsRecehB)+" PCS"});
+              hasilRows.push({label:"TOTAL",value:formatTotalBoxJoFg(jo)+" = "+formatNum(jo.totalPcs)+" PCS",bold:true});
+              wa+=formatWhatsAppQtyRows(hasilRows)+"\n\n";
+            });
+            const pct=Number(it.target)>0?(Number(it.totalPcs||0)/Number(it.target)*100):0;
+            wa+="*TOTAL PRODUK: "+formatNum(it.totalPcs)+" PCS | "+pct.toFixed(2)+"%*\n";
+          }else{
+            const jo=jobs[0];
+            const recehA=jo.recehABoxes||[];
+            const recehB=jo.recehBBoxes||[];
+            const recehCount=recehA.length+recehB.length;
+            const normalBox=jo.boxA+jo.boxB;
+            const totalBoxLabel=recehCount
+              ?formatNum(jo.totalBox)+" BOX ("+formatNum(normalBox)+" BOX + "+formatNum(recehCount)+" RECEH)"
+              :formatNum(jo.totalBox)+" BOX @"+formatNum(it.pcsPerBox);
+            const pct=Number(it.target)>0?(Number(it.totalPcs||0)/Number(it.target)*100):0;
+            const rows=[{label:"A",value:formatNum(jo.boxA)+" BOX @"+formatNum(it.pcsPerBox)+" = "+formatNum(jo.pcsA)+" PCS"}];
+            if(jo.boxB>0||recehB.length)rows.push({label:"B",value:formatNum(jo.boxB)+" BOX @"+formatNum(it.pcsPerBox)+" = "+formatNum(jo.pcsB)+" PCS"});
+            if(recehA.length)rows.push({label:"RECEH A",value:recehA.length+" BOX ("+recehA.map(formatNum).join(" + ")+") = "+formatNum(jo.pcsRecehA)+" PCS"});
+            if(recehB.length)rows.push({label:"RECEH B",value:recehB.length+" BOX ("+recehB.map(formatNum).join(" + ")+") = "+formatNum(jo.pcsRecehB)+" PCS"});
+            rows.push({label:"TOTAL",value:totalBoxLabel+" = "+formatNum(jo.totalPcs)+" PCS | "+pct.toFixed(2)+"%",bold:true});
+            if(it.gapNote)rows.push({label:"NOTE",value:it.gapNote,bold:true,noCode:true});
+            wa+=formatWhatsAppQtyRows(rows)+"\n";
           }
-          if (recehA.length) hasilRows.push({label:"RECEH A",value:recehA.length + " BOX (" + recehA.map(formatNum).join(" + ") + ") = " + formatNum(it.pcsRecehA || recehA.reduce((x,y)=>x+y,0)) + " PCS"});
-          if (recehB.length) hasilRows.push({label:"RECEH B",value:recehB.length + " BOX (" + recehB.map(formatNum).join(" + ") + ") = " + formatNum(it.pcsRecehB || it.pcsReceh || recehB.reduce((x,y)=>x+y,0)) + " PCS"});
-          hasilRows.push({label:"TOTAL",value:totalBoxLabel + " = " + formatNum(it.totalPcs) + " PCS | " + achievementPct.toFixed(2) + "%",bold:true});
-          if (it.gapNote) hasilRows.push({label:"NOTE",value:it.gapNote,bold:true,noCode:true});
-          wa += formatWhatsAppQtyRows(hasilRows) + "\n\n";
-        }
+          if(multipleProducts)wa+="\n";
+        });
+        if(multipleProducts){
+          const pct=group.totalTarget>0?(group.totalPcs/group.totalTarget*100):0;
+          wa+="*TOTAL PRODUKSI KEPALA LINE: "+formatNum(group.totalPcs)+" PCS | "+pct.toFixed(2)+"%*\n\n";
+        }else wa+="\n";
       });
 
-      const includeWip = document.getElementById("mergeWipToggle").checked;
-      if (includeWip && wipList.length > 0) {
-        const groupedWip = {};
-        wipList.forEach(item => {
-          if (!groupedWip[item.group]) groupedWip[item.group] = [];
-          groupedWip[item.group].push(item);
-        });
-        const plantLower = plant.toLowerCase();
-        wa += "\n*Sisa Barang Bagus wip Assy " + plantLower + "*\n\n";
-        Object.entries(groupedWip).forEach(([gName,items]) => {
-          wa += "*" + gName + "*\n";
-          wa += formatWhatsAppQtyRows(items.map(w => ({
-            label:String(w.part || "").trim() + (w.note ? " " + String(w.note).trim() : ""),
-            value:formatNum(w.qty)
-          }))) + "\n\n";
+      const includeWip=document.getElementById("mergeWipToggle").checked;
+      if(includeWip&&wipList.length>0){
+        const groupedWip={};
+        wipList.forEach(item=>{if(!groupedWip[item.group])groupedWip[item.group]=[];groupedWip[item.group].push(item);});
+        wa+="\n*Sisa Barang Bagus wip Assy "+plant.toLowerCase()+"*\n\n";
+        Object.entries(groupedWip).forEach(([name,items])=>{
+          wa+="*"+name+"*\n";
+          wa+=formatWhatsAppQtyRows(items.map(w=>({label:String(w.part||"").trim()+(w.note?" "+String(w.note).trim():""),value:formatNum(w.qty)})))+"\n\n";
         });
       }
-      wa += "Terima kasih";
-      if (!waFgManuallyEdited) waBox.value = wa.trim();
+      wa+="Terima kasih";
+      if(!waFgManuallyEdited)waBox.value=wa.trim();
     }
 
     function buatUlangWaFg() {
