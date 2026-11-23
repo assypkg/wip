@@ -4603,7 +4603,7 @@
           const jobs=ambilRincianJobOrderFg(it);
           const productName=it.productName||pisahProdukDanJo(it.productJo).productName;
           const productHeader=productName+" ("+jobs.map(jo=>jo.jobOrder).join(" dan ")+")";
-          if(multipleProducts)wa+="\n*SPA "+(productIndex+1)+": "+productHeader+"*\n";
+          if(multipleProducts)wa+="*SPA "+(productIndex+1)+": "+productHeader+"*\n";
           else wa+=productHeader+"\n";
           if(it.note)wa+="*"+it.note+"*\n";
           wa+="DURASI  : "+it.duration+"\n";
@@ -4643,7 +4643,6 @@
             if(it.gapNote)rows.push({label:"NOTE",value:it.gapNote,bold:true,noCode:true});
             wa+=formatWhatsAppQtyRows(rows)+"\n";
           }
-          if(multipleProducts)wa+="\n";
         });
         if(multipleProducts){
           const pct=group.totalTarget>0?(group.totalPcs/group.totalTarget*100):0;
