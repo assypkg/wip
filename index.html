@@ -6803,14 +6803,24 @@
       const nameIndex=headers.indexOf("NAMAPRODUK");
       const codeIndex=headers.indexOf("KODEITEM");
       const qtyIndex=headers.findIndex(x=>x==="ISIPERBOXPCS"||x==="ISIPERBOX");
-      let targetIndex=-1;
-      let dataStart=headerIndex+1;
+      // Template DP-ASY2-01-03 memakai header bertingkat/merged:
+      // kolom J = Standar per Jam, K = Standar 8 Jam, L = Standar 9 Jam.
+      // Karena pembaca ODS dapat meratakan sel header gabungan, jangan memakai
+      // findIndex() pada baris subheader (posisinya bisa bergeser ke kiri).
+      const targetIndex=10; // Kolom K (0-based)
+      let dataStart=headerIndex+2;
+      let foundEightHourHeader=false;
       for(let offset=0;offset<=4&&headerIndex+offset<rows.length;offset++){
         const candidate=(rows[headerIndex+offset]||[]).map(kunciHeaderStandarMasterFg);
-        const idx=candidate.findIndex(x=>x==="8JAM"||x==="STANDARHASIL8JAM");
-        if(idx>=0){targetIndex=idx;dataStart=headerIndex+offset+1;break;}
+        if(candidate.some(x=>x==="8JAM"||x==="STANDARHASIL8JAM")){
+          foundEightHourHeader=true;
+          dataStart=headerIndex+offset+1;
+          break;
+        }
       }
-      if(targetIndex<0)throw new Error("Kolom Standar Hasil 8 Jam tidak ditemukan.");
+      if(!foundEightHourHeader)throw new Error("Subheader 8 Jam tidak ditemukan. Pastikan file menggunakan format standar hasil produksi yang benar.");
+      if(!rows.slice(dataStart).some(row=>angkaStandarMasterFg(row?.[targetIndex])>0))
+        throw new Error("Kolom K (Standar Hasil 8 Jam) tidak terbaca. Periksa format file standar yang diunggah.");
       const byProduct=new Map();
       const codeNames=new Map();
       const conflicts=[];
