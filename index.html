@@ -6477,6 +6477,221 @@
       return true;
     }
 
+    function renderMasterErpMappingList() {
+      const list=document.getElementById("masterErpMappingList");
+      const info=document.getElementById("masterErpMappingInfo");
+      if(!list||!info)return;
+      const q=(document.getElementById("masterErpMappingSearch")?.value||"").trim().toLowerCase();
+      const items=masterErpMappings.map((record,index)=>({record,index})).filter(({record})=>
+        !q||(record.itemCode+" "+record.itemName+" "+record.fgProductName+" "+record.jobOrders.join(" ")).toLowerCase().includes(q)
+      );
+      const mapped=masterErpMappings.filter(x=>x.fgProductName).length;
+      info.textContent="Total "+masterErpMappings.length+" Item Code • "+mapped+" dipetakan • "+(masterErpMappings.length-mapped)+" belum dipetakan.";
+      if(!items.length){list.innerHTML='<div style="padding:14px;text-align:center;color:var(--text-muted);">Belum ada relasi ERP.</div>';return;}
+      list.innerHTML=items.map(({record,index})=>'<div style="padding:9px 3px;border-bottom:1px solid #e2e8f0;">'+
+        '<div style="font-size:.72rem;font-weight:800;color:var(--navy);">'+escapeHtmlMasterErp(record.itemCode)+' • '+record.jobOrders.length+' JO</div>'+
+        '<div style="font-size:.72rem;margin:3px 0;">'+escapeHtmlMasterErp(record.itemName)+'</div>'+
+        '<div style="font-size:.65rem;color:var(--text-muted);margin-bottom:5px;">JO: '+escapeHtmlMasterErp(record.jobOrders.join(", "))+'</div>'+
+        '<select style="width:100%;font-size:.72rem;" onchange="pilihPemetaanMasterErp('+index+',this.value)"><option value="">— Pilih produk Master FG —</option>'+
+        masterProdukFg.map(name=>'<option value="'+escapeHtmlMasterErp(name)+'" '+(kunciNamaMasterProdukFg(name)===kunciNamaMasterProdukFg(record.fgProductName)?"selected":"")+'>'+escapeHtmlMasterErp(name)+'</option>').join("")+'</select></div>'
+      ).join("");
+    }
+
+    function renderMasterErpPreview() {
+      const list=document.getElementById("masterErpPendingList");
+      const summary=document.getElementById("masterErpPreviewSummary");
+      const conflicts=document.getElementById("masterErpPreviewConflicts");
+      const button=document.getElementById("btnImportMasterErp");
+      if(!list||!summary||!conflicts||!button)return;
+      if(!pendingErpImport.length) {
+        summary.textContent="Belum ada file ERP yang diproses.";
+        list.innerHTML='<div style="padding:12px;text-align:center;color:var(--text-muted);">Upload file .HTM untuk melihat preview.</div>';
+        conflicts.style.display="none";button.disabled=true;return;
+      }
+      const mapped=pendingErpImport.filter(x=>x.fgProductName).length;
+      summary.textContent=pendingErpImport.length+" Item Code unik • "+pendingErpImport.reduce((n,x)=>n+x.jobOrders.length,0)+" JO unik • "+mapped+" cocok dengan Master FG • "+(pendingErpImport.length-mapped)+" perlu pemetaan.";
+      if(pendingErpImportConflicts.length) {
+        conflicts.style.display="block";
+        conflicts.textContent="Import diblokir: "+pendingErpImportConflicts.join(" | ");
+      } else conflicts.style.display="none";
+      list.innerHTML=pendingErpImport.map((record,index)=>'<div style="padding:8px 2px;border-bottom:1px solid #e2e8f0;">'+
+        '<b style="font-size:.72rem;color:var(--navy);">'+escapeHtmlMasterErp(record.itemCode)+'</b>'+
+        '<div style="font-size:.7rem;margin:2px 0;">'+escapeHtmlMasterErp(record.itemName)+'</div>'+
+        '<div style="font-size:.65rem;color:var(--text-muted);margin-bottom:4px;">'+record.jobOrders.length+' JO: '+escapeHtmlMasterErp(record.jobOrders.join(", "))+'</div>'+
+        '<select style="width:100%;font-size:.72rem;" onchange="ubahPemetaanPendingErp('+index+',this.value)"><option value="">— Belum dipetakan ke Master FG —</option>'+
+        masterProdukFg.map(name=>'<option value="'+escapeHtmlMasterErp(name)+'" '+(kunciNamaMasterProdukFg(name)===kunciNamaMasterProdukFg(record.fgProductName)?"selected":"")+'>'+escapeHtmlMasterErp(name)+'</option>').join("")+'</select></div>'
+      ).join("");
+      button.disabled=!!pendingErpImportConflicts.length||mapped!==pendingErpImport.length||!masterErpMappingReady||masterErpMappingConflict;
+    }
+
+    function ubahPemetaanPendingErp(index,value) {
+      if(!pendingErpImport[index])return;
+      pendingErpImport[index].fgProductName=String(value||"").trim();
+      renderMasterErpPreview();
+    }
+
+    function parseFileMasterErpHtml(html) {
+      const doc=new DOMParser().parseFromString(String(html||""),"text/html");
+      const normalizeHeader=value=>String(value||"").normalize("NFKC").trim().toLowerCase().replace(/[^a-z0-9]+/g,"");
+      let table=null,indexes=null,headerIndex=-1;
+      for(const candidate of [...doc.querySelectorAll("table")]) {
+        const rows=[...candidate.querySelectorAll("tr")];
+        const rowIndex=rows.findIndex(row=>{
+          const headers=[...row.querySelectorAll("th,td")].map(cell=>normalizeHeader(cell.textContent));
+          return headers.includes("joborder")&&headers.includes("itemcode")&&headers.includes("itemname");
+        });
+        if(rowIndex>=0) {
+          const headers=[...rows[rowIndex].querySelectorAll("th,td")].map(cell=>normalizeHeader(cell.textContent));
+          table=candidate;headerIndex=rowIndex;
+          indexes={jo:headers.indexOf("joborder"),code:headers.indexOf("itemcode"),name:headers.indexOf("itemname")};
+          break;
+        }
+      }
+      if(!table)throw new Error("Kolom Job Order, Item Code, dan Item Name tidak ditemukan.");
+      const rows=[...table.querySelectorAll("tr")];
+      const byCode=new Map(),joOwner=new Map(),conflicts=[];
+      let dataRows=0;
+      rows.slice(headerIndex+1).forEach((row,rowIndex)=>{
+        const cells=[...row.querySelectorAll("td")].map(cell=>cell.textContent.replace(/\u00a0/g," ").trim());
+        const jo=String(cells[indexes.jo]||"").trim().toUpperCase().replace(/\s+/g,"");
+        const itemCode=kunciItemCodeErp(cells[indexes.code]);
+        const itemName=String(cells[indexes.name]||"").normalize("NFKC").replace(/[\u200B-\u200D\uFEFF]/g,"").trim().replace(/\s+/g," ");
+        if(!jo&&!itemCode&&!itemName)return;
+        if(!jo||!itemCode||!itemName) {
+          conflicts.push("Baris "+(headerIndex+rowIndex+2)+" tidak lengkap (JO, Item Code, atau Item Name kosong).");
+          return;
+        }
+        dataRows++;
+        const old=byCode.get(itemCode);
+        if(old&&kunciNamaMasterProdukFg(old.itemName)!==kunciNamaMasterProdukFg(itemName)) {
+          conflicts.push("Item Code "+itemCode+" memiliki lebih dari satu Item Name.");
+          return;
+        }
+        const owner=joOwner.get(jo);
+        if(owner&&owner!==itemCode) {
+          conflicts.push("JO "+jo+" terhubung ke dua Item Code: "+owner+" dan "+itemCode+".");
+          return;
+        }
+        joOwner.set(jo,itemCode);
+        if(!byCode.has(itemCode))byCode.set(itemCode,{itemCode,itemName,fgProductName:"",jobOrders:[]});
+        const record=byCode.get(itemCode);
+        if(!record.jobOrders.includes(jo))record.jobOrders.push(jo);
+      });
+      const records=[...byCode.values()].map(record=>{
+        const previous=masterErpMappings.find(x=>x.itemCode===record.itemCode);
+        const exact=masterProdukFg.find(name=>kunciNamaMasterProdukFg(name)===kunciNamaMasterProdukFg(record.itemName));
+        return {...record,fgProductName:previous?.fgProductName||exact||""};
+      }).sort((a,b)=>new Intl.Collator("id",{numeric:true,sensitivity:"base"}).compare(a.itemCode,b.itemCode));
+      return {records,conflicts,dataRows,uniqueJobs:joOwner.size};
+    }
+
+    async function bacaFileMasterErp(event) {
+      const file=event.target.files?.[0];
+      if(!file)return;
+      pendingErpImport=[];pendingErpImportConflicts=[];
+      setStatusMasterErpMapping("syncing","Membaca file ERP...");
+      try {
+        const parsed=parseFileMasterErpHtml(await file.text());
+        pendingErpImport=parsed.records;
+        pendingErpImportConflicts=parsed.conflicts;
+        renderMasterErpPreview();
+        setStatusMasterErpMapping(parsed.conflicts.length?"warning":"success",
+          "File terbaca • "+parsed.dataRows+" baris • "+parsed.uniqueJobs+" JO unik • "+parsed.records.length+" Item Code unik • "+Math.max(0,parsed.dataRows-parsed.uniqueJobs)+" pengulangan digabung.");
+      } catch(e) {
+        pendingErpImport=[];pendingErpImportConflicts=[e.message];
+        renderMasterErpPreview();
+        setStatusMasterErpMapping("error","Gagal membaca file ERP: "+e.message);
+      }
+      event.target.value="";
+    }
+
+    async function simpanImportMasterErp() {
+      if(!pendingErpImport.length||pendingErpImportConflicts.length)return;
+      if(pendingErpImport.some(x=>!x.fgProductName)) {
+        alert("Petakan semua Item Code ke Master FG terlebih dahulu. Target dan Qty/Box tidak diambil dari ERP.");
+        return;
+      }
+      if(!masterErpMappingReady) {
+        const ready=await tarikMasterErpMappingCloud();
+        if(!ready||!masterErpMappingReady)return;
+      }
+      const merged=new Map(masterErpMappings.map(x=>[x.itemCode,{...x,jobOrders:[...x.jobOrders]}]));
+      const joOwner=new Map();
+      merged.forEach((record,code)=>record.jobOrders.forEach(jo=>joOwner.set(jo,code)));
+      const conflicts=[];
+      pendingErpImport.forEach(incoming=>{
+        const existing=merged.get(incoming.itemCode);
+        if(existing&&kunciNamaMasterProdukFg(existing.itemName)!==kunciNamaMasterProdukFg(incoming.itemName))
+          conflicts.push("Item Code "+incoming.itemCode+" berubah nama dibanding data Cloud.");
+        incoming.jobOrders.forEach(jo=>{
+          const owner=joOwner.get(jo);
+          if(owner&&owner!==incoming.itemCode)conflicts.push("JO "+jo+" sudah terhubung ke Item Code "+owner+".");
+        });
+        if(!merged.has(incoming.itemCode))merged.set(incoming.itemCode,{...incoming,jobOrders:[...incoming.jobOrders]});
+        else {
+          const target=merged.get(incoming.itemCode);
+          if(!target.fgProductName)target.fgProductName=incoming.fgProductName;
+          incoming.jobOrders.forEach(jo=>{if(!target.jobOrders.includes(jo))target.jobOrders.push(jo);});
+        }
+        incoming.jobOrders.forEach(jo=>joOwner.set(jo,incoming.itemCode));
+      });
+      if(conflicts.length) {
+        pendingErpImportConflicts=[...new Set(conflicts)];
+        renderMasterErpPreview();
+        alert("Import dibatalkan karena konflik JO/Item Code. Periksa daftar konflik.");
+        return;
+      }
+      masterErpMappings=[...merged.values()];
+      simpanMasterErpMappingLokal();
+      if(!await simpanMasterErpMappingCloud())return;
+
+      masterJobOrders=normalisasiMasterJobOrder([...masterJobOrders,...pendingErpImport.flatMap(x=>x.jobOrders)]);
+      simpanMasterJobOrderLokal();
+      let joSaved=false;
+      if(!masterJobOrderReady)await tarikMasterJobOrderCloud();
+      if(masterJobOrderReady&&!masterJobOrderBusy&&!masterJobOrderConflict)joSaved=await simpanMasterJobOrderCloud();
+
+      const itemCount=masterErpMappings.length;
+      const joCount=masterErpMappings.reduce((n,x)=>n+x.jobOrders.length,0);
+      pendingErpImport=[];pendingErpImportConflicts=[];
+      renderMasterErpPreview();renderMasterErpMappingList();
+      setStatusMasterErpMapping("success","Import terverifikasi • "+itemCount+" Item Code • "+joCount+" JO unik. "+(joSaved?"Master JO umum juga diperbarui di Cloud.":"Relasi ERP tersimpan; daftar Master JO umum belum berhasil disinkronkan."));
+    }
+
+    function batalImportMasterErp() {
+      pendingErpImport=[];pendingErpImportConflicts=[];
+      const input=document.getElementById("masterErpFile");if(input)input.value="";
+      renderMasterErpPreview();
+    }
+
+    async function pilihPemetaanMasterErp(index,value) {
+      const record=masterErpMappings[index];if(!record)return;
+      const next=String(value||"").trim();
+      if(!next){alert("Pilih produk Master FG untuk Item Code ini.");renderMasterErpMappingList();return;}
+      const previous=record.fgProductName;
+      record.fgProductName=next;
+      simpanMasterErpMappingLokal();
+      if(!await simpanMasterErpMappingCloud()) {
+        record.fgProductName=previous;
+        simpanMasterErpMappingLokal();
+      }
+    }
+
+    function downloadBackupMasterErpMapping() {
+      const raw=localStorage.getItem(MASTER_ERP_MAPPING_BACKUP_KEY)||JSON.stringify({savedAt:new Date().toISOString(),mappings:masterErpMappings},null,2);
+      const url=URL.createObjectURL(new Blob([raw],{type:"application/json"}));
+      const anchor=document.createElement("a");anchor.href=url;anchor.download="backup-master-erp-"+getTodayWibIso()+".json";
+      anchor.click();URL.revokeObjectURL(url);
+    }
+
+    function bukaMasterErpMapping() {
+      toggleModal("masterErpModal",true);
+      renderMasterErpPreview();renderMasterErpMappingList();
+      if(!masterErpMappingReady)tarikMasterErpMappingCloud();
+      if(!masterProdukFgReady)tarikMasterProdukFgCloud();
+      if(!masterJobOrderReady)tarikMasterJobOrderCloud();
+    }
+
     function normalisasiMasterJobOrder(list) {
       const seen = new Set();
       return (Array.isArray(list) ? list : []).map(value => String(value || "").trim().toUpperCase().replace(/\s+/g,""))
