@@ -3686,97 +3686,125 @@
       const waBox = document.getElementById("waPreviewFg");
 
       if (fgList.length === 0) {
-        container.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted); font-size:0.82rem;">Belum ada data Finish Good. Isi form di sebelah kiri atau klik tombol <b>"⚡ Contoh FG"</b> di atas.</div>`;
+        container.innerHTML = "<div style=\"text-align:center; padding:20px; color:var(--text-muted); font-size:0.82rem;\">Belum ada data Finish Good. Isi form di sebelah kiri atau klik tombol <b>\"⚡ Contoh FG\"</b> di atas.</div>";
       } else {
-        container.innerHTML = fgList
-          .map(
-            (it, idx) => `
-            <div class="group-card fg-mode">
-              <div class="group-header">
-                <span class="group-name">${idx + 1}. ${it.leader}</span>
-                <div style="display:flex; gap:4px;">
-                  <button class="btn btn-edit" onclick="mulaiEditFg(${it.id})">✏️ Edit</button>
-                  <button class="btn btn-danger" onclick="hapusItemFg(${it.id})">✕</button>
-                </div>
-              </div>
-              <div style="font-size:0.8rem; font-weight:700; color:var(--text-main);">${it.productName || pisahProdukDanJo(it.productJo).productName}</div>
-              <div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;">JO: <b>${it.jobOrder || pisahProdukDanJo(it.productJo).jobOrder || "-"}</b></div>
-              ${it.note ? `<div style="font-size:0.74rem; color:var(--purple); font-weight:700; margin-top:2px;">*${it.note}*</div>` : ""}
-              <div style="font-size:0.74rem; color:var(--text-muted); margin-top:4px;">
-                DURASI: <b>${it.duration}</b> &nbsp;|&nbsp; TARGET: <b>${formatNum(it.target)}</b>
-              </div>
-              <div class="box-breakdown-info" style="margin-top:6px;">
-                A : ${formatNum(it.boxA)} BOX @${formatNum(it.pcsPerBox)} = <b>${formatNum(it.pcsA)}</b><br>
-                B : ${formatNum(it.boxB)} BOX @${formatNum(it.pcsPerBox)} = <b>${formatNum(it.pcsB)}</b><br>
-                ${(it.recehABoxes || []).length ? `RECEH A : ${it.recehABoxes.length} BOX (${it.recehABoxes.map(formatNum).join(" + ")}) = <b>${formatNum(it.pcsRecehA || it.recehABoxes.reduce((a,b)=>a+b,0))} PCS</b><br>` : ""}${(it.recehBBoxes || it.recehBoxes || []).length ? `RECEH B : ${(it.recehBBoxes || it.recehBoxes).length} BOX (${(it.recehBBoxes || it.recehBoxes).map(formatNum).join(" + ")}) = <b>${formatNum(it.pcsRecehB || it.pcsReceh || (it.recehBBoxes || it.recehBoxes).reduce((a,b)=>a+b,0))} PCS</b><br>` : ""}
-                <span style="color:var(--emerald); font-weight:800;">TOTAL : ${formatNum(it.totalBox)} BOX ${( (it.recehABoxes || []).length + (it.recehBBoxes || it.recehBoxes || []).length ) > 0 ? `(${formatNum((Number(it.boxA) || 0) + (Number(it.boxB) || 0))} BOX + ${formatNum((it.recehABoxes || []).length + (it.recehBBoxes || it.recehBoxes || []).length)} RECEH)` : `@${formatNum(it.pcsPerBox)}`} = ${formatNum(it.totalPcs)} PCS</span>
-              </div>
-            </div>`
-          )
-          .join("");
+        container.innerHTML = fgList.map((it, idx) => {
+          const joList = ambilRincianJobOrderFg(it);
+          const multiJo = joList.length > 1;
+          const productName = it.productName || pisahProdukDanJo(it.productJo).productName;
+          let detailHtml = "";
+          if (multiJo) {
+            detailHtml = joList.map((jo, index) => {
+              const rows = [];
+              if (jo.boxA > 0) rows.push("Lot A: " + formatNum(jo.boxA) + " BOX @" + formatNum(it.pcsPerBox) + " = " + formatNum(jo.pcsA) + " PCS");
+              if (jo.boxB > 0) rows.push("Lot B: " + formatNum(jo.boxB) + " BOX @" + formatNum(it.pcsPerBox) + " = " + formatNum(jo.pcsB) + " PCS");
+              if (jo.recehABoxes.length) rows.push("Receh A: " + jo.recehABoxes.length + " BOX (" + jo.recehABoxes.map(formatNum).join(" + ") + ") = " + formatNum(jo.pcsRecehA) + " PCS");
+              if (jo.recehBBoxes.length) rows.push("Receh B: " + jo.recehBBoxes.length + " BOX (" + jo.recehBBoxes.map(formatNum).join(" + ") + ") = " + formatNum(jo.pcsRecehB) + " PCS");
+              return "<div style=\"margin-top:7px;padding:8px;border:1px solid #e2e8f0;border-radius:8px;background:#f8fafc;\">" +
+                "<b style=\"color:var(--navy);\">" + (index + 1) + ". " + jo.jobOrder + "</b>" +
+                "<div style=\"font-size:.72rem;line-height:1.55;margin-top:4px;\">" + rows.join("<br>") +
+                "<br><b style=\"color:var(--emerald);\">TOTAL: " + formatNum(jo.totalBox) + " BOX = " + formatNum(jo.totalPcs) + " PCS</b></div></div>";
+            }).join("");
+          } else {
+            detailHtml = "<div class=\"box-breakdown-info\" style=\"margin-top:6px;\">" +
+              "A : " + formatNum(it.boxA) + " BOX @" + formatNum(it.pcsPerBox) + " = <b>" + formatNum(it.pcsA) + "</b><br>" +
+              "B : " + formatNum(it.boxB) + " BOX @" + formatNum(it.pcsPerBox) + " = <b>" + formatNum(it.pcsB) + "</b><br>" +
+              ((it.recehABoxes || []).length ? "RECEH A : " + it.recehABoxes.length + " BOX (" + it.recehABoxes.map(formatNum).join(" + ") + ") = <b>" + formatNum(it.pcsRecehA || it.recehABoxes.reduce((x,y)=>x+y,0)) + " PCS</b><br>" : "") +
+              (((it.recehBBoxes || it.recehBoxes || []).length) ? "RECEH B : " + (it.recehBBoxes || it.recehBoxes).length + " BOX (" + (it.recehBBoxes || it.recehBoxes).map(formatNum).join(" + ") + ") = <b>" + formatNum(it.pcsRecehB || it.pcsReceh || (it.recehBBoxes || it.recehBoxes).reduce((x,y)=>x+y,0)) + " PCS</b><br>" : "") +
+              "<span style=\"color:var(--emerald);font-weight:800;\">TOTAL : " + formatNum(it.totalBox) + " BOX = " + formatNum(it.totalPcs) + " PCS</span></div>";
+          }
+          const totalPct = Number(it.target) > 0 ? (Number(it.totalPcs || 0) / Number(it.target) * 100) : 0;
+          const joHeader = joList.map(jo=>jo.jobOrder).filter(Boolean).join(" dan ");
+          return "<div class=\"group-card fg-mode\">" +
+            "<div class=\"group-header\"><span class=\"group-name\">" + (idx + 1) + ". " + it.leader + "</span>" +
+            "<div style=\"display:flex;gap:4px;\"><button class=\"btn btn-edit\" onclick=\"mulaiEditFg(" + it.id + ")\">✏️ Edit</button>" +
+            "<button class=\"btn btn-danger\" onclick=\"hapusItemFg(" + it.id + ")\">✕</button></div></div>" +
+            "<div style=\"font-size:.8rem;font-weight:700;color:var(--text-main);\">" + productName + "</div>" +
+            "<div style=\"font-size:.75rem;color:var(--text-muted);margin-top:2px;\">JO: <b>" + (joHeader || it.jobOrder || "-") + "</b></div>" +
+            (it.note ? "<div style=\"font-size:.74rem;color:var(--purple);font-weight:700;margin-top:2px;\">*" + it.note + "*</div>" : "") +
+            "<div style=\"font-size:.74rem;color:var(--text-muted);margin-top:4px;\">DURASI: <b>" + it.duration + "</b> &nbsp;|&nbsp; TARGET: <b>" + formatNum(it.target) + "</b></div>" +
+            detailHtml +
+            (multiJo ? "<div style=\"margin-top:8px;color:var(--emerald);font-weight:800;font-size:.78rem;\">TOTAL FG: " + formatNum(it.totalPcs) + " PCS | " + totalPct.toFixed(2) + "%</div>" : "") +
+            "</div>";
+        }).join("");
       }
 
       const tgl = formatTanggalLaporan(document.getElementById("fgDate").value);
       const jam = document.getElementById("fgTime").value.trim() || "23.00";
       const shift = document.getElementById("fgShift").value;
       const plant = document.getElementById("fgPlant").value;
-
-      let wa = `*LAPORAN HASIL PRODUKSI ${plant} JAM ${jam} TANGGAL ${tgl} (${shift})*\n━━━━━━━━━━━━━━━━━━━━\n\n`;
+      let wa = "*LAPORAN HASIL PRODUKSI " + plant + " JAM " + jam + " TANGGAL " + tgl + " (" + shift + ")*\n━━━━━━━━━━━━━━━━━━━━\n\n";
 
       fgList.forEach((it, idx) => {
-        wa += `${idx + 1}. ${it.leader}\n`;
-        wa += `${it.productJo || [it.productName, it.jobOrder ? `(${it.jobOrder})` : ""].filter(Boolean).join(" ")}\n`;
-        if (it.note) {
-          wa += `*${it.note}*\n`;
+        const joList = ambilRincianJobOrderFg(it);
+        const multiJo = joList.length > 1;
+        const productName = it.productName || pisahProdukDanJo(it.productJo).productName;
+        wa += (idx + 1) + ". " + it.leader + "\n";
+        if (multiJo) {
+          wa += productName + " (" + joList.map(jo=>jo.jobOrder).join(" dan ") + ")\n";
+        } else {
+          wa += (it.productJo || [productName, it.jobOrder ? "(" + it.jobOrder + ")" : ""].filter(Boolean).join(" ")) + "\n";
         }
-        wa += `DURASI  : ${it.duration}\n`;
-        wa += `TARGET : ${formatNum(it.target)}\n`;
-        wa += `HASIL \n`;
-        const recehA = it.recehABoxes || [];
-        const recehB = it.recehBBoxes || it.recehBoxes || [];
-        const totalRecehBoxes = recehA.length + recehB.length;
-        const normalBoxCount = (Number(it.boxA) || 0) + (Number(it.boxB) || 0);
-        const totalBoxLabel = totalRecehBoxes > 0
-          ? `${formatNum(it.totalBox)} BOX (${formatNum(normalBoxCount)} BOX + ${formatNum(totalRecehBoxes)} RECEH)`
-          : `${formatNum(it.totalBox)} BOX @${formatNum(it.pcsPerBox)}`;
-        const achievementPct = Number(it.target) > 0 ? (Number(it.totalPcs || 0) / Number(it.target) * 100) : 0;
-        const hasilRows = [
-          { label: "A", value: `${formatNum(it.boxA)} BOX @${formatNum(it.pcsPerBox)} = ${formatNum(it.pcsA)} PCS` }
-        ];
-        // Lot B hanya ditampilkan jika ada box B atau qty receh B.
-        if ((Number(it.boxB) || 0) > 0 || recehB.length > 0) {
-          hasilRows.push({ label: "B", value: `${formatNum(it.boxB)} BOX @${formatNum(it.pcsPerBox)} = ${formatNum(it.pcsB)} PCS` });
+        if (it.note) wa += "*" + it.note + "*\n";
+        wa += "DURASI  : " + it.duration + "\n";
+        wa += "TARGET : " + formatNum(it.target) + "\n";
+        wa += "HASIL\n";
+
+        if (multiJo) {
+          joList.forEach(jo => {
+            wa += jo.jobOrder + "\n";
+            const hasilRows = [];
+            if (jo.boxA > 0) hasilRows.push({label:"A",value:formatNum(jo.boxA) + " BOX @" + formatNum(it.pcsPerBox) + " = " + formatNum(jo.pcsA) + " PCS"});
+            if (jo.boxB > 0) hasilRows.push({label:"B",value:formatNum(jo.boxB) + " BOX @" + formatNum(it.pcsPerBox) + " = " + formatNum(jo.pcsB) + " PCS"});
+            if (jo.recehABoxes.length) hasilRows.push({label:"RECEH A",value:jo.recehABoxes.length + " BOX (" + jo.recehABoxes.map(formatNum).join(" + ") + ") = " + formatNum(jo.pcsRecehA) + " PCS"});
+            if (jo.recehBBoxes.length) hasilRows.push({label:"RECEH B",value:jo.recehBBoxes.length + " BOX (" + jo.recehBBoxes.map(formatNum).join(" + ") + ") = " + formatNum(jo.pcsRecehB) + " PCS"});
+            hasilRows.push({label:"TOTAL",value:formatTotalBoxJoFg(jo) + " = " + formatNum(jo.totalPcs) + " PCS",bold:true});
+            wa += formatWhatsAppQtyRows(hasilRows) + "\n\n";
+          });
+          const achievementPct = Number(it.target) > 0 ? (Number(it.totalPcs || 0) / Number(it.target) * 100) : 0;
+          wa += "*TOTAL FG : " + formatNum(it.totalPcs) + " | " + achievementPct.toFixed(2) + "%*\n\n";
+          if (it.gapNote) wa += "*NOTE : " + it.gapNote + "*\n\n";
+        } else {
+          const recehA = it.recehABoxes || [];
+          const recehB = it.recehBBoxes || it.recehBoxes || [];
+          const totalRecehBoxes = recehA.length + recehB.length;
+          const normalBoxCount = (Number(it.boxA) || 0) + (Number(it.boxB) || 0);
+          const totalBoxLabel = totalRecehBoxes > 0
+            ? formatNum(it.totalBox) + " BOX (" + formatNum(normalBoxCount) + " BOX + " + formatNum(totalRecehBoxes) + " RECEH)"
+            : formatNum(it.totalBox) + " BOX @" + formatNum(it.pcsPerBox);
+          const achievementPct = Number(it.target) > 0 ? (Number(it.totalPcs || 0) / Number(it.target) * 100) : 0;
+          const hasilRows = [
+            { label:"A", value:formatNum(it.boxA) + " BOX @" + formatNum(it.pcsPerBox) + " = " + formatNum(it.pcsA) + " PCS" }
+          ];
+          if ((Number(it.boxB) || 0) > 0 || recehB.length > 0) {
+            hasilRows.push({label:"B",value:formatNum(it.boxB) + " BOX @" + formatNum(it.pcsPerBox) + " = " + formatNum(it.pcsB) + " PCS"});
+          }
+          if (recehA.length) hasilRows.push({label:"RECEH A",value:recehA.length + " BOX (" + recehA.map(formatNum).join(" + ") + ") = " + formatNum(it.pcsRecehA || recehA.reduce((x,y)=>x+y,0)) + " PCS"});
+          if (recehB.length) hasilRows.push({label:"RECEH B",value:recehB.length + " BOX (" + recehB.map(formatNum).join(" + ") + ") = " + formatNum(it.pcsRecehB || it.pcsReceh || recehB.reduce((x,y)=>x+y,0)) + " PCS"});
+          hasilRows.push({label:"TOTAL",value:totalBoxLabel + " = " + formatNum(it.totalPcs) + " PCS | " + achievementPct.toFixed(2) + "%",bold:true});
+          if (it.gapNote) hasilRows.push({label:"NOTE",value:it.gapNote,bold:true,noCode:true});
+          wa += formatWhatsAppQtyRows(hasilRows) + "\n\n";
         }
-        if (recehA.length) hasilRows.push({ label: "RECEH A", value: `${recehA.length} BOX (${recehA.map(formatNum).join(" + ")}) = ${formatNum(it.pcsRecehA || recehA.reduce((a,b)=>a+b,0))} PCS` });
-        if (recehB.length) hasilRows.push({ label: "RECEH B", value: `${recehB.length} BOX (${recehB.map(formatNum).join(" + ")}) = ${formatNum(it.pcsRecehB || it.pcsReceh || recehB.reduce((a,b)=>a+b,0))} PCS` });
-        hasilRows.push({ label: "TOTAL", value: `${totalBoxLabel} = ${formatNum(it.totalPcs)} PCS | ${achievementPct.toFixed(2)}%`, bold: true });
-        // Catatan dimasukkan ke formatter yang sama agar sejajar dengan A, B, dan TOTAL.
-        if (it.gapNote) hasilRows.push({ label: "NOTE", value: it.gapNote, bold: true, noCode: true });
-        wa += formatWhatsAppQtyRows(hasilRows) + "\n\n";
       });
 
       const includeWip = document.getElementById("mergeWipToggle").checked;
       if (includeWip && wipList.length > 0) {
         const groupedWip = {};
-        wipList.forEach((item) => {
+        wipList.forEach(item => {
           if (!groupedWip[item.group]) groupedWip[item.group] = [];
           groupedWip[item.group].push(item);
         });
-
         const plantLower = plant.toLowerCase();
-        wa += `\n*Sisa Barang Bagus wip Assy ${plantLower}*\n\n`;
-
-        Object.entries(groupedWip).forEach(([gName, items]) => {
-          wa += `*${gName}*\n`;
+        wa += "\n*Sisa Barang Bagus wip Assy " + plantLower + "*\n\n";
+        Object.entries(groupedWip).forEach(([gName,items]) => {
+          wa += "*" + gName + "*\n";
           wa += formatWhatsAppQtyRows(items.map(w => ({
-            label: String(w.part || "").trim() + (w.note ? " " + String(w.note).trim() : ""),
-            value: formatNum(w.qty)
-          }))) + "\n";
-          wa += `\n`;
-        });;
+            label:String(w.part || "").trim() + (w.note ? " " + String(w.note).trim() : ""),
+            value:formatNum(w.qty)
+          }))) + "\n\n";
+        });
       }
-
-      wa += `Terima kasih`;
+      wa += "Terima kasih";
       if (!waFgManuallyEdited) waBox.value = wa.trim();
     }
 
