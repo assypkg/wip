@@ -1924,6 +1924,7 @@
         <button class="btn btn-outline" style="min-height:64px;justify-content:flex-start;" onclick="bukaSubmenuMaster('wip')">📦 Master WIP <b id="masterCount">0</b></button>
         <button class="btn btn-outline" style="min-height:64px;justify-content:flex-start;" onclick="bukaSubmenuMaster('leader')">👤 Master Leader <b id="masterLeaderCount">0</b></button>
         <button class="btn btn-outline" style="min-height:64px;justify-content:flex-start;" onclick="bukaSubmenuMaster('jo')">📋 Master JO <b id="masterJobOrderCount">0</b></button>
+        <button class="btn btn-outline" style="min-height:64px;justify-content:flex-start;grid-column:1/-1;" onclick="bukaSubmenuMaster('erp')">📥 Import ERP • Produk & JO</button>
       </div>
     </div>
   </div>
@@ -2024,6 +2025,42 @@
       <input type="search" id="masterJobOrderSearch" placeholder="🔎 Cari nomor Job Order..." oninput="renderMasterJobOrder()" style="width:100%;margin-bottom:8px;" />
       <div id="masterJobOrderInfo" style="font-size:.7rem;color:var(--text-muted);margin-bottom:6px;"></div>
       <div id="masterJobOrderList" style="max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px;font-size:.78rem;"></div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL IMPORT ERP: ITEM CODE, PRODUK MASTER FG & JO
+       ========================================================= -->
+  <div id="masterErpModal" class="modal-backdrop">
+    <div class="modal-card" style="max-width:900px;">
+      <div class="card-header">
+        <span class="card-title">📥 Import Data ERP — Produk & Job Order</span>
+        <button class="btn btn-danger" onclick="toggleModal('masterErpModal', false)">✕ Tutup</button>
+      </div>
+      <div id="masterErpCloudStatus" role="status" aria-live="polite" style="padding:9px 10px;margin:0 0 12px;border:1px solid var(--border);border-radius:9px;font-size:.76rem;">⏳ Memeriksa relasi ERP di Cloud...</div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px;">
+        <button class="btn btn-outline" type="button" onclick="tarikMasterErpMappingCloud()">↻ Sinkronkan ERP</button>
+        <button class="btn btn-outline" type="button" onclick="downloadBackupMasterErpMapping()">Unduh Backup ERP</button>
+      </div>
+      <div style="padding:12px;border:1px solid var(--border);border-radius:10px;background:#f8fafc;margin-bottom:12px;">
+        <label for="masterErpFile">Upload file jadwal ERP (.HTM / .HTML)</label>
+        <input type="file" id="masterErpFile" accept=".htm,.html,text/html" onchange="bacaFileMasterErp(event)" style="width:100%;font-size:.8rem;" />
+        <p style="font-size:.7rem;color:var(--text-muted);margin:6px 0 0;">Hanya Job Order, Item Code, dan Item Name yang dibaca. Unit Produksi, Confirm Date, dan Confirm Qty diabaikan. JO berulang pada tanggal berbeda digabung.</p>
+      </div>
+      <div id="masterErpPreviewSummary" style="font-size:.76rem;color:var(--text-muted);margin-bottom:8px;">Belum ada file ERP yang diproses.</div>
+      <div id="masterErpPreviewConflicts" style="display:none;padding:9px;border:1px solid #fca5a5;border-radius:8px;background:#fef2f2;color:#991b1b;font-size:.72rem;margin-bottom:10px;"></div>
+      <div id="masterErpPendingList" style="max-height:320px;overflow-y:auto;border:1px solid var(--border);border-radius:9px;padding:8px;margin-bottom:10px;"></div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px;">
+        <button class="btn btn-primary" id="btnImportMasterErp" type="button" onclick="simpanImportMasterErp()" disabled>☁️ Validasi & Simpan ke Cloud</button>
+        <button class="btn btn-outline" type="button" onclick="batalImportMasterErp()">Batal Preview</button>
+      </div>
+      <div style="border-top:1px solid var(--border);padding-top:12px;">
+        <div style="font-weight:800;color:var(--navy);margin-bottom:4px;">Pemetaan Item Code ERP ke Master FG</div>
+        <p style="font-size:.7rem;color:var(--text-muted);margin:0 0 8px;">Nama yang cocok dipetakan otomatis. Nama berbeda dipetakan manual. Target dan Qty/Box tetap bersumber dari Master FG.</p>
+        <input type="search" id="masterErpMappingSearch" placeholder="Cari Item Code / Item Name / produk Master FG..." oninput="renderMasterErpMappingList()" style="width:100%;margin-bottom:8px;" />
+        <div id="masterErpMappingInfo" style="font-size:.7rem;color:var(--text-muted);margin-bottom:6px;"></div>
+        <div id="masterErpMappingList" style="max-height:360px;overflow-y:auto;border:1px solid var(--border);border-radius:9px;padding:8px;"></div>
+      </div>
     </div>
   </div>
 
@@ -2189,6 +2226,10 @@
     const MASTER_JOB_ORDER_BASE_KEY = "assy_master_job_order_cloud_base_v1";
     const MASTER_JOB_ORDER_UPDATE_KEY = "assy_master_job_order_cloud_update_v1";
     const MASTER_JOB_ORDER_BACKUP_KEY = "assy_master_job_order_backup_v1";
+    const MASTER_ERP_MAPPING_KEY = "assy_master_erp_jo_product_map_v1";
+    const MASTER_ERP_MAPPING_BASE_KEY = "assy_master_erp_jo_product_map_cloud_base_v1";
+    const MASTER_ERP_MAPPING_UPDATE_KEY = "assy_master_erp_jo_product_map_cloud_update_v1";
+    const MASTER_ERP_MAPPING_BACKUP_KEY = "assy_master_erp_jo_product_map_backup_v1";
     const MASTER_LEADER_KEY = "assy_master_leader_v1";
     const MASTER_LEADER_BASE_KEY = "assy_master_leader_cloud_base_v1";
     const MASTER_LEADER_UPDATE_KEY = "assy_master_leader_cloud_update_v1";
@@ -2204,6 +2245,13 @@
     let masterTargetFg = JSON.parse(localStorage.getItem(MASTER_PRODUK_FG_TARGET_KEY) || "{}");
     let masterPcsPerBoxFg = JSON.parse(localStorage.getItem(MASTER_PRODUK_FG_PCS_PER_BOX_KEY) || "{}");
     let masterJobOrders = JSON.parse(localStorage.getItem(MASTER_JOB_ORDER_KEY) || "[]");
+    let masterErpMappings = JSON.parse(localStorage.getItem(MASTER_ERP_MAPPING_KEY) || "[]");
+    let masterErpMappingReady = false;
+    let masterErpMappingBusy = false;
+    let masterErpMappingConflict = false;
+    let masterErpMappingBootstrapQueued = false;
+    let pendingErpImport = [];
+    let pendingErpImportConflicts = [];
     let masterJobOrderReady = false;
     let masterJobOrderBusy = false;
     let masterJobOrderConflict = false;
@@ -6881,6 +6929,7 @@
       else if (type === "wip") toggleModal("masterModal", true);
       else if (type === "leader") bukaMasterLeader();
       else if (type === "jo") bukaMasterJobOrder();
+      else if (type === "erp") bukaMasterErpMapping();
     }
 
     function bukaMasterProdukFg(){toggleModal("masterProdukFgModal",true);renderMasterProdukFg();if(!masterProdukFgReady)tarikMasterProdukFgCloud();}
