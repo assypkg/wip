@@ -3661,6 +3661,11 @@
         if(usedJobs.slice(0,i).some(prev=>prev.jobOrder.toUpperCase()===jo.jobOrder.toUpperCase())){
           alert("Nomor Job Order tidak boleh duplikat dalam satu produk: "+jo.jobOrder);return;
         }
+        const erpLink=cariMappingErpDariJo(jo.jobOrder);
+        if(erpLink?.fgProductName&&kunciNamaMasterProdukFg(erpLink.fgProductName)!==kunciNamaMasterProdukFg(productName)){
+          alert("JO "+jo.jobOrder+" pada ERP terhubung ke produk "+erpLink.fgProductName+". Periksa pilihan produk atau nomor JO.");
+          return;
+        }
       }
       if(jobs[0].totalBox===0){alert("Masukkan hasil Lot A, Lot B, atau qty receh untuk JO pertama.");return;}
       if(usedJobs.some(jo=>(jo.boxA>0||jo.boxB>0)&&pcsPerBox<=0)){
@@ -6426,10 +6431,17 @@
       const next=String(productName||"").trim();
       const current=String(fgLastSelectedProductName||input.value||"").trim();
       const changed=kunciNamaMasterProdukFg(current)!==kunciNamaMasterProdukFg(next);
-      const hasExisting=!!(document.getElementById("fgJobOrder")?.value||document.getElementById("fgBoxA")?.value||document.getElementById("fgBoxB")?.value||
+      const hasExisting=!!(["fgJobOrder","fgBoxA","fgBoxB","fgRecehAQty","fgRecehBQty"].some(id=>document.getElementById(id)?.value)||
         [2,3,4].some(i=>["JobOrder","BoxA","BoxB","RecehAQty","RecehBQty"].some(k=>document.getElementById("fg"+k+i)?.value)));
       if(changed&&current&&hasExisting) {
-        if(!confirm("Mengganti nama produk akan mengosongkan JO dan hasil yang sudah dimasukkan untuk produk sebelumnya. Lanjutkan?"))return false;
+        if(!confirm("Mengganti nama produk akan mengosongkan JO dan hasil yang sudah dimasukkan untuk produk sebelumnya. Lanjutkan?")) {
+          input.value=current;
+          fgLastSelectedProductName=current;
+          hitungTargetFgOtomatis(true);
+          terapkanPcsPerBoxMasterFg(current,false);
+          hitungPreviewFg();
+          return false;
+        }
         kosongkanInputJobOrderTambahanFg();
         document.getElementById("fgJobOrder").value="";
       }
@@ -6477,6 +6489,7 @@
         }
         if(!currentProduct) {
           productInput.value=mapping.fgProductName;
+          fgLastSelectedProductName=mapping.fgProductName;
           fgTargetTouched=false;
           hitungTargetFgOtomatis(true);
           terapkanPcsPerBoxMasterFg(mapping.fgProductName,true);
@@ -6624,8 +6637,12 @@
 
     async function simpanImportMasterErp() {
       if(!pendingErpImport.length||pendingErpImportConflicts.length)return;
-      if(pendingErpImport.some(x=>!x.fgProductName)) {
-        alert("Petakan semua Item Code ke Master FG terlebih dahulu. Target dan Qty/Box tidak diambil dari ERP.");
+      if(!masterProdukFgReady) {
+        const fgReady=await tarikMasterProdukFgCloud();
+        if(!fgReady||!masterProdukFgReady)return;
+      }
+      if(pendingErpImport.some(x=>!x.fgProductName||!masterProdukFg.some(name=>kunciNamaMasterProdukFg(name)===kunciNamaMasterProdukFg(x.fgProductName)))) {
+        alert("Petakan semua Item Code ke produk yang benar di Master FG. Target dan Qty/Box tidak diambil dari ERP.");
         return;
       }
       if(!masterErpMappingReady) {
@@ -6701,15 +6718,20 @@
       anchor.click();URL.revokeObjectURL(url);
     }
 
-    function bukaMasterErpMapping() {
+    async function bukaMasterErpMapping() {
       toggleModal("masterErpModal",true);
-      renderMasterErpPreview();renderMasterErpMappingList();
-      if(!masterErpMappingReady)tarikMasterErpMappingCloud();
-      if(!masterProdukFgReady)tarikMasterProdukFgCloud();
-      if(!masterJobOrderReady)tarikMasterJobOrderCloud();
+      setStatusMasterErpMapping("syncing","Menyiapkan Master FG, Master JO, dan relasi ERP...");
+      await Promise.all([
+        masterErpMappingReady?Promise.resolve(true):tarikMasterErpMappingCloud(),
+        masterProdukFgReady?Promise.resolve(true):tarikMasterProdukFgCloud(),
+        masterJobOrderReady?Promise.resolve(true):tarikMasterJobOrderCloud()
+      ]);
+      renderMasterErpPreview();
+      renderMasterErpMappingList();
+      if(!masterProdukFgReady)setStatusMasterErpMapping("warning","Master FG belum berhasil disinkronkan. Pemetaan belum dapat dilakukan.");
     }
 
-    function normalisasiMasterJobOrder(list) {
+        function normalisasiMasterJobOrder(list) {
       const seen = new Set();
       return (Array.isArray(list) ? list : []).map(value => String(value || "").trim().toUpperCase().replace(/\s+/g,""))
         .filter(value => {
@@ -7934,6 +7956,7 @@
         tarikMasterProdukFgCloud();
         tarikMasterJobOrderCloud();
         tarikMasterLeaderCloud();
+        tarikMasterErpMappingCloud();
       }, 1200);
     });
   </script>
