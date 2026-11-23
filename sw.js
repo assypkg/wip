@@ -1,4 +1,4 @@
-const CACHE_NAME = "smart-wip-assy-v5-fg-shift-cutoff";
+const CACHE_NAME = "smart-wip-assy-v6-erp-add-master-fg";
 const ASSETS_TO_CACHE = [
   "./",
   "./index.html",
