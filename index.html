@@ -1302,6 +1302,7 @@
             </div>
             <div style="font-size:.66rem;color:var(--text-muted);margin-top:3px;">Pilih saran di atas atau isi durasi istirahat secara manual.</div>
           </div>
+          <div id="fgProductChangeHint" style="display:none;grid-column:1/-1;padding:8px 10px;border-radius:8px;background:#eff6ff;color:#1d4ed8;font-size:.72rem;font-weight:700;"></div>
           <div style="grid-column: 1 / -1;">
             <label>Nama Produk</label>
             <div class="fg-product-search-wrap" style="position:relative;">
@@ -3520,13 +3521,7 @@
         alert("Mohon isi Nama Leader/Operator, Nama Produk, dan Nomor JO pertama.");
         return;
       }
-      if(editingFgId===null){
-        const existingSegments=fgList.filter(item=>normalisasiKunciLeaderFg(item.leader)===normalisasiKunciLeaderFg(leader)).length;
-        if(existingSegments>=5){
-          alert("Kepala line ini sudah mencapai batas 4 kali pergantian produk (5 produk termasuk produk awal).");
-          return;
-        }
-      }
+
       for(let index=1;index<4;index++){
         const current=jobs[index],previous=jobs[index-1];
         if((current.jobOrder||current.totalBox>0)&&!previous.jobOrder){
@@ -3553,15 +3548,20 @@
       const totalBox=usedJobs.reduce((sum,jo)=>sum+jo.totalBox,0);
       const totalPcs=usedJobs.reduce((sum,jo)=>sum+jo.totalPcs,0);
       const productJo=productName+" ("+usedJobs.map(jo=>jo.jobOrder).join(" dan ")+")";
-      const existingLeaderSegments=fgList.filter(item=>normalisasiKunciLeaderFg(item.leader)===normalisasiKunciLeaderFg(leader));
-      if(editingFgId===null && existingLeaderSegments.length>=5){
+      const previousRecord=editingFgId!==null?fgList.find(item=>item.id===editingFgId):null;
+      const existingLeaderSegments=fgList.filter(item=>
+        item.id!==editingFgId &&
+        normalisasiKunciLeaderFg(item.leader)===normalisasiKunciLeaderFg(leader)
+      );
+      if(existingLeaderSegments.length>=5){
         alert("Kepala line ini sudah mencapai batas 4 kali pergantian produk (5 produk termasuk produk awal).");
         return;
       }
-      const previousRecord=editingFgId!==null?fgList.find(item=>item.id===editingFgId):null;
       const record={
         id:editingFgId!==null?editingFgId:Date.now()+Math.random(),
-        productSequence:previousRecord?.productSequence || (existingLeaderSegments.length+1),
+        productSequence:previousRecord && normalisasiKunciLeaderFg(previousRecord.leader)===normalisasiKunciLeaderFg(leader)
+          ? (previousRecord.productSequence || (existingLeaderSegments.length+1))
+          : (existingLeaderSegments.length+1),
         leader,productName,jobOrder:usedJobs[0].jobOrder,productJo,
         jobOrders:usedJobs,
         note,gapNote,duration,target,pcsPerBox,
@@ -3633,6 +3633,8 @@
       document.getElementById("fgEditBanner").style.display="flex";
       document.getElementById("fgEditBannerText").innerHTML="✏️ <b>MODE EDIT FG: "+item.leader+"</b>";
       document.getElementById("fgEditModalTitle").textContent="✏️ Edit Segmen Produk Finish Good";
+      const formHint=document.getElementById("fgProductChangeHint");
+      if(formHint){formHint.style.display="none";formHint.textContent="";}
       const btn=document.getElementById("btnSubmitFg");
       btn.textContent="💾 UPDATE DATA FINISH GOOD";
       btn.style.background="var(--orange)";
@@ -3715,6 +3717,7 @@
       fgPcsPerBoxAutoFilled=false;
       const breakInput=document.getElementById("fgBreakMinutes");
       if(breakInput)breakInput.value="";
+      document.querySelectorAll(".fg-break-preset").forEach(button=>button.classList.remove("selected"));
       kosongkanInputJobOrderTambahanFg();
       document.getElementById("fgSecondJoPanel").open=false;
       document.getElementById("fgThirdJoPanel").open=false;
@@ -3723,7 +3726,9 @@
       document.getElementById("fgInputCard").classList.remove("editing-mode");
       document.getElementById("btnSubmitFg").textContent="✅ SIMPAN PERGANTIAN PRODUK";
       document.getElementById("btnSubmitFg").style.background="var(--emerald)";
-      document.getElementById("fgEditModalTitle").textContent="➕ Pergantian Produk ke-"+count;
+      document.getElementById("fgEditModalTitle").textContent="➕ Pergantian Produk ke-"+(count+1);
+      const formHint=document.getElementById("fgProductChangeHint");
+      if(formHint){formHint.style.display="block";formHint.textContent="Isi nama produk, durasi, target, dan hasil produksi untuk produk berikutnya. Leader tetap sama.";}
       document.getElementById("btnSubmitFg").textContent="✅ SIMPAN PERGANTIAN PRODUK";
       tutupFgProductSuggestions();
       hitungPreviewFg();
@@ -7025,6 +7030,8 @@
       fgEditPlaceholder = null;
       const title=document.getElementById("fgEditModalTitle");
       if(title)title.textContent="✏️ Edit Hasil Produksi Finish Good";
+      const formHint=document.getElementById("fgProductChangeHint");
+      if(formHint){formHint.style.display="none";formHint.textContent="";}
       toggleModal("fgEditModal", false);
     }
 
