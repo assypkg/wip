@@ -7274,7 +7274,11 @@
     }
 
     function downloadBackupMasterErpMapping() {
-      const raw=localStorage.getItem(MASTER_ERP_MAPPING_BACKUP_KEY)||JSON.stringify({savedAt:new Date().toISOString(),mappings:masterErpMappings},null,2);
+      let backup={savedAt:new Date().toISOString(),mappings:masterErpMappings};
+      try{backup={...backup,...JSON.parse(localStorage.getItem(MASTER_ERP_MAPPING_BACKUP_KEY)||"{}")};}catch(e){}
+      backup.disabledJOs=normalisasiMasterErpJoStatus(masterErpDisabledJOs);
+      backup.disabledJoBackup=JSON.parse(localStorage.getItem(MASTER_ERP_JO_STATUS_BACKUP_KEY)||"null");
+      const raw=JSON.stringify(backup,null,2);
       const url=URL.createObjectURL(new Blob([raw],{type:"application/json"}));
       const anchor=document.createElement("a");anchor.href=url;anchor.download="backup-master-erp-"+getTodayWibIso()+".json";
       anchor.click();URL.revokeObjectURL(url);
@@ -7519,7 +7523,7 @@
       const joCount=record.jobOrders.length;
       if(!confirm("Hapus Item Code "+record.itemCode+" dari relasi ERP?\n\n"+record.itemName+"\n"+joCount+" relasi JO akan ikut terhapus dari daftar ERP. Nomor JO pada Master JO umum tidak dihapus."))return;
       localStorage.setItem(MASTER_ERP_MAPPING_BACKUP_KEY,JSON.stringify({
-        savedAt:new Date().toISOString(),mappings:current,reason:"Backup sebelum menghapus Item Code "+record.itemCode
+        savedAt:new Date().toISOString(),mappings:current,disabledJOs:normalisasiMasterErpJoStatus(masterErpDisabledJOs),reason:"Backup sebelum menghapus Item Code "+record.itemCode
       }));
       masterErpMappings=current.filter((_,i)=>i!==index);
       simpanMasterErpMappingLokal();
@@ -7539,7 +7543,7 @@
       const joCount=current.reduce((sum,row)=>sum+row.jobOrders.length,0);
       if(!confirm("HAPUS SEMUA DATA RELASI ERP?\n\n"+current.length+" Item Code dan "+joCount+" relasi JO akan dihapus dari daftar ERP.\n\nMaster FG dan Master JO umum TIDAK ikut dihapus. Backup lokal akan dibuat sebelum penghapusan."))return;
       localStorage.setItem(MASTER_ERP_MAPPING_BACKUP_KEY,JSON.stringify({
-        savedAt:new Date().toISOString(),mappings:current,reason:"Backup sebelum menghapus seluruh relasi ERP"
+        savedAt:new Date().toISOString(),mappings:current,disabledJOs:normalisasiMasterErpJoStatus(masterErpDisabledJOs),reason:"Backup sebelum menghapus seluruh relasi ERP"
       }));
       masterErpMappings=[];
       simpanMasterErpMappingLokal();
