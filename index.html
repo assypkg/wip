@@ -6978,7 +6978,7 @@
       renderPreviewStandarMasterFg();
       renderMasterErpMappingList();renderMasterErpPreview();
       const autoMapMessage=autoMapped?(autoMapSaved?" • "+autoMapped+" Item Code dipetakan otomatis.":" • "+autoMapped+" Item Code cocok, tetapi sinkron relasi ERP belum terverifikasi."):"";
-      setStatusMasterErpMapping("success","Standar Master FG tersimpan dan diverifikasi • "+importedCount+" produk • "+added+" produk baru • "+updatedCount+" produk diperbarui."+autoMapMessage);
+      setStatusMasterErpMapping(autoMapped&&!autoMapSaved?(masterErpMappingConflict?"conflict":"warning"):"success","Standar Master FG tersimpan dan diverifikasi • "+importedCount+" produk • "+added+" produk baru • "+updatedCount+" produk diperbarui."+autoMapMessage);
       alert("Import standar berhasil diverifikasi di Cloud.\n• Produk diproses: "+importedCount+"\n• Produk baru: "+added+"\n• Produk diperbarui: "+updatedCount+"\n• Item Code terpetakan otomatis: "+(autoMapped||0)+(autoMapped&&!autoMapSaved?" (perlu sinkron ulang ERP)":"")+"\n\nStandar 8 Jam dan Qty/Box kini digunakan pada input Finish Good.");
     }
 
