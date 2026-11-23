@@ -2211,7 +2211,10 @@
 
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {
-        navigator.serviceWorker.register("./sw.js").catch(() => {});
+        // Ganti URL versi agar browser/PWA segera mengambil Service Worker terbaru.
+        navigator.serviceWorker.register("./sw.js?v=13", { updateViaCache: "none" })
+          .then(registration => registration.update())
+          .catch(() => {});
       });
     }
 
