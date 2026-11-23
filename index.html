@@ -1591,6 +1591,17 @@
           </div>
         </div>
 
+        <details class="wa-import-collapse fg-wa-import-collapse">
+          <summary>📥 Import laporan WhatsApp <span class="wa-import-hint">Buka untuk tempel laporan FG</span></summary>
+          <div class="wa-import-body">
+            <p style="font-size:.73rem;color:var(--text-muted);">Tempel laporan hasil produksi Finish Good dari WhatsApp. Sistem akan membaca leader, produk, JO, durasi, target, hasil Lot A/B, dan qty receh. Periksa preview sebelum data dimasukkan ke Daftar FG.</p>
+            <textarea id="waImportFgText" class="wa-preview" style="min-height:150px;" placeholder="Tempel laporan HASIL PRODUKSI FINISH GOOD di sini..."></textarea>
+            <button type="button" class="btn btn-sky" onclick="previewImportFg()">🔎 Proses & Preview</button>
+            <button type="button" class="btn btn-outline" onclick="bersihkanImportFg()">Bersihkan</button>
+            <div id="waImportFgPreview" style="margin-top:8px;font-size:.78rem;"></div>
+          </div>
+        </details>
+
         <!-- OPSI GABUNG DENGAN SISA BARANG BAGUS WIP -->
         <div style="background:var(--emerald-bg); border:1.5px solid #81c784; padding:9px 12px; border-radius:8px; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; gap:8px;">
           <label style="margin:0; display:flex; align-items:center; gap:8px; cursor:pointer; color:var(--emerald); font-size:0.76rem;">
@@ -2374,6 +2385,8 @@
     let spaList = [];
     let pendingWipImport = [];
     let pendingSpaImport = [];
+    let pendingFgImport = [];
+    let pendingFgImportMeta = null;
 
     let cloudArchive = JSON.parse(localStorage.getItem("assy_wip_cloud_archive_v1")) || [];
     let deletedCloudIds = JSON.parse(localStorage.getItem("assy_deleted_cloud_ids_v1")) || [];
@@ -4148,6 +4161,319 @@
       document.getElementById("btnSubmitFg").textContent = "✅ TAMBAHKAN KE LAPORAN FINISH GOOD";
       document.getElementById("btnSubmitFg").style.background = "var(--emerald)";
       hitungPreviewFg(); renderFgAll(); simpanDraftLokal();
+    }
+
+    function bersihkanImportFg() {
+      const input=document.getElementById("waImportFgText");
+      const preview=document.getElementById("waImportFgPreview");
+      if(input)input.value="";
+      if(preview)preview.innerHTML="";
+      pendingFgImport=[];
+      pendingFgImportMeta=null;
+    }
+
+    function parseFgImportNumber(value) {
+      const digits=String(value??"").replace(/[^\d]/g,"");
+      const number=Number(digits);
+      return Number.isSafeInteger(number)&&number>=0?number:0;
+    }
+
+    function parseTanggalImportFg(value) {
+      const raw=String(value||"").trim().toLocaleLowerCase("id-ID");
+      const months={
+        januari:"01",februari:"02",maret:"03",april:"04",mei:"05",juni:"06",
+        juli:"07",agustus:"08",september:"09",oktober:"10",november:"11",desember:"12"
+      };
+      let day="",month="",year="";
+      const named=raw.match(/(\d{1,2})\s+(januari|februari|maret|april|mei|juni|juli|agustus|september|oktober|november|desember)\s+(\d{4})/i);
+      if(named){
+        day=named[1].padStart(2,"0");month=months[named[2].toLocaleLowerCase("id-ID")];year=named[3];
+      }else{
+        const iso=raw.match(/(\d{4})-(\d{1,2})-(\d{1,2})/);
+        const numeric=raw.match(/(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})/);
+        if(iso){year=iso[1];month=iso[2].padStart(2,"0");day=iso[3].padStart(2,"0");}
+        else if(numeric){day=numeric[1].padStart(2,"0");month=numeric[2].padStart(2,"0");year=numeric[3];}
+      }
+      if(!day||!month||!year)return "";
+      const check=new Date(Number(year),Number(month)-1,Number(day));
+      if(check.getFullYear()!==Number(year)||check.getMonth()!==Number(month)-1||check.getDate()!==Number(day))return "";
+      return year+"-"+month+"-"+day;
+    }
+
+    function bacaMetadataImportFg(lines) {
+      const meta={date:"",time:"",plant:"",shift:"",headerFound:false};
+      for(const raw of lines){
+        const line=String(raw||"").replace(/[*_\x60]/g,"").trim();
+        const prefix=line.match(/LAPORAN HASIL PRODUKSI\s+(PLANT\s+(?:ALPHA|BETA))\s+JAM\s+(\d{1,2}[.:]\d{2})\s+TANGGAL\s+/i);
+        if(!prefix)continue;
+        meta.headerFound=true;
+        meta.plant=prefix[1].toUpperCase();
+        meta.time=prefix[2].replace(":","");
+        meta.time=meta.time.slice(0,2)+"."+meta.time.slice(2);
+        const rest=line.slice(prefix[0].length).trim();
+        const shiftStart=rest.search(/\s+\(SHIFT\s*[123]/i);
+        const dateText=shiftStart>=0?rest.slice(0,shiftStart).trim():rest;
+        meta.date=parseTanggalImportFg(dateText);
+        const shiftMatch=rest.match(/\((SHIFT\s*[123].*)\)\s*$/i);
+        if(shiftMatch)meta.shift=shiftMatch[1].trim().toUpperCase();
+        break;
+      }
+      return meta;
+    }
+
+    function parseHeaderProdukImportFg(value) {
+      const raw=String(value||"").trim();
+      const match=raw.match(/^(.*)\s+\(([^()]*)\)\s*$/);
+      if(!match)return {productName:raw,jobNames:[]};
+      const jobNames=match[2].split(/\s+(?:dan|&)\s+|,\s*/i)
+        .map(x=>x.trim().toUpperCase())
+        .filter(x=>/^[A-Z0-9]{2,12}-[A-Z0-9]{3,12}$/i.test(x));
+      return {productName:(jobNames.length?match[1]:raw).trim(),jobNames};
+    }
+
+    function bacaBarisHasilImportFg(label,value,product,activeJob) {
+      const row=String(value||"").trim();
+      const boxMatch=row.match(/([\d.,]+)\s*BOX\b/i);
+      const perBoxMatch=row.match(/@\s*([\d.,]+)/);
+      const totalMatch=row.match(/=\s*([\d.,]+)\s*PCS\b/i);
+      const boxCount=boxMatch?parseFgImportNumber(boxMatch[1]):0;
+      const totalPcs=totalMatch?parseFgImportNumber(totalMatch[1]):0;
+      const receh=label.indexOf("RECEH")===0;
+      let job=activeJob;
+      if(!job){
+        const fallback=product.jobNames[0]||"";
+        if(fallback)job=product.ensureJob(fallback);
+      }
+      if(!job)return null;
+
+      if(receh){
+        const detail=row.match(/\(([^)]*)\)/);
+        let quantities=detail?(detail[1].match(/[\d.,]+/g)||[]).map(parseFgImportNumber).filter(x=>x>0):[];
+        if(!quantities.length&&totalPcs>0)quantities=[totalPcs];
+        const side=label.endsWith("A")?"A":"B";
+        if(side==="A")job.recehABoxes.push(...quantities);
+        else job.recehBBoxes.push(...quantities);
+      }else if(boxCount>0){
+        if(perBoxMatch){
+          const perBox=parseFgImportNumber(perBoxMatch[1]);
+          if(perBox>0&&!product.pcsPerBox)product.pcsPerBox=perBox;
+        }else if(totalPcs>0&&boxCount>0&&!product.pcsPerBox){
+          product.pcsPerBox=Math.round(totalPcs/boxCount);
+        }
+        if(label==="A")job.boxA+=boxCount;
+        else job.boxB+=boxCount;
+      }
+      return job;
+    }
+
+    function parseLaporanWhatsAppFg(rawText) {
+      const lines=String(rawText||"").replace(/\r/g,"").split("\n");
+      const metadata=bacaMetadataImportFg(lines);
+      const rows=[];
+      const warnings=[];
+      let currentLeader="";
+      let currentProduct=null;
+
+      const ensureJob=(product,jobName)=>{
+        const name=String(jobName||"").trim().toUpperCase();
+        if(!name)return null;
+        if(!product.jobMap.has(name)){
+          product.jobMap.set(name,{jobOrder:name,boxA:0,boxB:0,recehABoxes:[],recehBBoxes:[]});
+        }
+        return product.jobMap.get(name);
+      };
+
+      const finalizeProduct=()=>{
+        if(!currentProduct)return;
+        const product=currentProduct;
+        const name=String(product.productName||"").trim().toUpperCase();
+        const jobSources=[...product.jobMap.values()];
+        const perBox=Number(product.pcsPerBox)||((typeof ambilPcsPerBoxStandarFg==="function")?Number(ambilPcsPerBoxStandarFg(name))||0:0);
+        const jobs=jobSources.map(job=>hitungDataHasilJoFg(
+          job.jobOrder,job.boxA,job.boxB,job.recehABoxes,job.recehBBoxes,perBox
+        ));
+        const totalBox=jobs.reduce((sum,job)=>sum+job.totalBox,0);
+        const totalPcs=jobs.reduce((sum,job)=>sum+job.totalPcs,0);
+        if(!currentLeader||!name||!jobs.length||totalPcs<=0){
+          warnings.push((name||"Satu bagian produk")+" dilewati karena leader, JO, atau rincian hasil tidak terbaca.");
+          currentProduct=null;
+          return;
+        }
+        const first=jobs[0];
+        const leaderKey=normalisasiKunciLeaderFg(currentLeader);
+        const sequence=fgList.filter(item=>normalisasiKunciLeaderFg(item.leader)===leaderKey).length+
+          rows.filter(item=>normalisasiKunciLeaderFg(item.leader)===leaderKey).length+1;
+        const target=Number(product.target)||((typeof ambilTargetStandarFg==="function")?Number(ambilTargetStandarFg(name))||0:0);
+        rows.push({
+          id:Date.now()+Math.random(),
+          productSequence:sequence,
+          leader:currentLeader,
+          productName:name,
+          jobOrder:first.jobOrder,
+          productJo:name+" ("+jobs.map(job=>job.jobOrder).join(" dan ")+")",
+          jobOrders:jobs,
+          note:product.note||"",
+          gapNote:product.gapNote||"",
+          duration:product.duration||"",
+          target,
+          pcsPerBox:perBox,
+          boxA:first.boxA,pcsA:first.pcsA,boxB:first.boxB,pcsB:first.pcsB,
+          recehABoxes:first.recehABoxes,recehBBoxes:first.recehBBoxes,
+          pcsRecehA:first.pcsRecehA,pcsRecehB:first.pcsRecehB,
+          recehBoxes:first.recehBBoxes,pcsReceh:first.pcsRecehB,
+          totalBox,totalPcs
+        });
+        currentProduct=null;
+      };
+
+      const startProduct=(header)=>{
+        finalizeProduct();
+        const parsed=parseHeaderProdukImportFg(header);
+        const product={
+          productName:parsed.productName,
+          jobNames:parsed.jobNames,
+          jobMap:new Map(),
+          pcsPerBox:0,target:0,duration:"",note:"",gapNote:"",
+          ensureJob:null,activeJob:""
+        };
+        product.ensureJob=jobName=>ensureJob(product,jobName);
+        if(parsed.jobNames.length===1)product.ensureJob(parsed.jobNames[0]);
+        currentProduct=product;
+      };
+
+      for(const rawLine of lines){
+        const original=String(rawLine||"").trim();
+        if(!original)continue;
+        const line=original.replace(/[*_\x60]/g,"").replace(/^>+\s*/,"").trim();
+        if(!line)continue;
+        if(/^(sisa barang bagus wip|terima kasih)\b/i.test(line))break;
+        if(/^[-_=━]{3,}$/.test(line))continue;
+        if(/^LAPORAN HASIL PRODUKSI\b/i.test(line))continue;
+        if(/^(TOTAL FG|TOTAL SPA|TOTAL PRODUKSI KEPALA LINE)\s*:/i.test(line))continue;
+
+        const leaderMatch=line.match(/^\d{1,2}[.)]\s+(.+?)\s*$/);
+        if(leaderMatch){
+          finalizeProduct();
+          currentLeader=leaderMatch[1].trim().toUpperCase();
+          continue;
+        }
+
+        const spaHeader=line.match(/^SPA\s*\d+\s*:\s*(.+)$/i);
+        if(spaHeader){
+          startProduct(spaHeader[1].trim());
+          continue;
+        }
+
+        if(currentLeader&&!currentProduct){
+          if(/^(DURASI|TARGET|HASIL|NOTE)\s*:/i.test(line))continue;
+          startProduct(line);
+          continue;
+        }
+        if(!currentProduct)continue;
+
+        const durationMatch=line.match(/^DURASI\s*:\s*(.+)$/i);
+        if(durationMatch){currentProduct.duration=durationMatch[1].trim();continue;}
+        const targetMatch=line.match(/^TARGET\s*:\s*([\d.,]+)/i);
+        if(targetMatch){currentProduct.target=parseFgImportNumber(targetMatch[1]);continue;}
+        const gapMatch=line.match(/^NOTE\s*:\s*(.+)$/i);
+        if(gapMatch){currentProduct.gapNote=gapMatch[1].trim();continue;}
+        if(/^HASIL\b/i.test(line))continue;
+
+        if(/^[A-Z0-9]{2,12}-[A-Z0-9]{3,12}$/i.test(line)){
+          currentProduct.ensureJob(line);
+          currentProduct.activeJob=line.toUpperCase();
+          continue;
+        }
+
+        const rowMatch=line.match(/^(RECEH\s*[AB]|LOT\s*[AB]|[AB])\s*:\s*(.+)$/i);
+        if(rowMatch){
+          const label=rowMatch[1].replace(/\s+/g," ").toUpperCase().replace(/^LOT\s+/,"");
+          const activeName=currentProduct.activeJob||
+            (currentProduct.jobNames.length===1?currentProduct.jobNames[0]:"");
+          const activeJob=activeName?currentProduct.ensureJob(activeName):null;
+          bacaBarisHasilImportFg(label,rowMatch[2],currentProduct,activeJob);
+          continue;
+        }
+
+        if(!currentProduct.duration&&!currentProduct.target&&!currentProduct.note&&
+           !/^(TERIMA KASIH|SHIFT\s*[123])\b/i.test(line)&&
+           !/^[A-Z0-9]{2,12}-[A-Z0-9]{3,12}$/i.test(line)){
+          currentProduct.note=line;
+        }
+      }
+      finalizeProduct();
+      if(!rows.length&&!warnings.length)warnings.push("Belum ada rincian Finish Good yang terbaca. Tempel laporan hasil produksi lengkap dari WhatsApp.");
+      return {rows,metadata,warnings};
+    }
+
+    function previewImportFg() {
+      const input=document.getElementById("waImportFgText");
+      const preview=document.getElementById("waImportFgPreview");
+      if(!input||!preview)return;
+      const parsed=parseLaporanWhatsAppFg(input.value);
+      pendingFgImport=parsed.rows;
+      pendingFgImportMeta=parsed.metadata;
+      if(!pendingFgImport.length){
+        preview.textContent="Belum ada data FG yang dapat diimpor. Pastikan laporan memuat nama leader, nama produk, nomor JO, dan rincian hasil A/B atau receh.";
+        if(parsed.warnings.length)preview.textContent+=" "+parsed.warnings.join(" ");
+        return;
+      }
+      const totalPcs=pendingFgImport.reduce((sum,item)=>sum+(Number(item.totalPcs)||0),0);
+      const totalBox=pendingFgImport.reduce((sum,item)=>sum+(Number(item.totalBox)||0),0);
+      const safe=value=>String(value??"").replace(/[&<>"']/g,char=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[char]));
+      const meta=parsed.metadata;
+      const metaParts=[];
+      if(meta.plant)metaParts.push(meta.plant);
+      if(meta.date)metaParts.push(meta.date);
+      if(meta.time)metaParts.push("Jam "+meta.time);
+      if(meta.shift)metaParts.push(meta.shift);
+      const metadataHtml=metaParts.length
+        ?"<div style='font-size:.69rem;color:var(--navy);font-weight:700;margin-top:5px;'>Header laporan: "+safe(metaParts.join(" • "))+"</div>"
+        :"";
+      const warningHtml=parsed.warnings.length
+        ?"<div style='margin-top:8px;padding:8px;border-radius:7px;background:#fff7ed;color:#9a3412;font-size:.69rem;'>"+parsed.warnings.map(safe).join("<br>")+"</div>"
+        :"";
+      preview.innerHTML=
+        "<div style='padding:9px;border:1px solid #86c9a0;border-radius:8px;background:#f0fdf4;margin-bottom:8px;'>"+
+        "<b>Preview import: "+pendingFgImport.length+" data produk • "+formatNum(totalBox)+" BOX • "+formatNum(totalPcs)+" PCS</b>"+
+        metadataHtml+"</div>"+
+        "<div style='max-height:240px;overflow:auto;border:1px solid var(--border);border-radius:8px;padding:8px;'>"+
+        pendingFgImport.map((item,index)=>
+          "<div style='padding:7px 2px;border-bottom:1px solid #e5e7eb;'>"+
+          "<b>"+(index+1)+". "+safe(item.leader)+"</b><br>"+
+          "<span style='color:var(--navy);font-weight:700;'>"+safe(item.productName)+"</span><br>"+
+          "<span style='color:var(--text-muted);'>JO: "+safe(item.jobOrders.map(job=>job.jobOrder).join(", "))+
+          " • "+formatNum(item.totalBox)+" BOX • "+formatNum(item.totalPcs)+" PCS</span></div>"
+        ).join("")+"</div>"+
+        warningHtml+
+        "<button type='button' class='btn btn-emerald' style='margin-top:8px;' onclick='konfirmasiImportFg()'>✓ Masukkan hasil import ke Daftar FG</button>";
+    }
+
+    function konfirmasiImportFg() {
+      if(!Array.isArray(pendingFgImport)||!pendingFgImport.length)return;
+      const metadata=pendingFgImportMeta||{};
+      const dateEl=document.getElementById("fgDate");
+      const timeEl=document.getElementById("fgTime");
+      const plantEl=document.getElementById("fgPlant");
+      const shiftEl=document.getElementById("fgShift");
+      if(metadata.date&&dateEl)dateEl.value=metadata.date;
+      if(metadata.time&&timeEl)timeEl.value=metadata.time;
+      if(metadata.plant&&plantEl)plantEl.value=metadata.plant;
+      if(metadata.shift&&shiftEl){
+        const option=Array.from(shiftEl.options).find(item=>item.value.toUpperCase()===metadata.shift.toUpperCase());
+        if(option)shiftEl.value=option.value;
+      }
+      const count=pendingFgImport.length;
+      fgList.push(...pendingFgImport.map(item=>JSON.parse(JSON.stringify(item))));
+      pendingFgImport=[];
+      pendingFgImportMeta=null;
+      waFgManuallyEdited=false;
+      const input=document.getElementById("waImportFgText");
+      if(input)input.value="";
+      const preview=document.getElementById("waImportFgPreview");
+      if(preview)preview.innerHTML="<b style='color:var(--emerald);'>Berhasil memasukkan "+count+" data produk ke Daftar FG. Periksa kembali rincian sebelum laporan digunakan.</b>";
+      renderFgAll();
+      simpanDraftLokal();
     }
 
     function muatContohFg() {
