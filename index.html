@@ -4620,7 +4620,7 @@
               hasilRows.push({label:"TOTAL",value:formatTotalBoxJoFg(jo)+" = "+formatNum(jo.totalPcs)+" PCS"+totalSuffix,bold:true});
               wa+=formatWhatsAppQtyRows(hasilRows)+"\n\n";
             });
-            if(!multipleProducts)wa+="*"+String.fromCharCode(96)+"TOTAL FG : "+formatNum(it.totalPcs)+" | "+pct.toFixed(2)+"%"+String.fromCharCode(96)+"*\n";
+            if(!multipleProducts)wa+="*"+String.fromCharCode(96)+"TOTAL FG : "+formatNum(it.totalPcs)+" PCS | "+pct.toFixed(2)+"%"+String.fromCharCode(96)+"*\n";
             if(it.gapNote)wa+="*NOTE : "+it.gapNote+"*\n";
           }else{
             const jo=jobs[0];
@@ -4644,7 +4644,7 @@
         });
         if(multipleProducts){
           const pct=group.totalTarget>0?(group.totalPcs/group.totalTarget*100):0;
-          wa+="*"+String.fromCharCode(96)+"TOTAL PRODUKSI KEPALA LINE : "+formatNum(group.totalPcs)+" | "+pct.toFixed(2)+"%"+String.fromCharCode(96)+"*\n\n";
+          wa+="*"+String.fromCharCode(96)+"TOTAL PRODUKSI KEPALA LINE : "+formatNum(group.totalPcs)+" PCS | "+pct.toFixed(2)+"%"+String.fromCharCode(96)+"*\n\n";
         }else wa+="\n";
       });
 
