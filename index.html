@@ -2127,8 +2127,8 @@
         <p style="font-size:.7rem;color:var(--text-muted);margin:0 0 8px;">Nonaktifkan JO yang sudah Closed tanpa menghapus Item Code, relasi produk, atau JO lain. JO nonaktif tidak muncul pada pilihan input produksi dan tidak aktif kembali saat impor ERP ulang.</p>
         <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:8px;">
           <button class="btn btn-outline" type="button" onclick="tarikMasterErpJoStatusCloud()">↻ Sinkronkan Status JO</button>
-          <input type="search" id="masterErpJoStatusSearch" placeholder="Cari nomor JO / Item Code / produk..." oninput="renderMasterErpJoStatusList()" style="flex:1;min-width:180px;" />
-          <select id="masterErpJoStatusFilter" onchange="renderMasterErpJoStatusList()" style="min-width:130px;"><option value="all">Semua status</option><option value="active">JO Aktif</option><option value="disabled">JO Nonaktif / Closed</option></select>
+          <input type="search" id="masterErpJoStatusSearch" placeholder="Cari nomor JO / Item Code / produk..." oninput="resetCariMaster('erpJo')" style="flex:1;min-width:180px;" />
+          <select id="masterErpJoStatusFilter" onchange="resetCariMaster('erpJo')" style="min-width:130px;"><option value="all">Semua status</option><option value="active">JO Aktif</option><option value="disabled">JO Nonaktif / Closed</option></select>
         </div>
         <div id="masterErpJoStatusInfo" style="font-size:.7rem;color:var(--text-muted);margin-bottom:6px;"></div>
         <div id="masterErpJoStatusList" style="max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:9px;padding:8px;"></div>
@@ -2333,6 +2333,13 @@
     let masterErpMappingReady = false;
     let masterErpMappingBusy = false;
     let masterErpMappingConflict = false;
+    let masterErpEditingMappingIndex = null;
+    const MASTER_LIST_PAGE_SIZE = 40;
+    let masterProdukFgVisibleLimit = MASTER_LIST_PAGE_SIZE;
+    let masterJobOrderVisibleLimit = MASTER_LIST_PAGE_SIZE;
+    let masterLeaderVisibleLimit = MASTER_LIST_PAGE_SIZE;
+    let masterErpMappingVisibleLimit = MASTER_LIST_PAGE_SIZE;
+    let masterErpJoStatusVisibleLimit = MASTER_LIST_PAGE_SIZE;
     let masterErpMappingBootstrapQueued = false;
     let pendingErpImport = [];
     let pendingErpImportConflicts = [];
@@ -6868,6 +6875,30 @@
       alert(nonaktif?"JO "+jo+" berhasil dinonaktifkan dan diverifikasi di Cloud.":"JO "+jo+" berhasil diaktifkan kembali dan diverifikasi di Cloud.");
     }
 
+
+    function resetCariMaster(listName) {
+      if(listName==="produkFg"){masterProdukFgVisibleLimit=MASTER_LIST_PAGE_SIZE;renderMasterProdukFg();}
+      else if(listName==="jobOrder"){masterJobOrderVisibleLimit=MASTER_LIST_PAGE_SIZE;renderMasterJobOrder();}
+      else if(listName==="leader"){masterLeaderVisibleLimit=MASTER_LIST_PAGE_SIZE;renderMasterLeader();}
+      else if(listName==="erpMapping"){masterErpMappingVisibleLimit=MASTER_LIST_PAGE_SIZE;renderMasterErpMappingList();}
+      else if(listName==="erpJo"){masterErpJoStatusVisibleLimit=MASTER_LIST_PAGE_SIZE;renderMasterErpJoStatusList();}
+    }
+
+    function muatLebihBanyakMaster(listName) {
+      if(listName==="produkFg"){masterProdukFgVisibleLimit+=MASTER_LIST_PAGE_SIZE;renderMasterProdukFg();}
+      else if(listName==="jobOrder"){masterJobOrderVisibleLimit+=MASTER_LIST_PAGE_SIZE;renderMasterJobOrder();}
+      else if(listName==="leader"){masterLeaderVisibleLimit+=MASTER_LIST_PAGE_SIZE;renderMasterLeader();}
+      else if(listName==="erpMapping"){masterErpMappingVisibleLimit+=MASTER_LIST_PAGE_SIZE;renderMasterErpMappingList();}
+      else if(listName==="erpJo"){masterErpJoStatusVisibleLimit+=MASTER_LIST_PAGE_SIZE;renderMasterErpJoStatusList();}
+    }
+
+    function htmlTombolMuatLebihBanyak(listName,total,shown) {
+      const remaining=Math.max(0,total-shown);
+      if(!remaining)return "";
+      const next=Math.min(MASTER_LIST_PAGE_SIZE,remaining);
+      return `<div style="display:flex;justify-content:center;padding:10px 0 4px;"><button type="button" class="btn btn-outline" style="font-size:.7rem;" onclick="muatLebihBanyakMaster('${listName}')">Tampilkan ${next} berikutnya • ${remaining} tersisa</button></div>`;
+    }
+
     function renderMasterErpJoStatusList() {
       const list=document.getElementById("masterErpJoStatusList");
       const info=document.getElementById("masterErpJoStatusInfo");
@@ -6885,12 +6916,13 @@
       const disabledCount=rows.filter(row=>row.disabled).length;
       const visible=rows.filter(row=>(filter==="all"||(filter==="disabled"&&row.disabled)||(filter==="active"&&!row.disabled))&&
         (!q||(row.jo+" "+(row.record?.itemCode||"")+" "+(row.record?.itemName||"")+" "+(row.record?.fgProductName||"")).toLowerCase().includes(q)));
-      info.textContent="JO aktif: "+activeCount+" • JO nonaktif/Closed: "+disabledCount+" • Ditampilkan: "+visible.length;
+      const displayed=visible.slice(0,masterErpJoStatusVisibleLimit);
+      info.textContent="JO aktif: "+activeCount+" • JO nonaktif/Closed: "+disabledCount+" • Hasil filter: "+visible.length+" • Ditampilkan: "+displayed.length;
       if(!visible.length) {
         list.innerHTML='<div style="padding:12px;text-align:center;color:var(--text-muted);">Tidak ada JO pada filter ini.</div>';
         return;
       }
-      list.innerHTML=visible.map(row=>{
+      list.innerHTML=displayed.map(row=>{
         const action=row.disabled?"Aktifkan kembali":"Hapus JO karena Closed";
         const encoded=encodeURIComponent(row.jo);
         const context=row.record
@@ -6900,7 +6932,7 @@
           '<div style="min-width:0;flex:1;"><div style="font-size:.74rem;font-weight:800;color:var(--navy);">'+escapeHtmlMasterErp(row.jo)+' <span style="font-size:.62rem;font-weight:700;color:'+(row.disabled?'#b45309':'#047857')+';">'+(row.disabled?'• NONAKTIF / CLOSED':'• AKTIF')+'</span></div>'+context+'</div>'+
           '<button class="btn '+(row.disabled?'btn-primary':'btn-outline')+'" type="button" style="font-size:.62rem;padding:5px 7px;white-space:nowrap;" data-jo="'+encoded+'" data-reactivate="'+(row.disabled?'1':'0')+'" '+(masterErpJoStatusBusy?'disabled':"")+'>'+action+'</button>'+
           '</div>';
-      }).join("");
+      }).join("")+htmlTombolMuatLebihBanyak("erpJo",visible.length,displayed.length);
       list.querySelectorAll("button[data-jo]").forEach(button=>button.addEventListener("click",()=>{
         ubahStatusJoErp(decodeURIComponent(button.dataset.jo),button.dataset.reactivate!=="1");
       }));
