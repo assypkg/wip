@@ -6683,10 +6683,11 @@
       simpanMasterErpMappingLokal();
       if(!await simpanMasterErpMappingCloud())return;
 
+      // Tarik versi Master JO Cloud lebih dahulu agar merge lokal tidak tertimpa saat sinkronisasi awal.
+      if(!masterJobOrderReady)await tarikMasterJobOrderCloud();
       masterJobOrders=normalisasiMasterJobOrder([...masterJobOrders,...pendingErpImport.flatMap(x=>x.jobOrders)]);
       simpanMasterJobOrderLokal();
       let joSaved=false;
-      if(!masterJobOrderReady)await tarikMasterJobOrderCloud();
       if(masterJobOrderReady&&!masterJobOrderBusy&&!masterJobOrderConflict)joSaved=await simpanMasterJobOrderCloud();
 
       const itemCount=masterErpMappings.length;
