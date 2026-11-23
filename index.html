@@ -2041,7 +2041,7 @@
           <button class="btn btn-outline" id="btnBatalEditMasterProdukFg" type="button" onclick="batalEditMasterProdukFg()" style="display:none;">Batal Edit</button>
         </div>
       </div>
-      <input type="search" id="masterProdukFgSearch" placeholder="🔎 Cari nama produk..." oninput="renderMasterProdukFg()" style="width:100%; margin-bottom:8px;" />
+      <input type="search" id="masterProdukFgSearch" placeholder="🔎 Cari nama produk..." oninput="resetCariMaster('produkFg')" style="width:100%; margin-bottom:8px;" />
       <div id="masterProdukFgInfo" style="font-size:0.7rem; color:var(--text-muted); margin-bottom:6px;"></div>
       <div id="masterProdukFgList" style="max-height:300px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:8px; font-size:0.78rem;"></div>
     </div>
@@ -2069,7 +2069,7 @@
           <button class="btn btn-outline" id="btnBatalEditMasterJobOrder" type="button" onclick="batalEditMasterJobOrder()" style="display:none;">Batal Edit</button>
         </div>
       </div>
-      <input type="search" id="masterJobOrderSearch" placeholder="🔎 Cari nomor Job Order..." oninput="renderMasterJobOrder()" style="width:100%;margin-bottom:8px;" />
+      <input type="search" id="masterJobOrderSearch" placeholder="🔎 Cari nomor Job Order..." oninput="resetCariMaster('jobOrder')" style="width:100%;margin-bottom:8px;" />
       <div id="masterJobOrderInfo" style="font-size:.7rem;color:var(--text-muted);margin-bottom:6px;"></div>
       <div id="masterJobOrderList" style="max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px;font-size:.78rem;"></div>
     </div>
@@ -2158,7 +2158,7 @@
           <button class="btn btn-outline" id="btnBatalEditMasterLeader" type="button" onclick="batalEditMasterLeader()" style="display:none;">Batal Edit</button>
         </div>
       </div>
-      <input type="search" id="masterLeaderSearch" placeholder="🔎 Cari nama Leader..." oninput="renderMasterLeader()" style="width:100%;margin-bottom:8px;" />
+      <input type="search" id="masterLeaderSearch" placeholder="🔎 Cari nama Leader..." oninput="resetCariMaster('leader')" style="width:100%;margin-bottom:8px;" />
       <div id="masterLeaderInfo" style="font-size:.7rem;color:var(--text-muted);margin-bottom:6px;"></div>
       <div id="masterLeaderList" style="max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px;font-size:.78rem;"></div>
     </div>
@@ -7857,12 +7857,13 @@
       if(!list||!info)return;
       const q=(document.getElementById("masterJobOrderSearch")?.value||"").trim().toLowerCase();
       const items=masterJobOrders.map((name,index)=>({name,index})).filter(item=>!q||item.name.toLowerCase().includes(q));
-      info.textContent=q?"Ditemukan "+items.length+" dari "+masterJobOrders.length+" Job Order.":"Total "+masterJobOrders.length+" Job Order.";
+      const displayed=items.slice(0,masterJobOrderVisibleLimit);
+      info.textContent=(q?"Ditemukan "+items.length+" dari "+masterJobOrders.length+" Job Order.":"Total "+masterJobOrders.length+" Job Order.")+" Ditampilkan "+displayed.length+".";
       if(!items.length) {
         list.innerHTML='<div style="padding:14px;text-align:center;color:var(--text-muted);">Belum ada Job Order yang cocok.</div>';
         return;
       }
-      list.innerHTML=items.map(item=>'<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;padding:8px 4px;border-bottom:1px solid #f1f5f9;"><b style="flex:1;min-width:0;overflow-wrap:anywhere;">'+item.name.replace(/[&<>]/g,"")+'</b><div style="display:flex;gap:4px;flex-shrink:0;"><button class="btn btn-edit" onclick="editMasterJobOrder('+item.index+')">Edit</button><button class="btn btn-danger" onclick="hapusMasterJobOrder('+item.index+')">Hapus</button></div></div>').join("");
+      list.innerHTML=displayed.map(item=>'<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;padding:8px 4px;border-bottom:1px solid #f1f5f9;"><b style="flex:1;min-width:0;overflow-wrap:anywhere;">'+item.name.replace(/[&<>]/g,"")+'</b><div style="display:flex;gap:4px;flex-shrink:0;"><button class="btn btn-edit" onclick="editMasterJobOrder('+item.index+')">Edit</button><button class="btn btn-danger" onclick="hapusMasterJobOrder('+item.index+')">Hapus</button></div></div>').join("")+htmlTombolMuatLebihBanyak("jobOrder",items.length,displayed.length);
     }
 
     function simpanItemMasterJobOrder() {
@@ -8109,13 +8110,15 @@
       const info=document.getElementById("masterLeaderInfo");
       if(!list||!info)return;
       const q=(document.getElementById("masterLeaderSearch")?.value||"").trim().toLowerCase();
-      const items=masterLeaders.map((name,index)=>({name,index})).filter(item=>!q||item.name.toLowerCase().includes(q));
-      info.textContent=q?"Ditemukan "+items.length+" dari "+masterLeaders.length+" Leader.":"Total "+masterLeaders.length+" Leader.";
+      const source=masterLeaderSearchIndex.length?masterLeaderSearchIndex:masterLeaders.map((name,index)=>({name,index,search:String(name||"").toLowerCase()}));
+      const items=source.filter(item=>!q||item.search.includes(q));
+      const displayed=items.slice(0,masterLeaderVisibleLimit);
+      info.textContent=(q?"Ditemukan "+items.length+" dari "+masterLeaders.length+" Leader.":"Total "+masterLeaders.length+" Leader.")+" Ditampilkan "+displayed.length+".";
       if(!items.length) {
         list.innerHTML='<div style="padding:14px;text-align:center;color:var(--text-muted);">Belum ada Leader yang cocok.</div>';
         return;
       }
-      list.innerHTML=items.map(item=>'<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;padding:8px 4px;border-bottom:1px solid #f1f5f9;"><b style="flex:1;min-width:0;overflow-wrap:anywhere;">'+item.name.replace(/[&<>]/g,"")+'</b><div style="display:flex;gap:4px;flex-shrink:0;"><button class="btn btn-edit" onclick="editMasterLeader('+item.index+')">Edit</button><button class="btn btn-danger" onclick="hapusMasterLeader('+item.index+')">Hapus</button></div></div>').join("");
+      list.innerHTML=displayed.map(item=>'<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;padding:8px 4px;border-bottom:1px solid #f1f5f9;"><b style="flex:1;min-width:0;overflow-wrap:anywhere;">'+item.name.replace(/[&<>]/g,"")+'</b><div style="display:flex;gap:4px;flex-shrink:0;"><button class="btn btn-edit" onclick="editMasterLeader('+item.index+')">Edit</button><button class="btn btn-danger" onclick="hapusMasterLeader('+item.index+')">Hapus</button></div></div>').join("")+htmlTombolMuatLebihBanyak("leader",items.length,displayed.length);
     }
 
     function simpanItemMasterLeader() {
@@ -8535,19 +8538,20 @@
       const list=document.getElementById("masterProdukFgList"),info=document.getElementById("masterProdukFgInfo");
       if(!list||!info)return;
       const q=(document.getElementById("masterProdukFgSearch")?.value||"").trim().toLowerCase();
-      const items=masterProdukFg.map((name,index)=>({
-        name,index,target:ambilTargetStandarFg(name),pcsPerBox:ambilPcsPerBoxStandarFg(name)
-      })).filter(x=>!q||x.name.toLowerCase().includes(q));
+      const source=masterProdukFgSearchIndex.length?masterProdukFgSearchIndex:masterProdukFg.map((name,index)=>({name,index,search:String(name||"").toLowerCase()}));
+      const matched=source.filter(x=>!q||x.search.includes(q));
+      const page=matched.slice(0,masterProdukFgVisibleLimit);
+      const items=page.map(x=>({name:x.name,index:x.index,target:ambilTargetStandarFg(x.name),pcsPerBox:ambilPcsPerBoxStandarFg(x.name)}));
       info.textContent=q
-        ? "Ditemukan "+items.length+" dari "+masterProdukFg.length+" produk."
-        : "Total "+masterProdukFg.length+" produk • "+Object.keys(masterTargetFg).length+" target 8 jam • "+Object.keys(masterPcsPerBoxFg).length+" qty/box.";
+        ? "Ditemukan "+matched.length+" dari "+masterProdukFg.length+" produk • Ditampilkan "+items.length+"."
+        : "Total "+masterProdukFg.length+" produk • "+Object.keys(masterTargetFg).length+" target 8 jam • "+Object.keys(masterPcsPerBoxFg).length+" qty/box • Ditampilkan "+items.length+".";
       if(!items.length){
         list.innerHTML='<div style="padding:14px;text-align:center;color:var(--text-muted);">Belum ada produk yang cocok.</div>';
         return;
       }
       list.innerHTML=items.map(x=>'<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;align-items:center;padding:9px 4px;border-bottom:1px solid #f1f5f9;">'+
         '<div style="min-width:0;overflow-wrap:anywhere;"><b>'+x.name.replace(/[&<>]/g,"")+'</b><div style="font-size:.7rem;color:var(--text-muted);margin-top:3px;">Target 8 jam: <b style="color:var(--emerald);">'+(x.target?formatNum(x.target)+" PCS":"Belum diatur")+'</b><br>Qty per box: <b style="color:var(--navy);">'+(x.pcsPerBox?formatNum(x.pcsPerBox)+" PCS/BOX":"Belum diatur")+'</b></div></div>'+
-        '<div style="display:flex;gap:4px;flex-shrink:0;"><button class="btn btn-edit" onclick="editMasterProdukFg('+x.index+')">Edit</button><button class="btn btn-danger" onclick="hapusMasterProdukFg('+x.index+')">Hapus</button></div></div>').join("");
+        '<div style="display:flex;gap:4px;flex-shrink:0;"><button class="btn btn-edit" onclick="editMasterProdukFg('+x.index+')">Edit</button><button class="btn btn-danger" onclick="hapusMasterProdukFg('+x.index+')">Hapus</button></div></div>').join("")+htmlTombolMuatLebihBanyak("produkFg",matched.length,items.length);
     }
 
     function simpanItemMasterProdukFg(){
