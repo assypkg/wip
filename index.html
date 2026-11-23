@@ -4530,12 +4530,6 @@
       simpanDraftLokal();
     }
 
-    function garisBawahWhatsApp(teks) {
-      return Array.from(String(teks ?? "")).map(char =>
-        /\s/u.test(char) ? char : char + "\u0332"
-      ).join("");
-    }
-
     function renderFgAll() {
       perbaruiPresetJamLaporanFg();
       const container=document.getElementById("fgListContainer");
@@ -4600,7 +4594,7 @@
       let wa="*LAPORAN HASIL PRODUKSI "+plant+" JAM "+jam+" TANGGAL "+tgl+" ("+shift+")*\n━━━━━━━━━━━━━━━━━━━━\n\n";
 
       groups.forEach((group,groupIndex)=>{
-        wa+=garisBawahWhatsApp((groupIndex+1)+". "+group.leader)+"\n";
+        wa+="*"+(groupIndex+1)+". "+group.leader+"*\n";
         const multipleProducts=group.items.length>1;
         group.items.forEach((it,productIndex)=>{
           const jobs=ambilRincianJobOrderFg(it);
