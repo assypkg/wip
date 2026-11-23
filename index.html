@@ -2326,7 +2326,11 @@
     let masterPcsPerBoxFg = JSON.parse(localStorage.getItem(MASTER_PRODUK_FG_PCS_PER_BOX_KEY) || "{}");
     let masterJobOrders = JSON.parse(localStorage.getItem(MASTER_JOB_ORDER_KEY) || "[]");
     let masterErpMappings = JSON.parse(localStorage.getItem(MASTER_ERP_MAPPING_KEY) || "[]");
+    let masterErpMappingsByProduct = new Map();
+    let masterErpMappingByJo = new Map();
+    let masterErpMappedRows = [];
     let masterErpDisabledJOs = JSON.parse(localStorage.getItem(MASTER_ERP_JO_STATUS_KEY) || "[]");
+    let masterErpDisabledJoSet = new Set();
     let masterErpJoStatusReady = false;
     let masterErpJoStatusBusy = false;
     let masterErpJoStatusConflict = false;
@@ -6554,8 +6558,34 @@
       })).sort((a,b)=>new Intl.Collator("id",{numeric:true,sensitivity:"base"}).compare(a.itemCode,b.itemCode));
     }
 
+    function rebuildMasterErpLookupCaches() {
+      const byProduct=new Map();
+      const byJo=new Map();
+      const mappedRows=[];
+      masterErpMappings.forEach(row=>{
+        if(row.fgProductName) {
+          const key=kunciNamaMasterProdukFg(row.fgProductName);
+          if(key) {
+            if(!byProduct.has(key))byProduct.set(key,[]);
+            byProduct.get(key).push(row);
+            mappedRows.push(row);
+          }
+        }
+        (Array.isArray(row.jobOrders)?row.jobOrders:[]).forEach(jo=>{
+          const normalized=String(jo||"").trim().toUpperCase().replace(/\s+/g,"");
+          if(normalized&&!byJo.has(normalized))byJo.set(normalized,row);
+        });
+      });
+      masterErpMappingsByProduct=byProduct;
+      masterErpMappingByJo=byJo;
+      masterErpMappedRows=mappedRows;
+    }
+
+    rebuildMasterErpLookupCaches();
+
     function simpanMasterErpMappingLokal() {
       masterErpMappings=normalisasiMasterErpMappings(masterErpMappings);
+      rebuildMasterErpLookupCaches();
       localStorage.setItem(MASTER_ERP_MAPPING_KEY,JSON.stringify(masterErpMappings));
       const erpModal=document.getElementById("masterErpModal");
       if(erpModal?.style.display==="flex") {
@@ -6691,8 +6721,15 @@
       return normalisasiMasterJobOrder(list);
     }
 
+    function rebuildMasterErpDisabledJoSet() {
+      masterErpDisabledJoSet=new Set(normalisasiMasterErpJoStatus(masterErpDisabledJOs));
+    }
+
+    rebuildMasterErpDisabledJoSet();
+
     function simpanMasterErpJoStatusLokal() {
       masterErpDisabledJOs=normalisasiMasterErpJoStatus(masterErpDisabledJOs);
+      rebuildMasterErpDisabledJoSet();
       localStorage.setItem(MASTER_ERP_JO_STATUS_KEY,JSON.stringify(masterErpDisabledJOs));
       const erpModal=document.getElementById("masterErpModal");
       if(erpModal?.style.display==="flex")renderMasterErpJoStatusList();
@@ -6713,6 +6750,7 @@
             return false;
           }
           masterErpJoStatusReady=true;
+          rebuildMasterErpDisabledJoSet();
           masterErpJoStatusBootstrapQueued=masterErpDisabledJOs.length>0;
           setStatusMasterErpMapping("warning",masterErpDisabledJOs.length?"Status JO lokal siap diinisialisasi ke Cloud.":"Status JO Cloud belum dibuat; akan dibuat saat ada JO yang dinonaktifkan.");
           return true;
@@ -6812,6 +6850,7 @@
         masterErpJoStatusReady=true;
         masterErpJoStatusConflict=false;
         masterErpDisabledJOs=snapshot;
+        rebuildMasterErpDisabledJoSet();
         localStorage.setItem(MASTER_ERP_JO_STATUS_KEY,JSON.stringify(snapshot));
         setStatusMasterErpMapping("success","Status JO berhasil disimpan dan diverifikasi • "+snapshot.length+" JO nonaktif.");
         return true;
@@ -6871,6 +6910,7 @@
       const saved=await simpanMasterErpJoStatusCloud();
       if(!saved) {
         masterErpDisabledJOs=previous;
+        rebuildMasterErpDisabledJoSet();
         localStorage.setItem(MASTER_ERP_JO_STATUS_KEY,JSON.stringify(previous));
         renderMasterErpJoStatusList();
         alert("Perubahan status JO belum berhasil diverifikasi di Cloud. Status di perangkat dikembalikan ke kondisi sebelumnya. Periksa status Cloud sebelum mencoba lagi.");
@@ -6914,7 +6954,7 @@
       const list=document.getElementById("masterErpJoStatusList");
       const info=document.getElementById("masterErpJoStatusInfo");
       if(!list||!info)return;
-      const disabledSet=new Set(normalisasiMasterErpJoStatus(masterErpDisabledJOs));
+      const disabledSet=masterErpDisabledJoSet;
       const byJo=new Map();
       masterErpMappings.forEach(record=>record.jobOrders.forEach(jo=>{
         if(!byJo.has(jo))byJo.set(jo,{jo,record});
@@ -6955,21 +6995,20 @@
 
     function cariMappingErpDariJo(jobOrder) {
       const jo=String(jobOrder||"").trim().toUpperCase().replace(/\s+/g,"");
-      return masterErpMappings.find(row=>row.jobOrders.includes(jo))||null;
+      return masterErpMappingByJo.get(jo)||null;
     }
 
     function cariMappingErpDariProduk(productName) {
       const key=kunciNamaMasterProdukFg(productName);
-      if(!key)return [];
-      return masterErpMappings.filter(row=>row.fgProductName&&kunciNamaMasterProdukFg(row.fgProductName)===key);
+      return key?masterErpMappingsByProduct.get(key)||[]:[];
     }
 
     function daftarJoErpUntukProduk(productName,exclude=[]) {
       const normalizedExclude=new Set(exclude.map(jo=>String(jo||"").trim().toUpperCase().replace(/\s+/g,"")));
-      normalisasiMasterErpJoStatus(masterErpDisabledJOs).forEach(jo=>normalizedExclude.add(jo));
+      masterErpDisabledJoSet.forEach(jo=>normalizedExclude.add(jo));
       let rows;
       if(productName)rows=cariMappingErpDariProduk(productName);
-      else if(masterErpMappings.length)rows=masterErpMappings.filter(record=>record.fgProductName);
+      else if(masterErpMappings.length)rows=masterErpMappedRows;
       else rows=[];
       if(!rows.length) {
         if(productName||masterErpMappings.length)return [];
@@ -7286,7 +7325,7 @@
 
       // Tarik versi Master JO Cloud lebih dahulu agar merge lokal tidak tertimpa saat sinkronisasi awal.
       if(!masterJobOrderReady)await tarikMasterJobOrderCloud();
-      const disabledSet=new Set(normalisasiMasterErpJoStatus(masterErpDisabledJOs));
+      const disabledSet=masterErpDisabledJoSet;
       masterJobOrders=normalisasiMasterJobOrder([...masterJobOrders,...pendingErpImport.flatMap(x=>x.jobOrders).filter(jo=>!disabledSet.has(jo))]);
       simpanMasterJobOrderLokal();
       let joSaved=false;
