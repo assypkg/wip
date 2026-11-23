@@ -2283,6 +2283,7 @@
     ];
 
     let catalog = JSON.parse(localStorage.getItem("assy_catalog_v3")) || DEFAULT_CATALOG;
+    let catalogSearchIndex = [];
     const MASTER_BASE_CATALOG_KEY = "assy_master_cloud_base_v1";
     const MASTER_BASE_UPDATE_KEY = "assy_master_cloud_update_time_v1";
     const MASTER_RECOVERY_KEY = "assy_master_local_recovery_v1";
@@ -2311,6 +2312,7 @@
     const MASTER_LEADER_UPDATE_KEY = "assy_master_leader_cloud_update_v1";
     const MASTER_LEADER_BACKUP_KEY = "assy_master_leader_backup_v1";
     let masterLeaders = JSON.parse(localStorage.getItem(MASTER_LEADER_KEY) || "[]");
+    let masterLeaderSearchIndex = [];
     let masterLeaderReady = false;
     let masterLeaderBusy = false;
     let masterLeaderConflict = false;
@@ -2318,6 +2320,7 @@
     let masterLeaderMigrationQueued = false;
     let editingMasterLeader = null;
     let masterProdukFg = JSON.parse(localStorage.getItem(MASTER_PRODUK_FG_KEY) || "[]");
+    let masterProdukFgSearchIndex = [];
     let masterTargetFg = JSON.parse(localStorage.getItem(MASTER_PRODUK_FG_TARGET_KEY) || "{}");
     let masterPcsPerBoxFg = JSON.parse(localStorage.getItem(MASTER_PRODUK_FG_PCS_PER_BOX_KEY) || "{}");
     let masterJobOrders = JSON.parse(localStorage.getItem(MASTER_JOB_ORDER_KEY) || "[]");
@@ -2571,9 +2574,24 @@
     // Autosave terjadwal: gabungkan perubahan input yang berdekatan agar tidak
     // menulis seluruh draft ke Local Storage pada setiap ketukan keyboard.
     let draftSaveTimer = null;
+    let draftSaveIdleId = null;
     function simpanDraftLokal() {
       if (draftSaveTimer) clearTimeout(draftSaveTimer);
-      draftSaveTimer = setTimeout(simpanDraftLokalSekarang, 650);
+      if (draftSaveIdleId !== null && typeof window.cancelIdleCallback === "function") {
+        window.cancelIdleCallback(draftSaveIdleId);
+        draftSaveIdleId = null;
+      }
+      draftSaveTimer = setTimeout(() => {
+        draftSaveTimer = null;
+        if (typeof window.requestIdleCallback === "function") {
+          draftSaveIdleId = window.requestIdleCallback(() => {
+            draftSaveIdleId = null;
+            simpanDraftLokalSekarang();
+          }, { timeout: 1800 });
+        } else {
+          simpanDraftLokalSekarang();
+        }
+      }, 850);
     }
 
     // Simpan sinkron untuk momen penting (halaman disembunyikan/ditinggalkan).
@@ -2581,6 +2599,10 @@
       if (draftSaveTimer) {
         clearTimeout(draftSaveTimer);
         draftSaveTimer = null;
+      }
+      if (draftSaveIdleId !== null && typeof window.cancelIdleCallback === "function") {
+        window.cancelIdleCallback(draftSaveIdleId);
+        draftSaveIdleId = null;
       }
       try {
         const draftObj = {
@@ -2639,7 +2661,7 @@
             fgFourthJoOpen: document.getElementById("fgFourthJoPanel")?.open || false,
             fgSecondJoOpen: document.getElementById("fgSecondJoPanel")?.open || false,
             mergeWipToggle: document.getElementById("mergeWipToggle")?.checked ?? true,
-            waPreviewFg: document.getElementById("waPreviewFg")?.value || "",
+            waPreviewFg: waFgManuallyEdited ? (document.getElementById("waPreviewFg")?.value || "") : "",
             waFgManuallyEdited,
 
             spaDate: document.getElementById("spaDate")?.value || "",
@@ -2653,7 +2675,7 @@
             spaAssyQtyBoxCount: document.getElementById("spaAssyQtyBoxCount")?.value || "",
             spaGudangQtyPerBox: document.getElementById("spaGudangQtyPerBox")?.value || "",
             spaGudangQtyBoxCount: document.getElementById("spaGudangQtyBoxCount")?.value || "",
-            waPreviewSpa: document.getElementById("waPreviewSpa")?.value || "",
+            waPreviewSpa: waSpaManuallyEdited ? (document.getElementById("waPreviewSpa")?.value || "") : "",
             waSpaManuallyEdited
           }
         };
@@ -2798,6 +2820,7 @@
       });
     }
     catalog = deduplicateCatalogList(catalog);
+    rebuildCatalogSearchIndex();
 
     function wipRecordKey(record) {
       const norm = value => String(value || "").trim().toLowerCase().replace(/\\s+/g, " ");
@@ -2964,26 +2987,37 @@
     /********************************************************************
      * 4. SMART SEARCH: HANYA MUNCUL SAAT DIKETIK
      ********************************************************************/
+    function rebuildCatalogSearchIndex() {
+      catalogSearchIndex = (Array.isArray(catalog) ? catalog : []).map(item => {
+        const group = String(item?.group || "").trim();
+        const part = String(item?.part || "").trim();
+        const keywords = String(item?.keywords || (group + " " + part));
+        return {
+          item, group, part,
+          groupSearch: group.toLocaleLowerCase("id-ID").replace(/\s+/g, " "),
+          partSearch: part.toLocaleLowerCase("id-ID"),
+          searchText: (group + " " + part + " " + keywords).toLocaleLowerCase("id-ID"),
+          groupPartKey: group.toLowerCase() + "\u0000" + part.toLowerCase()
+        };
+      }).filter(row => row.group && row.part);
+    }
+
     function getCatalogComponentsForProduct(groupValue, partQuery = "", limit = 40) {
       const groupQuery = String(groupValue || "").trim().toLocaleLowerCase("id-ID").replace(/\s+/g, " ");
       const componentQuery = String(partQuery || "").trim().toLocaleLowerCase("id-ID");
       if (!groupQuery) return [];
-      const source = Array.isArray(catalog) ? catalog : [];
+      const source = catalogSearchIndex;
       const matches = [];
       const seen = new Set();
-      source.forEach(item => {
-        const group = String(item.group || "").trim();
-        const part = String(item.part || "").trim();
-        if (!group || !part) return;
-        const normalizedGroup = group.toLocaleLowerCase("id-ID").replace(/\s+/g, " ");
-        if (!normalizedGroup.includes(groupQuery)) return;
-        if (componentQuery && !part.toLocaleLowerCase("id-ID").includes(componentQuery)) return;
-        const key = part.toLocaleLowerCase("id-ID");
-        if (seen.has(key)) return;
-        seen.add(key);
-        matches.push({ group, part });
-      });
-      return matches.slice(0, limit);
+      for (const row of source) {
+        if (!row.groupSearch.includes(groupQuery)) continue;
+        if (componentQuery && !row.partSearch.includes(componentQuery)) continue;
+        if (seen.has(row.partSearch)) continue;
+        seen.add(row.partSearch);
+        matches.push({ group:row.group, part:row.part });
+        if (matches.length >= limit) break;
+      }
+      return matches;
     }
 
     function renderProductComponentSuggestions(box, matches, emptyMessage, onChoose) {
@@ -3069,12 +3103,14 @@
       if (!inputEl || !resultsBox) return;
       const query = inputEl.value.trim().toLocaleLowerCase("id-ID");
       if (!query) { resultsBox.style.display = "none"; resultsBox.innerHTML = ""; return; }
-      const filtered = (Array.isArray(catalog) ? catalog : []).filter(item =>
-        `${item.group || ""} ${item.part || ""} ${item.keywords || ""}`.toLocaleLowerCase("id-ID").includes(query)
-      ).filter((item,index,arr) => arr.findIndex(x =>
-        String(x.group).toLowerCase()===String(item.group).toLowerCase() &&
-        String(x.part).toLowerCase()===String(item.part).toLowerCase()
-      )===index).slice(0,25);
+      const seen = new Set();
+      const filtered = [];
+      for (const row of catalogSearchIndex) {
+        if (!row.searchText.includes(query) || seen.has(row.groupPartKey)) continue;
+        seen.add(row.groupPartKey);
+        filtered.push(row.item);
+        if (filtered.length >= 25) break;
+      }
       resultsBox.innerHTML = "";
       if (!filtered.length) {
         const empty=document.createElement("div");
@@ -3161,12 +3197,14 @@
       if (!inputEl || !resultsBox) return;
       const query = inputEl.value.trim().toLocaleLowerCase("id-ID");
       if (!query) { resultsBox.style.display="none"; resultsBox.innerHTML=""; return; }
-      const filtered = (Array.isArray(catalog) ? catalog : []).filter(item =>
-        `${item.group || ""} ${item.part || ""} ${item.keywords || ""}`.toLocaleLowerCase("id-ID").includes(query)
-      ).filter((item,index,arr) => arr.findIndex(x =>
-        String(x.group).toLowerCase()===String(item.group).toLowerCase() &&
-        String(x.part).toLowerCase()===String(item.part).toLowerCase()
-      )===index).slice(0,25);
+      const seen = new Set();
+      const filtered = [];
+      for (const row of catalogSearchIndex) {
+        if (!row.searchText.includes(query) || seen.has(row.groupPartKey)) continue;
+        seen.add(row.groupPartKey);
+        filtered.push(row.item);
+        if (filtered.length >= 25) break;
+      }
       resultsBox.innerHTML="";
       if (!filtered.length) {
         const empty=document.createElement("div");
@@ -4557,6 +4595,7 @@
 
     function simpanMasterLokal() {
       catalog = normalisasiMaster(catalog);
+      rebuildCatalogSearchIndex();
       localStorage.setItem("assy_catalog_v3", JSON.stringify(catalog));
       const count = document.getElementById("masterCount");
       if (count) count.textContent = catalog.length;
@@ -6182,8 +6221,15 @@
       }).sort((a,b) => new Intl.Collator("id",{numeric:true,sensitivity:"base"}).compare(a,b));
     }
 
+    function rebuildMasterProdukFgSearchIndex() {
+      masterProdukFgSearchIndex = masterProdukFg.map((name,index)=>({
+        name,index,search:String(name||"").toLocaleLowerCase("id-ID")
+      }));
+    }
+
     function simpanMasterProdukFgLokal() {
       masterProdukFg = normalisasiMasterProdukFg(masterProdukFg);
+      rebuildMasterProdukFgSearchIndex();
       masterTargetFg = normalisasiTargetMasterFg(masterTargetFg, masterProdukFg);
       masterPcsPerBoxFg = normalisasiPcsPerBoxMasterFg(masterPcsPerBoxFg, masterProdukFg);
       localStorage.setItem(MASTER_PRODUK_FG_KEY,JSON.stringify(masterProdukFg));
@@ -6884,7 +6930,7 @@
       else rows=[];
       if(!rows.length) {
         if(productName||masterErpMappings.length)return [];
-        return normalisasiMasterJobOrder(masterJobOrders).filter(jo=>!normalizedExclude.has(jo));
+        return masterJobOrders.filter(jo=>!normalizedExclude.has(jo));
       }
       const set=new Set();
       rows.forEach(row=>row.jobOrders.forEach(jo=>{if(!normalizedExclude.has(jo))set.add(jo);}));
@@ -7851,8 +7897,15 @@
       }).sort((a,b) => new Intl.Collator("id",{numeric:true,sensitivity:"base"}).compare(a,b));
     }
 
+    function rebuildMasterLeaderSearchIndex() {
+      masterLeaderSearchIndex = masterLeaders.map((name,index)=>({
+        name,index,search:String(name||"").toLocaleLowerCase("id-ID")
+      }));
+    }
+
     function simpanMasterLeaderLokal() {
       masterLeaders = normalisasiMasterLeader(masterLeaders);
+      rebuildMasterLeaderSearchIndex();
       localStorage.setItem(MASTER_LEADER_KEY,JSON.stringify(masterLeaders));
       const count=document.getElementById("masterLeaderCount");
       if(count)count.textContent=masterLeaders.length;
@@ -8093,7 +8146,7 @@
       const box=document.getElementById("fgJobOrderSuggestions2");
       if(!input||!box)return;
       const q=input.value.trim().toLowerCase();
-      const matches=normalisasiMasterJobOrder(masterJobOrders).filter(jo=>!q||jo.toLowerCase().includes(q)).slice(0,30);
+      const matches=masterJobOrders.filter(jo=>!q||jo.toLowerCase().includes(q)).slice(0,30);
       box.innerHTML="";
       if(!matches.length) {
         const empty=document.createElement("div");
@@ -8146,7 +8199,7 @@
       const box=document.getElementById("fgJobOrderSuggestions"+index);
       if(!input||!box)return;
       const q=input.value.trim().toLowerCase();
-      const matches=normalisasiMasterJobOrder(masterJobOrders).filter(jo=>!q||jo.toLowerCase().includes(q)).slice(0,30);
+      const matches=masterJobOrders.filter(jo=>!q||jo.toLowerCase().includes(q)).slice(0,30);
       box.innerHTML="";
       if(!matches.length) {
         const empty=document.createElement("div");
@@ -8202,7 +8255,8 @@
       const box=document.getElementById("fgLeaderSuggestions");
       if(!input||!box)return;
       const q=input.value.trim().toLowerCase();
-      const matches=normalisasiMasterLeader(masterLeaders).filter(name=>!q||name.toLowerCase().includes(q)).slice(0,30);
+      const source=masterLeaderSearchIndex.length?masterLeaderSearchIndex:masterLeaders.map((name,index)=>({name,index,search:String(name||"").toLowerCase()}));
+      const matches=source.filter(item=>!q||item.search.includes(q)).slice(0,30).map(item=>item.name);
       box.innerHTML="";
       if(!matches.length) {
         const empty=document.createElement("div");
@@ -8388,8 +8442,8 @@
       const box = document.getElementById("fgProductSuggestions");
       if (!input || !box) return;
       const q = input.value.trim().toLocaleLowerCase("id-ID");
-      const products = normalisasiMasterProdukFg(masterProdukFg);
-      const matches = products.filter(name => !q || name.toLocaleLowerCase("id-ID").includes(q)).slice(0, 30);
+      const source = masterProdukFgSearchIndex.length ? masterProdukFgSearchIndex : masterProdukFg.map((name,index)=>({name,index,search:String(name||"").toLocaleLowerCase("id-ID")}));
+      const matches = source.filter(item => !q || item.search.includes(q)).slice(0, 30).map(item=>item.name);
       box.innerHTML = "";
       if (!matches.length) {
         const empty = document.createElement("div");
@@ -8799,8 +8853,7 @@
           }
         });
 
-        localStorage.setItem("assy_catalog_v3", JSON.stringify(catalog));
-        renderMasterModalList();
+        simpanMasterLokal();
         simpanMasterKeFirebase();
         alert(`Upload selesai di perangkat!\n• Ditambahkan: ${addedCount} item baru\n• Ditolak karena duplikat: ${skippedDupCount} item\n\nPeriksa status Cloud untuk memastikan seluruh perubahan sudah tersinkron.`);
         event.target.value = "";
