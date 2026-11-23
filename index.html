@@ -2118,7 +2118,7 @@
       <div style="border-top:1px solid var(--border);padding-top:12px;">
         <div style="font-weight:800;color:var(--navy);margin-bottom:4px;">Pemetaan Item Code ERP ke Master FG</div>
         <p style="font-size:.7rem;color:var(--text-muted);margin:0 0 8px;">Nama yang cocok dipetakan otomatis. Nama berbeda dipetakan manual. Target dan Qty/Box tetap bersumber dari Master FG.</p>
-        <input type="search" id="masterErpMappingSearch" placeholder="Cari Item Code / Item Name / produk Master FG..." oninput="renderMasterErpMappingList()" style="width:100%;margin-bottom:8px;" />
+        <input type="search" id="masterErpMappingSearch" placeholder="Cari Item Code / Item Name / produk Master FG..." oninput="resetCariMaster('erpMapping')" style="width:100%;margin-bottom:8px;" />
         <div id="masterErpMappingInfo" style="font-size:.7rem;color:var(--text-muted);margin-bottom:6px;"></div>
         <div id="masterErpMappingList" style="max-height:360px;overflow-y:auto;border:1px solid var(--border);border-radius:9px;padding:8px;"></div>
       </div>
@@ -6554,6 +6554,8 @@
       masterErpMappings=normalisasiMasterErpMappings(masterErpMappings);
       localStorage.setItem(MASTER_ERP_MAPPING_KEY,JSON.stringify(masterErpMappings));
       renderMasterErpMappingList();
+      const erpModal=document.getElementById("masterErpModal");
+      if(erpModal?.style.display==="flex")renderMasterErpJoStatusList();
     }
 
     function setStatusMasterErpMapping(type,message) {
@@ -7086,14 +7088,18 @@
         !q||(record.itemCode+" "+record.itemName+" "+record.fgProductName+" "+record.jobOrders.join(" ")).toLowerCase().includes(q)
       );
       const mapped=masterErpMappings.filter(x=>x.fgProductName).length;
-      info.textContent="Total "+masterErpMappings.length+" Item Code • "+mapped+" dipetakan • "+(masterErpMappings.length-mapped)+" belum dipetakan.";
-      renderMasterErpJoStatusList();
+      const displayed=items.slice(0,masterErpMappingVisibleLimit);
+      info.textContent="Total "+masterErpMappings.length+" Item Code • "+mapped+" dipetakan • "+(masterErpMappings.length-mapped)+" belum dipetakan. Hasil filter: "+items.length+" • Ditampilkan: "+displayed.length+".";
       const deleteAllButton=document.getElementById("btnHapusSemuaMasterErp");
       if(deleteAllButton)deleteAllButton.disabled=!masterErpMappings.length||masterErpMappingBusy;
       if(!items.length){list.innerHTML='<div style="padding:14px;text-align:center;color:var(--text-muted);">Belum ada relasi ERP.</div>';return;}
-      list.innerHTML=items.map(({record,index})=>{
+      list.innerHTML=displayed.map(({record,index})=>{
         const isMapped=!!record.fgProductName;
         const addButton=isMapped?"":'<button class="btn btn-primary" type="button" style="font-size:.65rem;padding:5px 8px;" onclick="tambahItemErpKeMasterFg('+index+')">＋ Add to Master FG</button>';
+        const mappingControl=masterErpEditingMappingIndex===index
+          ?'<select style="width:100%;font-size:.72rem;margin-top:7px;" onchange="pilihPemetaanMasterErp('+index+',this.value)"><option value="">— Pilih produk Master FG —</option>'+
+            masterProdukFg.map(name=>'<option value="'+escapeHtmlMasterErp(name)+'" '+(kunciNamaMasterProdukFg(name)===kunciNamaMasterProdukFg(record.fgProductName)?"selected":"")+'>'+escapeHtmlMasterErp(name)+'</option>').join("")+'</select>'
+          :'<button class="btn btn-outline" type="button" style="font-size:.65rem;padding:5px 8px;" onclick="toggleEditorPemetaanMasterErp('+index+')">'+(isMapped?"Ubah Pemetaan":"Pilih Produk")+'</button>';
         return '<div style="padding:9px 3px;border-bottom:1px solid #e2e8f0;">'+
           '<div style="display:flex;align-items:center;justify-content:space-between;gap:7px;flex-wrap:wrap;">'+
             '<div style="font-size:.72rem;font-weight:800;color:var(--navy);">'+escapeHtmlMasterErp(record.itemCode)+' • '+record.jobOrders.length+' JO</div>'+
@@ -7103,10 +7109,14 @@
           '</div>'+
           '<div style="font-size:.72rem;margin:3px 0;">'+escapeHtmlMasterErp(record.itemName)+'</div>'+
           '<div style="font-size:.65rem;color:var(--text-muted);margin-bottom:5px;">JO: '+escapeHtmlMasterErp(record.jobOrders.join(", "))+'</div>'+
-          (isMapped?'<div style="font-size:.65rem;color:var(--emerald);font-weight:700;margin-bottom:5px;">✓ Terhubung ke Master FG</div>':'')+
-          '<select style="width:100%;font-size:.72rem;" onchange="pilihPemetaanMasterErp('+index+',this.value)"><option value="">— Pilih produk Master FG —</option>'+
-          masterProdukFg.map(name=>'<option value="'+escapeHtmlMasterErp(name)+'" '+(kunciNamaMasterProdukFg(name)===kunciNamaMasterProdukFg(record.fgProductName)?"selected":"")+'>'+escapeHtmlMasterErp(name)+'</option>').join("")+'</select></div>';
-      }).join("");
+          (isMapped?'<div style="font-size:.65rem;color:var(--emerald);font-weight:700;margin-bottom:5px;">✓ Terhubung ke Master FG: '+escapeHtmlMasterErp(record.fgProductName)+'</div>':'')+
+          mappingControl+'</div>';
+      }).join("")+htmlTombolMuatLebihBanyak("erpMapping",items.length,displayed.length);
+    }
+
+    function toggleEditorPemetaanMasterErp(index) {
+      masterErpEditingMappingIndex=masterErpEditingMappingIndex===index?null:index;
+      renderMasterErpMappingList();
     }
 
     function renderMasterErpPreview() {
@@ -7371,6 +7381,7 @@
     }
 
     async function pilihPemetaanMasterErp(index,value) {
+      masterErpEditingMappingIndex=null;
       const record=masterErpMappings[index];if(!record)return;
       const next=String(value||"").trim();
       if(!next){alert("Pilih produk Master FG untuk Item Code ini.");renderMasterErpMappingList();return;}
