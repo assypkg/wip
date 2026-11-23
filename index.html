@@ -3589,6 +3589,23 @@
       return !!normalized;
     }
 
+    function sinkronkanShiftLaporanDariJamFg(jam) {
+      const shiftEl=document.getElementById("fgShift");
+      if(!shiftEl)return;
+      const shiftByTime={
+        "10.00":"SHIFT 1 (08.00-10.00)",
+        "12.00":"SHIFT 1 (08.00-12.00)",
+        "17.00":"SHIFT 1 (08.00-17.00)",
+        "06.00":"SHIFT 2 (21.00-06.00)"
+      };
+      const matched=shiftByTime[jam];
+      if(matched&&Array.from(shiftEl.options).some(option=>option.value===matched)){
+        // Hanya sinkronkan label shift pada header.
+        // Durasi setiap produk/SPA/JO tetap mengikuti data masing-masing.
+        shiftEl.value=matched;
+      }
+    }
+
     function bukaPopupJamLaporanFg() {
       const current=normalisasiJamLaporanFinishGood(document.getElementById("fgTime")?.value)||"23.00";
       const manual=document.getElementById("fgTimeCustomInput");
@@ -3611,6 +3628,7 @@
         input.dataset.lastValid=normalized;
       }
       if(manual)manual.value=normalized;
+      sinkronkanShiftLaporanDariJamFg(normalized);
       perbaruiPresetJamLaporanFg();
       simpanDraftLokal();
       renderFgAll();
@@ -3624,6 +3642,7 @@
       if(!input||!normalized)return;
       input.value=normalized;
       input.dataset.lastValid=normalized;
+      sinkronkanShiftLaporanDariJamFg(normalized);
       perbaruiPresetJamLaporanFg();
       simpanDraftLokal();
       renderFgAll();
@@ -4162,8 +4181,7 @@
       const tgl=formatTanggalLaporan(document.getElementById("fgDate").value);
       const jam=document.getElementById("fgTime").value.trim()||"23.00";
       const shiftRaw=document.getElementById("fgShift").value;
-      const shiftMatch=String(shiftRaw||"").match(/^SHIFT\s*[123]/i);
-      const shift=shiftMatch?shiftMatch[0].replace(/\s+/g," ").toUpperCase():String(shiftRaw||"").trim().toUpperCase();
+      const shift=String(shiftRaw||"").trim().toUpperCase();
       const plant=document.getElementById("fgPlant").value;
       let wa="*LAPORAN HASIL PRODUKSI "+plant+" JAM "+jam+" TANGGAL "+tgl+" ("+shift+")*\n━━━━━━━━━━━━━━━━━━━━\n\n";
 
