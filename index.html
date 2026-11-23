@@ -1395,7 +1395,10 @@
           <div style="grid-column: 1 / -1;">
             <label>Nama Produk</label>
             <div class="fg-product-search-wrap" style="position:relative;">
-              <input type="text" id="fgProductName" placeholder="Ketik kode atau nama produk FG..." autocomplete="off" oninput="onFgProductInput()" onfocus="onFgProductSearchType()" onkeydown="onFgProductSearchKey(event)" aria-controls="fgProductSuggestions" aria-expanded="false" />
+              <div style="position:relative;">
+                <input type="text" id="fgProductName" placeholder="Ketik kode atau nama produk FG..." autocomplete="off" oninput="onFgProductInput()" onfocus="onFgProductSearchType()" onkeydown="onFgProductSearchKey(event)" aria-controls="fgProductSuggestions" aria-expanded="false" style="padding-right:48px;" />
+                <button type="button" id="btnClearFgProductName" aria-label="Kosongkan nama produk" title="Kosongkan nama produk" onclick="hapusNamaProdukFg()" style="display:none;position:absolute;right:9px;top:50%;transform:translateY(-50%);width:30px;height:30px;padding:0;border:1px solid #cbd5e1;border-radius:50%;background:#f8fafc;color:#334155;font-size:21px;font-weight:700;line-height:1;align-items:center;justify-content:center;z-index:2;">×</button>
+              </div>
               <div class="quick-results" id="fgProductSuggestions" role="listbox" aria-label="Saran nama produk Finish Good"></div>
             </div>
             <div style="font-size:0.68rem; color:var(--text-muted); margin-top:3px;">Pilih dari Master Produk FG atau ketik nama produk.</div>
@@ -2607,6 +2610,7 @@
             fgLeader: document.getElementById("fgLeader")?.value || "",
             fgDuration: document.getElementById("fgDuration")?.value || "15.00-23.00",
             fgProductName: document.getElementById("fgProductName")?.value || "",
+            fgLastSelectedProductName: fgLastSelectedProductName || "",
             fgJobOrder: document.getElementById("fgJobOrder")?.value || "",
             fgNote: document.getElementById("fgNote")?.value || "Pakai lem shadowless UV glue",
             fgTarget: document.getElementById("fgTarget")?.value ?? "",
@@ -2730,6 +2734,9 @@
           document.getElementById("fgProductName").value = legacyFg.productName;
           fgLastSelectedProductName = legacyFg.productName || "";
           document.getElementById("fgJobOrder").value = legacyFg.jobOrder;
+        }
+        if (f.fgLastSelectedProductName !== undefined) {
+          fgLastSelectedProductName = String(f.fgLastSelectedProductName || "");
         }
         if (f.fgNote !== undefined) document.getElementById("fgNote").value = f.fgNote;
         fgTargetTouched = f.fgTargetTouched === true;
@@ -3783,6 +3790,7 @@
       const product=last.productName!==undefined?{productName:last.productName,jobOrder:last.jobOrder||""}:pisahProdukDanJo(last.productJo);
       document.getElementById("fgProductName").value=product.productName;
       fgLastSelectedProductName=product.productName||"";
+      perbaruiTombolHapusNamaProdukFg();
       document.getElementById("fgNote").value=last.note||"";
       document.getElementById("fgDuration").value=last.duration||"";
       document.getElementById("fgTarget").value=last.target||"";
@@ -6061,7 +6069,27 @@
       return standard;
     }
 
+    function perbaruiTombolHapusNamaProdukFg() {
+      const input=document.getElementById("fgProductName");
+      const button=document.getElementById("btnClearFgProductName");
+      if(!input||!button)return;
+      const hasValue=!!String(input.value||"").trim();
+      button.style.display=hasValue?"inline-flex":"none";
+      button.disabled=!hasValue;
+    }
+
+    function hapusNamaProdukFg() {
+      const input=document.getElementById("fgProductName");
+      if(!input||!String(input.value||"").trim())return;
+      input.value="";
+      tutupFgProductSuggestions();
+      perbaruiTombolHapusNamaProdukFg();
+      simpanDraftLokal();
+      input.focus();
+    }
+
     function onFgProductInput() {
+      perbaruiTombolHapusNamaProdukFg();
       onFgProductSearchType();
       const input=document.getElementById("fgProductName");
       const typed=String(input?.value||"").trim();
@@ -6875,6 +6903,7 @@
         if(!confirm("Mengganti nama produk akan mengosongkan JO dan hasil yang sudah dimasukkan untuk produk sebelumnya. Lanjutkan?")) {
           input.value=current;
           fgLastSelectedProductName=current;
+          perbaruiTombolHapusNamaProdukFg();
           hitungTargetFgOtomatis(true);
           terapkanPcsPerBoxMasterFg(current,false);
           hitungPreviewFg();
@@ -6885,6 +6914,7 @@
       }
       input.value=next;
       fgLastSelectedProductName=next;
+      perbaruiTombolHapusNamaProdukFg();
       fgTargetTouched=false;
       hitungTargetFgOtomatis(true);
       const perBox=terapkanPcsPerBoxMasterFg(next,true);
@@ -6897,12 +6927,14 @@
             alert("JO "+currentJo1+" belum dipetakan ke Master FG. Petakan dahulu sebelum memilih produk.");
             input.value=current;
             fgLastSelectedProductName=current;
+            perbaruiTombolHapusNamaProdukFg();
             return false;
           }
           if(joMapping?.fgProductName&&kunciNamaMasterProdukFg(joMapping.fgProductName)!==kunciNamaMasterProdukFg(next)) {
             alert("JO "+currentJo1+" terhubung ke produk "+joMapping.fgProductName+". Pilih produk yang sesuai atau kosongkan JO terlebih dahulu.");
             input.value=current;
             fgLastSelectedProductName=current;
+            perbaruiTombolHapusNamaProdukFg();
             return false;
           }
         } else {
@@ -8798,6 +8830,7 @@
       updateCloudCounterUI();
 
       pulihkanDraftLokalJikaHariSama();
+      perbaruiTombolHapusNamaProdukFg();
       hitungTargetFgOtomatis(false);
 
       renderCurrentBoxes();
