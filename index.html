@@ -984,6 +984,88 @@
     .fg-break-presets { display:flex; flex-wrap:wrap; gap:6px; margin-top:7px; }
     .fg-break-preset { min-height:34px; padding:6px 10px; font-size:.7rem; }
     .fg-break-preset.selected { background:var(--navy); color:#fff; border-color:var(--navy); }
+    .fg-main-calc-grid {
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:10px;
+      margin-top:0;
+      align-items:start;
+    }
+    .fg-main-calc-grid > div { min-width:0; }
+    .fg-main-calc-grid input { width:100%; min-width:0; }
+    .fg-main-calc-grid small { display:block; line-height:1.35; }
+    .fg-leader-footer {
+      display:grid;
+      grid-template-columns:minmax(0,1fr);
+      gap:9px;
+      align-items:stretch;
+      margin-top:10px;
+      padding-top:9px;
+      border-top:1px solid #e2e8f0;
+    }
+    .fg-leader-total {
+      width:100%;
+      min-width:0;
+      font-size:.78rem;
+      line-height:1.45;
+      font-weight:800;
+      color:var(--navy);
+      overflow-wrap:anywhere;
+    }
+    .fg-add-spa-btn {
+      width:100%;
+      min-width:0;
+      white-space:normal;
+      line-height:1.25;
+      padding:10px 12px;
+    }
+    .fg-wa-preview-modal .modal-card {
+      display:flex;
+      flex-direction:column;
+      width:96vw;
+      max-width:1400px;
+      height:94vh;
+      height:94dvh;
+      max-height:94vh;
+      max-height:94dvh;
+      overflow:hidden;
+      padding:14px;
+    }
+    #fgWaPreviewModalContent {
+      display:flex;
+      flex:1 1 auto;
+      min-height:0;
+    }
+    #fgWaPreviewModalContent .wa-preview {
+      flex:1 1 auto;
+      min-height:0;
+      height:100%;
+      max-height:none;
+      resize:none;
+      font-size:.88rem;
+      line-height:1.55;
+    }
+    @media (min-width:880px) {
+      .fg-break-presets {
+        display:grid;
+        grid-template-columns:repeat(3,minmax(0,1fr));
+        gap:6px;
+        width:100%;
+        max-width:100%;
+      }
+      .fg-break-preset {
+        width:100%;
+        min-width:0;
+        white-space:nowrap;
+        padding:6px 5px;
+        font-size:.66rem;
+      }
+    }
+    @media (max-width:520px) {
+      .fg-main-calc-grid { gap:8px; }
+      .fg-main-calc-grid label { font-size:.68rem; }
+      .fg-main-calc-grid input { padding:9px 8px; font-size:.85rem; }
+    }
     .fg-second-jo { margin-top:10px; border:1px solid #cbd5e1; border-radius:10px; background:#f8fafc; overflow:hidden; }
     .fg-second-jo > summary { list-style:none; padding:12px; cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:8px; color:var(--navy); font-size:.82rem; font-weight:800; }
     .fg-second-jo > summary::-webkit-details-marker { display:none; }
@@ -1333,16 +1415,6 @@
             <label>Catatan (Opsional)</label>
             <input type="text" id="fgGapNote" placeholder="Contoh: Operator keteter, perbaikan mesin, receh A box ke-2" oninput="simpanDraftLokal()" />
           </div>
-          <div>
-            <label>Target Produksi (PCS)</label>
-            <input
-              type="text"
-              inputmode="numeric"
-              id="fgTarget"
-              value=""
-              placeholder="Isi target produksi"
-              oninput="this.value=this.value.replace(/[^0-9]/g,''); fgTargetTouched=true; simpanDraftLokal();"
-            />          </div>
         </div>
 
         <!-- AUTO KALKULATOR HASIL PRODUKSI (A & B @ ISI PER BOX) -->
@@ -1354,37 +1426,22 @@
             </span>
           </div>
 
-          <div class="form-row-responsive three-cols" style="margin-top:0;">
+          <div class="fg-main-calc-grid">
             <div>
-              <label>Isi Per Box (@ PCS)</label>
-              <input
-                type="text"
-                inputmode="numeric"
-                id="fgPcsPerBox"
-                value="550"
-                placeholder="550"
-                oninput="this.value=this.value.replace(/[^0-9]/g,''); fgPcsPerBoxAutoFilled=false; hitungPreviewFg(); simpanDraftLokal();"
-              />
+              <label>Target Produksi (PCS)</label>
+              <input type="text" inputmode="numeric" id="fgTarget" value="" placeholder="Isi target produksi" oninput="this.value=this.value.replace(/[^0-9]/g,''); fgTargetTouched=true; hitungPreviewFg(); simpanDraftLokal();" />
+            </div>
+            <div>
+              <label>Qty per Box (PCS)</label>
+              <input type="text" inputmode="numeric" id="fgPcsPerBox" value="550" placeholder="550" oninput="this.value=this.value.replace(/[^0-9]/g,''); fgPcsPerBoxAutoFilled=false; hitungPreviewFg(); simpanDraftLokal();" />
             </div>
             <div>
               <label>Lot A — Jumlah Box JO 1</label>
-              <input
-                type="text"
-                inputmode="numeric"
-                id="fgBoxA"
-                placeholder="Misal: 20"
-                oninput="this.value=this.value.replace(/[^0-9]/g,''); hitungPreviewFg(); simpanDraftLokal();"
-              />
+              <input type="text" inputmode="numeric" id="fgBoxA" placeholder="Misal: 20" oninput="this.value=this.value.replace(/[^0-9]/g,''); hitungPreviewFg(); simpanDraftLokal();" />
             </div>
             <div>
               <label>Lot B — Jumlah Box JO 1</label>
-              <input
-                type="text"
-                inputmode="numeric"
-                id="fgBoxB"
-                placeholder="Misal: 16"
-                oninput="this.value=this.value.replace(/[^0-9]/g,''); hitungPreviewFg(); simpanDraftLokal();"
-              />
+              <input type="text" inputmode="numeric" id="fgBoxB" placeholder="Misal: 16" oninput="this.value=this.value.replace(/[^0-9]/g,''); hitungPreviewFg(); simpanDraftLokal();" />
             </div>
             <div>
               <label>Receh Lot A JO 1 (PCS)</label>
@@ -1509,6 +1566,7 @@
           <button class="btn btn-outline" style="flex:1;" onclick="copyWaText('waPreviewFg')">
             📋 Salin Teks
           </button>
+          <button class="btn btn-outline" type="button" onclick="bukaPreviewWaFg()">⛶ Perbesar Preview</button>
           <button class="btn btn-edit" onclick="buatUlangWaFg()">↻ Format Otomatis</button>
         </div>
         <p style="font-size:0.73rem; color:var(--text-muted); margin:-3px 0 8px;">
@@ -1688,6 +1746,18 @@
         <button type="button" class="btn btn-danger" onclick="batalEditFg()">✕ Tutup</button>
       </div>
       <div id="fgEditModalContent"></div>
+    </div>
+  </div>
+
+  <!-- PREVIEW WHATSAPP FINISH GOOD: TAMPILAN DIPERLUAS -->
+  <div id="fgWaPreviewModal" class="modal-backdrop fg-wa-preview-modal" onclick="if(event.target===this)tutupPreviewWaFg()">
+    <div class="modal-card">
+      <div class="card-header" style="flex:0 0 auto;">
+        <span class="card-title">⛶ Preview Laporan WhatsApp Finish Good</span>
+        <button type="button" class="btn btn-danger" onclick="tutupPreviewWaFg()">✕ Tutup Preview</button>
+      </div>
+      <p style="margin:0 0 8px;color:var(--text-muted);font-size:.74rem;">Teks tetap dapat diedit. Perubahan tersimpan pada draft Finish Good.</p>
+      <div id="fgWaPreviewModalContent"></div>
     </div>
   </div>
 
@@ -2166,6 +2236,7 @@
     let fgPcsPerBoxAutoFilled = false;
     let wipEditPlaceholder = null;
     let fgEditPlaceholder = null;
+    let fgWaPreviewPlaceholder = null;
     let fgEditWasMobileHidden = false;
     let editingCatalogIndex = null;
     let waWipManuallyEdited = false;
@@ -3724,12 +3795,12 @@
       document.getElementById("fgFourthJoPanel").open=false;
       document.getElementById("fgEditBanner").style.display="none";
       document.getElementById("fgInputCard").classList.remove("editing-mode");
-      document.getElementById("btnSubmitFg").textContent="✅ SIMPAN PERGANTIAN PRODUK";
+      document.getElementById("btnSubmitFg").textContent="✅ SIMPAN PERGANTIAN SPA";
       document.getElementById("btnSubmitFg").style.background="var(--emerald)";
-      document.getElementById("fgEditModalTitle").textContent="➕ Pergantian Produk ke-"+(count+1);
+      document.getElementById("fgEditModalTitle").textContent="➕ Pergantian SPA ke-"+(count+1);
       const formHint=document.getElementById("fgProductChangeHint");
-      if(formHint){formHint.style.display="block";formHint.textContent="Isi nama produk, durasi, target, dan hasil produksi untuk produk berikutnya. Leader tetap sama.";}
-      document.getElementById("btnSubmitFg").textContent="✅ SIMPAN PERGANTIAN PRODUK";
+      if(formHint){formHint.style.display="block";formHint.textContent="Isi nama produk, durasi, target, dan hasil produksi untuk SPA berikutnya. Leader tetap sama.";}
+      document.getElementById("btnSubmitFg").textContent="✅ SIMPAN PERGANTIAN SPA";
       tutupFgProductSuggestions();
       hitungPreviewFg();
       bukaModalEditFg();
@@ -3844,7 +3915,7 @@
             const productName=it.productName||pisahProdukDanJo(it.productJo).productName;
             return "<div style=\"border:1px solid #dbe2ed;border-radius:10px;padding:10px;margin-top:9px;background:#fff;\">"+
               "<div style=\"display:flex;justify-content:space-between;align-items:flex-start;gap:8px;\">"+
-                "<div style=\"min-width:0;overflow-wrap:anywhere;\"><div style=\"font-size:.65rem;color:var(--text-muted);font-weight:800;\">PRODUK "+(productIndex+1)+"</div>"+
+                "<div style=\"min-width:0;overflow-wrap:anywhere;\"><div style=\"font-size:.65rem;color:var(--text-muted);font-weight:800;\">SPA "+(productIndex+1)+"</div>"+
                 "<b style=\"font-size:.8rem;color:var(--navy);\">"+productName+"</b></div>"+
                 "<div style=\"display:flex;gap:4px;flex-shrink:0;\"><button class=\"btn btn-edit\" onclick=\"mulaiEditFg("+it.id+")\">Edit</button><button class=\"btn btn-danger\" onclick=\"hapusItemFg("+it.id+")\">✕</button></div>"+
               "</div>"+
@@ -3852,7 +3923,7 @@
               (it.note?"<div style=\"font-size:.7rem;color:var(--purple);font-weight:700;margin-top:3px;\">*"+it.note+"*</div>":"")+
               joHtml+
               "<div style=\"display:flex;justify-content:space-between;gap:8px;align-items:center;margin-top:8px;border-top:1px dashed #cbd5e1;padding-top:7px;\">"+
-                "<b style=\"color:var(--emerald);font-size:.78rem;\">TOTAL PRODUK: "+formatNum(it.totalPcs)+" PCS</b>"+
+                "<b style=\"color:var(--emerald);font-size:.78rem;\">TOTAL SPA: "+formatNum(it.totalPcs)+" PCS</b>"+
                 "<b style=\"color:var(--emerald);font-size:.78rem;\">"+pct.toFixed(2)+"%</b>"+
               "</div>"+
               (it.gapNote?"<div style=\"font-size:.7rem;color:var(--text-muted);margin-top:4px;\">NOTE: "+it.gapNote+"</div>":"")+
@@ -3864,11 +3935,11 @@
           const pct=group.totalTarget>0?(group.totalPcs/group.totalTarget*100):0;
           return "<div class=\"group-card fg-mode\" style=\"margin-bottom:12px;\">"+
             "<div class=\"group-header\"><span class=\"group-name\">"+(groupIndex+1)+". "+group.leader+"</span>"+
-            "<span style=\"font-size:.7rem;color:var(--text-muted);font-weight:700;\">"+count+"/5 Produk</span></div>"+
+            "<span style=\"font-size:.7rem;color:var(--text-muted);font-weight:700;\">"+count+"/5 SPA</span></div>"+
             productCards+
-            "<div style=\"display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:10px;padding-top:9px;border-top:1px solid #e2e8f0;\">"+
-              "<div style=\"font-size:.74rem;font-weight:800;color:var(--navy);\">TOTAL KEPALA LINE: "+formatNum(group.totalPcs)+" PCS<br><span style=\"font-size:.68rem;color:var(--text-muted);\">Pencapaian gabungan: "+pct.toFixed(2)+"%</span></div>"+
-              (canChange?"<button class=\"btn btn-emerald\" style=\"flex-shrink:0;font-size:.72rem;\" onclick=\"mulaiPergantianProdukFgById("+lastId+")\">＋ Tambah Pergantian Produk</button>":"<span style=\"font-size:.65rem;color:var(--text-muted);text-align:right;\">Batas 4 kali pergantian tercapai</span>")+
+            "<div class=\"fg-leader-footer\">"+
+              "<div class=\"fg-leader-total\">TOTAL KEPALA LINE: "+formatNum(group.totalPcs)+" PCS<br><span style=\"font-size:.68rem;color:var(--text-muted);\">Pencapaian gabungan: "+pct.toFixed(2)+"%</span></div>"+
+              (canChange?"<button class=\"btn btn-emerald fg-add-spa-btn\" onclick=\"mulaiPergantianProdukFgById("+lastId+")\">＋ Tambah Pergantian SPA</button>":"<span style=\"font-size:.65rem;color:var(--text-muted);text-align:right;\">Batas 4 kali pergantian SPA tercapai</span>")+
             "</div></div>";
         }).join("");
       }
@@ -3886,7 +3957,7 @@
           const jobs=ambilRincianJobOrderFg(it);
           const productName=it.productName||pisahProdukDanJo(it.productJo).productName;
           const productHeader=productName+" ("+jobs.map(jo=>jo.jobOrder).join(" dan ")+")";
-          if(multipleProducts)wa+="\n*PRODUK "+(productIndex+1)+": "+productHeader+"*\n";
+          if(multipleProducts)wa+="\n*SPA "+(productIndex+1)+": "+productHeader+"*\n";
           else wa+=productHeader+"\n";
           if(it.note)wa+="*"+it.note+"*\n";
           wa+="DURASI  : "+it.duration+"\n";
@@ -3905,7 +3976,7 @@
               wa+=formatWhatsAppQtyRows(hasilRows)+"\n\n";
             });
             const pct=Number(it.target)>0?(Number(it.totalPcs||0)/Number(it.target)*100):0;
-            wa+=(multipleProducts?"*TOTAL PRODUK : ":"*TOTAL FG : ")+formatNum(it.totalPcs)+" | "+pct.toFixed(2)+"%*\n";
+            wa+=(multipleProducts?"*TOTAL SPA : ":"*TOTAL FG : ")+formatNum(it.totalPcs)+" | "+pct.toFixed(2)+"%*\n";
             if(it.gapNote)wa+="*NOTE : "+it.gapNote+"*\n";
           }else{
             const jo=jobs[0];
@@ -6981,6 +7052,30 @@
       if (show && id === "masterJobOrderModal") renderMasterJobOrder();
       if (show && id === "masterLeaderModal") renderMasterLeader();
       syncSheetNavModalVisibility();
+    }
+
+    function bukaPreviewWaFg() {
+      const textarea=document.getElementById("waPreviewFg");
+      const target=document.getElementById("fgWaPreviewModalContent");
+      if(!textarea||!target)return;
+      if(!fgWaPreviewPlaceholder && textarea.parentNode!==target){
+        fgWaPreviewPlaceholder=document.createComment("Posisi asli preview WhatsApp Finish Good");
+        textarea.parentNode.insertBefore(fgWaPreviewPlaceholder,textarea);
+      }
+      target.appendChild(textarea);
+      toggleModal("fgWaPreviewModal",true);
+      textarea.focus();
+    }
+
+    function tutupPreviewWaFg() {
+      const textarea=document.getElementById("waPreviewFg");
+      if(textarea&&fgWaPreviewPlaceholder&&fgWaPreviewPlaceholder.parentNode){
+        fgWaPreviewPlaceholder.parentNode.insertBefore(textarea,fgWaPreviewPlaceholder);
+        fgWaPreviewPlaceholder.remove();
+      }
+      fgWaPreviewPlaceholder=null;
+      toggleModal("fgWaPreviewModal",false);
+      simpanDraftLokal();
     }
 
     function bukaModalEditWip() {
