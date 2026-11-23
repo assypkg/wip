@@ -1610,6 +1610,15 @@
           </label>
         </div>
 
+        <div class="fg-list-search" style="padding:10px 11px;margin:-2px 0 12px;background:#f8fafc;border:1px solid var(--border);border-radius:9px;">
+          <label for="fgListSearch" style="display:block;margin:0 0 6px;color:var(--navy);font-size:.72rem;font-weight:800;">🔎 CARI DATA FINISH GOOD UNTUK UPDATE</label>
+          <div style="display:flex;gap:7px;align-items:center;">
+            <input type="search" id="fgListSearch" placeholder="Nama kepala line, nama produk, atau nomor JO..." oninput="filterDaftarFg()" autocomplete="off" style="flex:1;min-width:0;margin:0;background:#fff;" />
+            <button type="button" class="btn btn-outline" onclick="bersihkanPencarianFg()" style="white-space:nowrap;min-height:42px;">Reset</button>
+          </div>
+          <div id="fgListSearchStatus" style="margin-top:6px;color:var(--text-muted);font-size:.67rem;">Cari kepala line, produk, atau JO untuk menemukan data yang akan diperbarui.</div>
+        </div>
+
         <div id="fgListContainer"></div>
       </div>
 
@@ -4533,6 +4542,58 @@
       simpanDraftLokal();
     }
 
+    function normalisasiTeksPencarianFg(value) {
+      return String(value ?? "").normalize("NFKC").trim().replace(/\s+/g," ").toLocaleLowerCase("id-ID");
+    }
+
+    function filterDaftarFg() {
+      const input=document.getElementById("fgListSearch");
+      const status=document.getElementById("fgListSearchStatus");
+      const container=document.getElementById("fgListContainer");
+      if(!container)return;
+      const query=normalisasiTeksPencarianFg(input?.value || "");
+      const groupCards=container.querySelectorAll(".group-card.fg-mode");
+      let visibleItems=0;
+      let visibleGroups=0;
+
+      groupCards.forEach(groupCard=>{
+        const leader=normalisasiTeksPencarianFg(groupCard.querySelector(".group-header .group-name")?.textContent || "");
+        const leaderMatches=!!query && leader.includes(query);
+        const entries=groupCard.querySelectorAll(".fg-product-entry");
+        let groupVisibleItems=0;
+
+        entries.forEach(entry=>{
+          const matches=!query || leaderMatches || normalisasiTeksPencarianFg(entry.textContent).includes(query);
+          entry.style.display=matches ? "" : "none";
+          if(matches)groupVisibleItems++;
+        });
+
+        const showGroup=groupVisibleItems>0;
+        groupCard.style.display=showGroup ? "" : "none";
+        const footer=groupCard.querySelector(".fg-leader-footer");
+        // Pencarian produk/JO menampilkan hasil spesifik; sembunyikan total leader
+        // yang masih menghitung seluruh SPA dalam grup.
+        if(footer)footer.style.display=(!query || leaderMatches) ? "" : "none";
+        if(showGroup){visibleGroups++;visibleItems+=groupVisibleItems;}
+      });
+
+      if(status){
+        if(!query){
+          status.textContent="Cari kepala line, produk, atau JO untuk menemukan data yang akan diperbarui.";
+        }else if(visibleItems===0){
+          status.textContent='Tidak ditemukan data Finish Good untuk "'+String(input.value||"").trim()+'".';
+        }else{
+          status.textContent=visibleItems+" data FG ditemukan pada "+visibleGroups+" kepala line. Tekan Update pada data yang ingin diperbarui.";
+        }
+      }
+    }
+
+    function bersihkanPencarianFg() {
+      const input=document.getElementById("fgListSearch");
+      if(input)input.value="";
+      filterDaftarFg();
+    }
+
     function renderFgAll() {
       perbaruiPresetJamLaporanFg();
       const container=document.getElementById("fgListContainer");
@@ -4558,11 +4619,11 @@
             }).join("");
             const pct=Number(it.target)>0?(Number(it.totalPcs||0)/Number(it.target)*100):0;
             const productName=it.productName||pisahProdukDanJo(it.productJo).productName;
-            return "<div style=\"border:1px solid #dbe2ed;border-radius:10px;padding:10px;margin-top:9px;background:#fff;\">"+
+            return "<div class=\\"fg-product-entry\\" style=\"border:1px solid #dbe2ed;border-radius:10px;padding:10px;margin-top:9px;background:#fff;\">"+
               "<div style=\"display:flex;justify-content:space-between;align-items:flex-start;gap:8px;\">"+
                 "<div style=\"min-width:0;overflow-wrap:anywhere;\"><div style=\"font-size:.65rem;color:var(--text-muted);font-weight:800;\">SPA "+(productIndex+1)+"</div>"+
                 "<b style=\"font-size:.8rem;color:var(--navy);\">"+productName+"</b></div>"+
-                "<div style=\"display:flex;gap:4px;flex-shrink:0;\"><button class=\"btn btn-edit\" onclick=\"mulaiEditFg("+it.id+")\">Edit</button><button class=\"btn btn-danger\" onclick=\"hapusItemFg("+it.id+")\">✕</button></div>"+
+                "<div style=\"display:flex;gap:4px;flex-shrink:0;\"><button class=\"btn btn-edit\" onclick=\"mulaiEditFg("+it.id+")\">Update</button><button class=\"btn btn-danger\" onclick=\"hapusItemFg("+it.id+")\">✕</button></div>"+
               "</div>"+
               "<div style=\"font-size:.72rem;color:var(--text-muted);margin-top:5px;\">Durasi: <b>"+(it.duration||"-")+"</b> • Target: <b>"+formatNum(it.target)+" PCS</b> • Isi/box: <b>"+formatNum(it.pcsPerBox)+"</b></div>"+
               (it.note?"<div style=\"font-size:.7rem;color:var(--purple);font-weight:700;margin-top:3px;\">*"+it.note+"*</div>":"")+
@@ -4588,6 +4649,8 @@
             "</div></div>";
         }).join("");
       }
+
+      filterDaftarFg();
 
       const tgl=formatTanggalLaporan(document.getElementById("fgDate").value);
       const jam=document.getElementById("fgTime").value.trim()||"23.00";
