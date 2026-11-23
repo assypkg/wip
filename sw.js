@@ -1,4 +1,4 @@
-const CACHE_NAME = "smart-wip-assy-v10-fg-report-format";
+const CACHE_NAME = "smart-wip-assy-v11-fg-leader-bold";
 const ASSETS_TO_CACHE = [
   "./",
   "./index.html",
