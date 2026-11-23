@@ -3836,6 +3836,7 @@
 
       document.getElementById("fgLeader").value=leader;
       document.getElementById("fgProductName").value="";
+      fgLastSelectedProductName="";
       document.getElementById("fgJobOrder").value="";
       document.getElementById("fgNote").value="";
       document.getElementById("fgGapNote").value="";
@@ -3882,6 +3883,7 @@
     function resetSemuaDataFg() {
       if (!confirm("RESET ALL DATA FINISH GOOD?\n\nSemua daftar FG, input operator/hasil box, dan laporan WhatsApp FG akan dikosongkan. Data WIP, Master Katalog, riwayat Cloud, dan data SPA TIDAK dihapus.")) return;
       editingFgId = null; fgList = []; waFgManuallyEdited = false;
+      fgLastSelectedProductName = "";
       ["fgLeader", "fgProductName", "fgNote"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
       kosongkanInputJobOrderTambahanFg();
       document.getElementById("fgJobOrder").value = "";
@@ -5870,15 +5872,17 @@
       const typed=String(input?.value||"").trim();
       const exact=masterProdukFg.find(name=>kunciNamaMasterProdukFg(name)===kunciNamaMasterProdukFg(typed));
       if(exact) {
-        if(kunciNamaMasterProdukFg(fgLastSelectedProductName)!==kunciNamaMasterProdukFg(exact)) {
+        if(!fgLastSelectedProductName||kunciNamaMasterProdukFg(fgLastSelectedProductName)!==kunciNamaMasterProdukFg(exact)) {
           pilihProdukMasterFg(exact);
           return;
         }
         hitungTargetFgOtomatis(true);
         terapkanPcsPerBoxMasterFg(exact,true);
-      } else {
+      } else if(!fgLastSelectedProductName) {
         hitungTargetFgOtomatis(true);
-        if(fgPcsPerBoxAutoFilled)terapkanPcsPerBoxMasterFg("",true);
+      } else {
+        const status=document.getElementById("masterErpCloudStatus");
+        if(status)status.textContent="Pilih produk dari daftar saran Master FG. Jika nama produk belum ada, tambahkan ke Master FG terlebih dahulu agar target dan Qty/Box akurat.";
       }
       simpanDraftLokal();
     }
@@ -6429,8 +6433,8 @@
       const input=document.getElementById("fgProductName");
       if(!input)return false;
       const next=String(productName||"").trim();
-      const current=String(fgLastSelectedProductName||input.value||"").trim();
-      const changed=kunciNamaMasterProdukFg(current)!==kunciNamaMasterProdukFg(next);
+      const current=String(fgLastSelectedProductName||"").trim();
+      const changed=!current||kunciNamaMasterProdukFg(current)!==kunciNamaMasterProdukFg(next);
       const hasExisting=!!(["fgJobOrder","fgBoxA","fgBoxB","fgRecehAQty","fgRecehBQty"].some(id=>document.getElementById(id)?.value)||
         [2,3,4].some(i=>["JobOrder","BoxA","BoxB","RecehAQty","RecehBQty"].some(k=>document.getElementById("fg"+k+i)?.value)));
       if(changed&&current&&hasExisting) {
