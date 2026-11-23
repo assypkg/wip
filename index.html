@@ -4530,6 +4530,12 @@
       simpanDraftLokal();
     }
 
+    function garisBawahWhatsApp(teks) {
+      return Array.from(String(teks ?? "")).map(char =>
+        /\s/u.test(char) ? char : char + "\u0332"
+      ).join("");
+    }
+
     function renderFgAll() {
       perbaruiPresetJamLaporanFg();
       const container=document.getElementById("fgListContainer");
@@ -4594,7 +4600,7 @@
       let wa="*LAPORAN HASIL PRODUKSI "+plant+" JAM "+jam+" TANGGAL "+tgl+" ("+shift+")*\n━━━━━━━━━━━━━━━━━━━━\n\n";
 
       groups.forEach((group,groupIndex)=>{
-        wa+=(groupIndex+1)+". "+group.leader+"\n";
+        wa+=garisBawahWhatsApp((groupIndex+1)+". "+group.leader)+"\n";
         const multipleProducts=group.items.length>1;
         group.items.forEach((it,productIndex)=>{
           const jobs=ambilRincianJobOrderFg(it);
@@ -4608,18 +4614,19 @@
           wa+="HASIL\n";
 
           if(jobs.length>1||multipleProducts){
-            jobs.forEach(jo=>{
-              wa+=jo.jobOrder+"\n";
+            const pct=Number(it.target)>0?(Number(it.totalPcs||0)/Number(it.target)*100):0;
+            jobs.forEach((jo,jobIndex)=>{
+              wa+="*"+jo.jobOrder+"*\n";
               const hasilRows=[];
               if(jo.boxA>0)hasilRows.push({label:"A",value:formatNum(jo.boxA)+" BOX @"+formatNum(it.pcsPerBox)+" = "+formatNum(jo.pcsA)+" PCS"});
               if(jo.boxB>0)hasilRows.push({label:"B",value:formatNum(jo.boxB)+" BOX @"+formatNum(it.pcsPerBox)+" = "+formatNum(jo.pcsB)+" PCS"});
               if(jo.recehABoxes.length)hasilRows.push({label:"RECEH A",value:jo.recehABoxes.length+" BOX ("+jo.recehABoxes.map(formatNum).join(" + ")+") = "+formatNum(jo.pcsRecehA)+" PCS"});
               if(jo.recehBBoxes.length)hasilRows.push({label:"RECEH B",value:jo.recehBBoxes.length+" BOX ("+jo.recehBBoxes.map(formatNum).join(" + ")+") = "+formatNum(jo.pcsRecehB)+" PCS"});
-              hasilRows.push({label:"TOTAL",value:formatTotalBoxJoFg(jo)+" = "+formatNum(jo.totalPcs)+" PCS",bold:true});
+              const totalSuffix=multipleProducts&&jobIndex===jobs.length-1?" | "+pct.toFixed(2)+"%":"";
+              hasilRows.push({label:"TOTAL",value:formatTotalBoxJoFg(jo)+" = "+formatNum(jo.totalPcs)+" PCS"+totalSuffix,bold:true});
               wa+=formatWhatsAppQtyRows(hasilRows)+"\n\n";
             });
-            const pct=Number(it.target)>0?(Number(it.totalPcs||0)/Number(it.target)*100):0;
-            wa+=(multipleProducts?"*TOTAL SPA : ":"*TOTAL FG : ")+formatNum(it.totalPcs)+" | "+pct.toFixed(2)+"%*\n";
+            if(!multipleProducts)wa+="*"+String.fromCharCode(96)+"TOTAL FG : "+formatNum(it.totalPcs)+" | "+pct.toFixed(2)+"%"+String.fromCharCode(96)+"*\n";
             if(it.gapNote)wa+="*NOTE : "+it.gapNote+"*\n";
           }else{
             const jo=jobs[0];
@@ -4643,7 +4650,7 @@
         });
         if(multipleProducts){
           const pct=group.totalTarget>0?(group.totalPcs/group.totalTarget*100):0;
-          wa+="*TOTAL PRODUKSI KEPALA LINE : "+formatNum(group.totalPcs)+" | "+pct.toFixed(2)+"%*\n\n";
+          wa+="*"+String.fromCharCode(96)+"TOTAL PRODUKSI KEPALA LINE : "+formatNum(group.totalPcs)+" | "+pct.toFixed(2)+"%"+String.fromCharCode(96)+"*\n\n";
         }else wa+="\n";
       });
 
@@ -4657,7 +4664,7 @@
           wa+=formatWhatsAppQtyRows(items.map(w=>({label:String(w.part||"").trim()+(w.note?" "+String(w.note).trim():""),value:formatNum(w.qty)})))+"\n\n";
         });
       }
-      wa+="Terima kasih";
+      wa+="*TERIMA KASIH*";
       if(!waFgManuallyEdited)waBox.value=wa.trim();
     }
 
