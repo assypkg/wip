@@ -6669,6 +6669,12 @@
           masterErpJoStatusBootstrapQueued=false;
           simpanMasterErpJoStatusCloud();
         }
+        if(masterErpJoStatusReady) {
+          for(let i=1;i<=4;i++) {
+            const box=document.getElementById(idFgJobOrderSuggestions(i));
+            if(box?.style.display==="block")onFgJobOrderTypeIndex(i);
+          }
+        }
       }
     }
 
@@ -8229,6 +8235,17 @@
       const input=document.getElementById(idFgJobOrder(index));
       const box=document.getElementById(idFgJobOrderSuggestions(index));
       if(!input||!box)return;
+      if(!masterErpJoStatusReady) {
+        box.innerHTML="";
+        const notice=document.createElement("div");
+        notice.style.cssText="padding:10px 12px;font-size:.74rem;color:var(--text-muted);line-height:1.4;";
+        notice.textContent="Saran JO belum ditampilkan karena status JO Closed belum terverifikasi dari Cloud. Anda tetap dapat mengetik nomor JO secara manual.";
+        box.appendChild(notice);
+        box.style.display="block";
+        input.setAttribute("aria-expanded","true");
+        if(!masterErpJoStatusBusy)tarikMasterErpJoStatusCloud();
+        return;
+      }
       const query=input.value.trim().toLowerCase();
       const product=String(document.getElementById("fgProductName")?.value||"").trim();
       const exclude=getFgSelectedJobOrders(index);
