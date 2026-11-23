@@ -1311,11 +1311,12 @@
             <div style="font-size:0.68rem; color:var(--text-muted); margin-top:3px;">Pilih dari Master Produk FG atau ketik nama produk.</div>
           </div>
           <div style="grid-column: 1 / -1;">
-            <label>Nomor Job Order (JO)</label>
+            <label>Nomor Job Order Pertama (JO 1)</label>
             <div class="fg-job-order-search-wrap" style="position:relative;">
               <input type="text" id="fgJobOrder" placeholder="Pilih atau ketik nomor JO..." autocomplete="off" oninput="onFgJobOrderType(); simpanDraftLokal()" onfocus="onFgJobOrderType()" onkeydown="onFgJobOrderKey(event)" aria-controls="fgJobOrderSuggestions" aria-expanded="false" />
               <div class="quick-results" id="fgJobOrderSuggestions" role="listbox" aria-label="Saran nomor Job Order"></div>
             </div>
+            <div style="font-size:.66rem;color:var(--text-muted);margin-top:3px;">Hasil Lot A/B dan receh pada kalkulator utama dicatat untuk JO 1. Tambahkan JO 2 bila produk yang sama memiliki nomor JO lanjutan.</div>
           </div>
           <div>
             <label>Catatan Proses / Lem (Opsional)</label>
@@ -3618,7 +3619,8 @@
     function resetSemuaDataFg() {
       if (!confirm("RESET ALL DATA FINISH GOOD?\n\nSemua daftar FG, input operator/hasil box, dan laporan WhatsApp FG akan dikosongkan. Data WIP, Master Katalog, riwayat Cloud, dan data SPA TIDAK dihapus.")) return;
       editingFgId = null; fgList = []; waFgManuallyEdited = false;
-      ["fgLeader", "fgProductName", "fgJobOrder", "fgNote", "fgBoxA", "fgBoxB"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+      ["fgLeader", "fgProductName", "fgJobOrder", "fgJobOrder2", "fgNote", "fgBoxA", "fgBoxB", "fgRecehAQty", "fgRecehBQty", "fgBoxA2", "fgBoxB2", "fgRecehAQty2", "fgRecehBQty2"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+      document.getElementById("fgSecondJoPanel").open = false;
       document.getElementById("fgEditBanner").style.display = "none";
       document.getElementById("fgInputCard").classList.remove("editing-mode");
       document.getElementById("btnSubmitFg").textContent = "✅ TAMBAHKAN KE LAPORAN FINISH GOOD";
