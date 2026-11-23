@@ -2282,6 +2282,7 @@
     let editingFgId = null;
     let fgTargetTouched = false;
     let fgPcsPerBoxAutoFilled = false;
+    let fgLastSelectedProductName = "";
     let wipEditPlaceholder = null;
     let fgEditPlaceholder = null;
     let fgWaPreviewPlaceholder = null;
@@ -2641,10 +2642,12 @@
         if (f.fgDuration !== undefined) document.getElementById("fgDuration").value = f.fgDuration;
         if (f.fgProductName !== undefined || f.fgJobOrder !== undefined) {
           document.getElementById("fgProductName").value = f.fgProductName || "";
+          fgLastSelectedProductName = f.fgProductName || "";
           document.getElementById("fgJobOrder").value = f.fgJobOrder || "";
         } else if (f.fgProductJo !== undefined) {
           const legacyFg = pisahProdukDanJo(f.fgProductJo);
           document.getElementById("fgProductName").value = legacyFg.productName;
+          fgLastSelectedProductName = legacyFg.productName || "";
           document.getElementById("fgJobOrder").value = legacyFg.jobOrder;
         }
         if (f.fgNote !== undefined) document.getElementById("fgNote").value = f.fgNote;
@@ -3594,6 +3597,7 @@
       const last=fgList[fgList.length-1];
       const product=last.productName!==undefined?{productName:last.productName,jobOrder:last.jobOrder||""}:pisahProdukDanJo(last.productJo);
       document.getElementById("fgProductName").value=product.productName;
+      fgLastSelectedProductName=product.productName||"";
       document.getElementById("fgNote").value=last.note||"";
       document.getElementById("fgDuration").value=last.duration||"";
       document.getElementById("fgTarget").value=last.target||"";
@@ -3726,6 +3730,7 @@
       document.getElementById("fgLeader").value=item.leader;
       const itemProduct=item.productName!==undefined?{productName:item.productName,jobOrder:item.jobOrder||""}:pisahProdukDanJo(item.productJo);
       document.getElementById("fgProductName").value=itemProduct.productName;
+      fgLastSelectedProductName=itemProduct.productName||"";
       document.getElementById("fgJobOrder").value=jobs[0]?.jobOrder||itemProduct.jobOrder;
       document.getElementById("fgNote").value=item.note||"";
       document.getElementById("fgGapNote").value=item.gapNote||"";
@@ -5856,17 +5861,24 @@
 
     function onFgProductInput() {
       onFgProductSearchType();
-      hitungTargetFgOtomatis(true);
-      const input = document.getElementById("fgProductName");
-      const exactProduct = masterProdukFg.find(name =>
-        kunciNamaMasterProdukFg(name) === kunciNamaMasterProdukFg(input?.value || "")
-      );
-      if (exactProduct) terapkanPcsPerBoxMasterFg(exactProduct, true);
-      else if (fgPcsPerBoxAutoFilled) terapkanPcsPerBoxMasterFg("", true);
+      const input=document.getElementById("fgProductName");
+      const typed=String(input?.value||"").trim();
+      const exact=masterProdukFg.find(name=>kunciNamaMasterProdukFg(name)===kunciNamaMasterProdukFg(typed));
+      if(exact) {
+        if(kunciNamaMasterProdukFg(fgLastSelectedProductName)!==kunciNamaMasterProdukFg(exact)) {
+          pilihProdukMasterFg(exact);
+          return;
+        }
+        hitungTargetFgOtomatis(true);
+        terapkanPcsPerBoxMasterFg(exact,true);
+      } else {
+        hitungTargetFgOtomatis(true);
+        if(fgPcsPerBoxAutoFilled)terapkanPcsPerBoxMasterFg("",true);
+      }
       simpanDraftLokal();
     }
 
-    function hitungDurasiJamKerja(value, breakMinutes = 0) {
+        function hitungDurasiJamKerja(value, breakMinutes = 0) {
       const match = String(value || "").trim().match(/^(\d{1,2})[.:](\d{2})\s*[-–—]\s*(\d{1,2})[.:](\d{2})$/);
       if (!match) return 0;
       const sh = Number(match[1]), sm = Number(match[2]), eh = Number(match[3]), em = Number(match[4]);
@@ -6397,10 +6409,14 @@
     }
 
     function daftarJoErpUntukProduk(productName,exclude=[]) {
-      const rows=cariMappingErpDariProduk(productName);
-      if(!rows.length)return normalisasiMasterJobOrder(masterJobOrders).filter(jo=>!exclude.includes(jo));
+      const normalizedExclude=new Set(exclude.map(jo=>String(jo||"").trim().toUpperCase().replace(/\s+/g,"")));
+      const rows=productName?cariMappingErpDariProduk(productName):masterErpMappings;
+      if(!rows.length) {
+        if(masterErpMappings.length)return [];
+        return normalisasiMasterJobOrder(masterJobOrders).filter(jo=>!normalizedExclude.has(jo));
+      }
       const set=new Set();
-      rows.forEach(row=>row.jobOrders.forEach(jo=>{if(!exclude.includes(jo))set.add(jo);}));
+      rows.forEach(row=>row.jobOrders.forEach(jo=>{if(!normalizedExclude.has(jo))set.add(jo);}));
       return [...set].sort((a,b)=>new Intl.Collator("id",{numeric:true,sensitivity:"base"}).compare(a,b));
     }
 
@@ -6408,7 +6424,7 @@
       const input=document.getElementById("fgProductName");
       if(!input)return false;
       const next=String(productName||"").trim();
-      const current=String(input.value||"").trim();
+      const current=String(fgLastSelectedProductName||input.value||"").trim();
       const changed=kunciNamaMasterProdukFg(current)!==kunciNamaMasterProdukFg(next);
       const hasExisting=!!(document.getElementById("fgJobOrder")?.value||document.getElementById("fgBoxA")?.value||document.getElementById("fgBoxB")?.value||
         [2,3,4].some(i=>["JobOrder","BoxA","BoxB","RecehAQty","RecehBQty"].some(k=>document.getElementById("fg"+k+i)?.value)));
@@ -6418,6 +6434,7 @@
         document.getElementById("fgJobOrder").value="";
       }
       input.value=next;
+      fgLastSelectedProductName=next;
       fgTargetTouched=false;
       hitungTargetFgOtomatis(true);
       const perBox=terapkanPcsPerBoxMasterFg(next,true);
@@ -7329,40 +7346,73 @@
       }
     }
 
-    function tutupFgJobOrderSuggestions() {
-      const box=document.getElementById("fgJobOrderSuggestions");
-      const input=document.getElementById("fgJobOrder");
+    function idFgJobOrder(index) {
+      return "fgJobOrder"+(index===1?"":String(index));
+    }
+
+    function idFgJobOrderSuggestions(index) {
+      return "fgJobOrderSuggestions"+(index===1?"":String(index));
+    }
+
+    function tutupFgJobOrderSuggestionsIndex(index) {
+      const box=document.getElementById(idFgJobOrderSuggestions(index));
+      const input=document.getElementById(idFgJobOrder(index));
       if(box){box.style.display="none";box.innerHTML="";}
       if(input)input.setAttribute("aria-expanded","false");
     }
 
-    function onFgJobOrderType() {
-      const input=document.getElementById("fgJobOrder");
-      const box=document.getElementById("fgJobOrderSuggestions");
+    function tutupFgJobOrderSuggestions(){tutupFgJobOrderSuggestionsIndex(1);}
+    function tutupFgJobOrderSuggestions2(){tutupFgJobOrderSuggestionsIndex(2);}
+    function tutupFgJobOrderSuggestionsExtra(index){tutupFgJobOrderSuggestionsIndex(index);}
+
+    function getFgSelectedJobOrders(exceptIndex=0) {
+      return [1,2,3,4].filter(index=>index!==exceptIndex)
+        .map(index=>document.getElementById(idFgJobOrder(index))?.value||"")
+        .map(value=>String(value).trim().toUpperCase().replace(/\s+/g,""))
+        .filter(Boolean);
+    }
+
+    function onFgJobOrderTypeIndex(index) {
+      const input=document.getElementById(idFgJobOrder(index));
+      const box=document.getElementById(idFgJobOrderSuggestions(index));
       if(!input||!box)return;
-      const q=input.value.trim().toLowerCase();
-      const matches=normalisasiMasterJobOrder(masterJobOrders).filter(name=>!q||name.toLowerCase().includes(q)).slice(0,30);
+      const query=input.value.trim().toLowerCase();
+      const product=String(document.getElementById("fgProductName")?.value||"").trim();
+      const exclude=getFgSelectedJobOrders(index);
+      const matches=daftarJoErpUntukProduk(product,exclude)
+        .filter(jo=>!query||jo.toLowerCase().includes(query))
+        .slice(0,30);
       box.innerHTML="";
       if(!matches.length) {
         const empty=document.createElement("div");
-        empty.style.cssText="padding:10px 12px;font-size:.78rem;color:var(--text-muted);";
-        empty.textContent=masterJobOrders.length?"Tidak ada Job Order yang cocok. Anda tetap bisa mengetik manual.":"Master Job Order belum berisi data. Anda tetap bisa mengetik manual.";
+        empty.style.cssText="padding:10px 12px;font-size:.76rem;color:var(--text-muted);line-height:1.4;";
+        if(product&&masterErpMappings.length&&!cariMappingErpDariProduk(product).length)
+          empty.textContent="Produk ini belum memiliki pemetaan JO ERP. Periksa Import ERP atau ketik JO manual.";
+        else if(product&&masterErpMappings.length)
+          empty.textContent="Tidak ada JO lain yang tersedia untuk produk ini. JO yang sudah dipilih tidak ditampilkan ulang.";
+        else
+          empty.textContent="Tidak ada Job Order yang cocok. Anda tetap bisa mengetik nomor JO secara manual.";
         box.appendChild(empty);
       } else {
-        matches.forEach(name=>{
+        matches.forEach(jo=>{
           const option=document.createElement("div");
           option.className="quick-item";
           option.setAttribute("role","option");
           option.tabIndex=-1;
           const label=document.createElement("span");
           label.className="quick-item-left";
-          label.textContent=name;
+          label.textContent=jo;
           option.appendChild(label);
+          const mapping=cariMappingErpDariJo(jo);
+          if(mapping?.itemCode) {
+            const hint=document.createElement("small");
+            hint.style.cssText="display:block;color:var(--text-muted);font-size:.62rem;margin-left:auto;padding-left:6px;";
+            hint.textContent=mapping.itemCode;
+            option.appendChild(hint);
+          }
           option.addEventListener("pointerdown",event=>event.preventDefault());
           option.addEventListener("click",()=>{
-            input.value=name;
-            tutupFgJobOrderSuggestions();
-            simpanDraftLokal();
+            pilihJobOrderFg(index,jo);
           });
           box.appendChild(option);
         });
@@ -7371,14 +7421,24 @@
       input.setAttribute("aria-expanded","true");
     }
 
-    function onFgJobOrderKey(event) {
-      if(event.key==="Escape"){tutupFgJobOrderSuggestions();return;}
+    function onFgJobOrderType(){onFgJobOrderTypeIndex(1);}
+    function onFgJobOrderType2(){onFgJobOrderTypeIndex(2);}
+    function onFgJobOrderType3(){onFgJobOrderTypeIndex(3);}
+    function onFgJobOrderType4(){onFgJobOrderTypeIndex(4);}
+
+    function onFgJobOrderKeyIndex(event,index) {
+      if(event.key==="Escape"){tutupFgJobOrderSuggestionsIndex(index);return;}
       if(event.key==="Enter") {
-        const box=document.getElementById("fgJobOrderSuggestions");
+        const box=document.getElementById(idFgJobOrderSuggestions(index));
         const first=box?.querySelector(".quick-item");
         if(box?.style.display==="block"&&first){event.preventDefault();first.click();}
       }
     }
+
+    function onFgJobOrderKey(event){onFgJobOrderKeyIndex(event,1);}
+    function onFgJobOrderKey2(event){onFgJobOrderKeyIndex(event,2);}
+    function onFgJobOrderKey3(event){onFgJobOrderKeyIndex(event,3);}
+    function onFgJobOrderKey4(event){onFgJobOrderKeyIndex(event,4);}
 
     document.addEventListener("pointerdown",event=>{
       if(!event.target.closest(".fg-job-order-search-wrap"))tutupFgJobOrderSuggestions();
@@ -7431,11 +7491,7 @@
           item.appendChild(label);
           item.addEventListener("pointerdown", e => e.preventDefault());
           item.addEventListener("click", () => {
-            input.value = name;
-            tutupFgProductSuggestions();
-            hitungTargetFgOtomatis(true);
-            terapkanPcsPerBoxMasterFg(name, true);
-            simpanDraftLokal();
+            pilihProdukMasterFg(name);
           });
           box.appendChild(item);
         });
