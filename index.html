@@ -6961,13 +6961,25 @@
         renderPreviewStandarMasterFg();
         return;
       }
+      let autoMapped=0,autoMapSaved=false;
+      if(masterErpMappingReady&&!masterErpMappingConflict&&!masterErpMappingBusy){
+        const mappedBefore=masterErpMappings.filter(x=>x.fgProductName).length;
+        const normalizedMappings=normalisasiMasterErpMappings(masterErpMappings);
+        autoMapped=Math.max(0,normalizedMappings.filter(x=>x.fgProductName).length-mappedBefore);
+        if(JSON.stringify(normalizedMappings)!==JSON.stringify(masterErpMappings)){
+          masterErpMappings=normalizedMappings;
+          simpanMasterErpMappingLokal();
+          autoMapSaved=await simpanMasterErpMappingCloud();
+        }else autoMapSaved=true;
+      }
       const importedCount=pendingStandarMasterFgImport.length;
       pendingStandarMasterFgImport=[];pendingStandarMasterFgConflicts=[];pendingStandarMasterFgMeta=null;
       const input=document.getElementById("masterFgStandardFile");if(input)input.value="";
       renderPreviewStandarMasterFg();
       renderMasterErpMappingList();renderMasterErpPreview();
-      setStatusMasterErpMapping("success","Standar Master FG tersimpan dan diverifikasi • "+importedCount+" produk • "+added+" produk baru • "+updatedCount+" produk diperbarui.");
-      alert("Import standar berhasil diverifikasi di Cloud.\n• Produk diproses: "+importedCount+"\n• Produk baru: "+added+"\n• Produk diperbarui: "+updatedCount+"\n\nStandar 8 Jam dan Qty/Box kini digunakan pada input Finish Good.");
+      const autoMapMessage=autoMapped?(autoMapSaved?" • "+autoMapped+" Item Code dipetakan otomatis.":" • "+autoMapped+" Item Code cocok, tetapi sinkron relasi ERP belum terverifikasi."):"";
+      setStatusMasterErpMapping("success","Standar Master FG tersimpan dan diverifikasi • "+importedCount+" produk • "+added+" produk baru • "+updatedCount+" produk diperbarui."+autoMapMessage);
+      alert("Import standar berhasil diverifikasi di Cloud.\n• Produk diproses: "+importedCount+"\n• Produk baru: "+added+"\n• Produk diperbarui: "+updatedCount+"\n• Item Code terpetakan otomatis: "+(autoMapped||0)+(autoMapped&&!autoMapSaved?" (perlu sinkron ulang ERP)":"")+"\n\nStandar 8 Jam dan Qty/Box kini digunakan pada input Finish Good.");
     }
 
     function batalImportStandarMasterFg() {
