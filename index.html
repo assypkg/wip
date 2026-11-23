@@ -6761,11 +6761,11 @@
         return;
       }
       const exists=masterErpMappings.some(row=>row.jobOrders.includes(jo));
-      if(!exists) {
-        alert("JO "+jo+" tidak ditemukan pada relasi ERP. Tidak ada perubahan yang dilakukan.");
+      const alreadyDisabled=masterErpDisabledJOs.includes(jo);
+      if(nonaktif&&!exists) {
+        alert("JO "+jo+" tidak ditemukan pada relasi ERP. JO tidak dinonaktifkan.");
         return;
       }
-      const alreadyDisabled=masterErpDisabledJOs.includes(jo);
       if(nonaktif&&alreadyDisabled)return;
       if(!nonaktif&&!alreadyDisabled)return;
       const action=nonaktif?"menonaktifkan JO "+jo+" karena sudah Closed":"mengaktifkan kembali JO "+jo;
