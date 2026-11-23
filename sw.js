@@ -1,4 +1,4 @@
-const CACHE_NAME = "smart-wip-assy-v9-fg-whatsapp-import";
+const CACHE_NAME = "smart-wip-assy-v10-fg-report-format";
 const ASSETS_TO_CACHE = [
   "./",
   "./index.html",
