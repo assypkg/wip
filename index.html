@@ -4208,8 +4208,7 @@
         if(!prefix)continue;
         meta.headerFound=true;
         meta.plant=prefix[1].toUpperCase();
-        meta.time=prefix[2].replace(":","");
-        meta.time=meta.time.slice(0,2)+"."+meta.time.slice(2);
+        meta.time=prefix[2].replace(":",".");
         const rest=line.slice(prefix[0].length).trim();
         const shiftStart=rest.search(/\s+\(SHIFT\s*[123]/i);
         const dateText=shiftStart>=0?rest.slice(0,shiftStart).trim():rest;
