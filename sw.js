@@ -1,4 +1,4 @@
-const CACHE_NAME = "smart-wip-assy-v3-fg-report-time";
+const CACHE_NAME = "smart-wip-assy-v4-fg-time-popup";
 const ASSETS_TO_CACHE = [
   "./",
   "./index.html",
