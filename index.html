@@ -6559,7 +6559,7 @@
         '<select style="width:100%;font-size:.72rem;" onchange="ubahPemetaanPendingErp('+index+',this.value)"><option value="">— Belum dipetakan ke Master FG —</option>'+
         masterProdukFg.map(name=>'<option value="'+escapeHtmlMasterErp(name)+'" '+(kunciNamaMasterProdukFg(name)===kunciNamaMasterProdukFg(record.fgProductName)?"selected":"")+'>'+escapeHtmlMasterErp(name)+'</option>').join("")+'</select></div>'
       ).join("");
-      button.disabled=!!pendingErpImportConflicts.length||mapped!==pendingErpImport.length||!masterErpMappingReady||masterErpMappingConflict;
+      button.disabled=!!pendingErpImportConflicts.length||!masterErpMappingReady||masterErpMappingConflict;
     }
 
     function ubahPemetaanPendingErp(index,value) {
@@ -6649,8 +6649,8 @@
         const fgReady=await tarikMasterProdukFgCloud();
         if(!fgReady||!masterProdukFgReady)return;
       }
-      if(pendingErpImport.some(x=>!x.fgProductName||!masterProdukFg.some(name=>kunciNamaMasterProdukFg(name)===kunciNamaMasterProdukFg(x.fgProductName)))) {
-        alert("Petakan semua Item Code ke produk yang benar di Master FG. Target dan Qty/Box tidak diambil dari ERP.");
+      if(pendingErpImport.some(x=>x.fgProductName&&!masterProdukFg.some(name=>kunciNamaMasterProdukFg(name)===kunciNamaMasterProdukFg(x.fgProductName)))) {
+        alert("Ada pemetaan yang menunjuk ke produk yang tidak tersedia di Master FG. Periksa kembali pemetaannya.");
         return;
       }
       if(!masterErpMappingReady) {
@@ -6698,7 +6698,8 @@
       const joCount=masterErpMappings.reduce((n,x)=>n+x.jobOrders.length,0);
       pendingErpImport=[];pendingErpImportConflicts=[];
       renderMasterErpPreview();renderMasterErpMappingList();
-      setStatusMasterErpMapping("success","Import terverifikasi • "+itemCount+" Item Code • "+joCount+" JO unik. "+(joSaved?"Master JO umum juga diperbarui di Cloud.":"Relasi ERP tersimpan; daftar Master JO umum belum berhasil disinkronkan."));
+      const unmappedCount=masterErpMappings.filter(x=>!x.fgProductName).length;
+      setStatusMasterErpMapping(unmappedCount?"warning":"success","Import terverifikasi • "+itemCount+" Item Code • "+joCount+" JO unik • "+unmappedCount+" belum dipetakan ke Master FG. "+(joSaved?"Master JO umum juga diperbarui di Cloud.":"Relasi ERP tersimpan; daftar Master JO umum belum berhasil disinkronkan.")+" Item yang belum dipetakan belum mengisi target/Qty Box otomatis.");
     }
 
     function batalImportMasterErp() {
