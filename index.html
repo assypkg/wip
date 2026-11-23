@@ -2284,6 +2284,7 @@
 
     let catalog = JSON.parse(localStorage.getItem("assy_catalog_v3")) || DEFAULT_CATALOG;
     let catalogSearchIndex = [];
+    let catalogDuplicateKeys = new Set();
     let catalogMasterListIndex = [];
     const MASTER_BASE_CATALOG_KEY = "assy_master_cloud_base_v1";
     const MASTER_BASE_UPDATE_KEY = "assy_master_cloud_update_time_v1";
@@ -2863,12 +2864,12 @@
     }
     cloudArchive = cleanAndDeduplicateCloudArchive(cloudArchive);
 
+    function kunciCatalogDuplicate(group,part) {
+      return String(group||"").trim().toLowerCase()+"\\u0000"+String(part||"").trim().toLowerCase();
+    }
+
     function isCatalogDuplicate(group, part) {
-      const gKey = group.trim().toLowerCase();
-      const pKey = part.trim().toLowerCase();
-      return catalog.some(
-        (c) => c.group.trim().toLowerCase() === gKey && c.part.trim().toLowerCase() === pKey
-      );
+      return catalogDuplicateKeys.has(kunciCatalogDuplicate(group,part));
     }
 
     function formatNum(n) {
@@ -3015,6 +3016,7 @@
       }).filter(row => row.group && row.part);
       const collator=new Intl.Collator("id",{numeric:true,sensitivity:"base"});
       catalogMasterListIndex=catalogSearchIndex.slice().sort((a,b)=>collator.compare(a.group,b.group)||collator.compare(a.part,b.part));
+      catalogDuplicateKeys=new Set(catalogSearchIndex.map(row=>row.group.toLowerCase()+"\\u0000"+row.part.toLowerCase()));
     }
 
     function getCatalogComponentsForProduct(groupValue, partQuery = "", limit = 40) {
@@ -8940,6 +8942,7 @@
               skippedDupCount++;
             } else {
               catalog.push({ group: g, part: p, keywords: `${g} ${p}`.toLowerCase() });
+              catalogDuplicateKeys.add(kunciCatalogDuplicate(g,p));
               addedCount++;
             }
           }
