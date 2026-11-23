@@ -3905,7 +3905,7 @@
               wa+=formatWhatsAppQtyRows(hasilRows)+"\n\n";
             });
             const pct=Number(it.target)>0?(Number(it.totalPcs||0)/Number(it.target)*100):0;
-            wa+=(multipleProducts?"*TOTAL PRODUK: ":"*TOTAL FG : ")+formatNum(it.totalPcs)+" PCS | "+pct.toFixed(2)+"%*\n";
+            wa+=(multipleProducts?"*TOTAL PRODUK : ":"*TOTAL FG : ")+formatNum(it.totalPcs)+" | "+pct.toFixed(2)+"%*\n";
             if(it.gapNote)wa+="*NOTE : "+it.gapNote+"*\n";
           }else{
             const jo=jobs[0];
@@ -3929,7 +3929,7 @@
         });
         if(multipleProducts){
           const pct=group.totalTarget>0?(group.totalPcs/group.totalTarget*100):0;
-          wa+="*TOTAL PRODUKSI KEPALA LINE: "+formatNum(group.totalPcs)+" PCS | "+pct.toFixed(2)+"%*\n\n";
+          wa+="*TOTAL PRODUKSI KEPALA LINE : "+formatNum(group.totalPcs)+" | "+pct.toFixed(2)+"%*\n\n";
         }else wa+="\n";
       });
 
