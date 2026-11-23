@@ -2041,11 +2041,25 @@
       <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px;">
         <button class="btn btn-outline" type="button" onclick="tarikMasterErpMappingCloud()">↻ Sinkronkan ERP</button>
         <button class="btn btn-outline" type="button" onclick="downloadBackupMasterErpMapping()">Unduh Backup ERP</button>
+        <button class="btn btn-danger" type="button" id="btnHapusSemuaMasterErp" onclick="hapusSemuaMasterErpMapping()">🗑 Hapus Semua Data ERP</button>
       </div>
       <div style="padding:12px;border:1px solid var(--border);border-radius:10px;background:#f8fafc;margin-bottom:12px;">
         <label for="masterErpFile">Upload file jadwal ERP (.HTM / .HTML)</label>
         <input type="file" id="masterErpFile" accept=".htm,.html,text/html" onchange="bacaFileMasterErp(event)" style="width:100%;font-size:.8rem;" />
         <p style="font-size:.7rem;color:var(--text-muted);margin:6px 0 0;">Hanya Job Order, Item Code, dan Item Name yang dibaca. Unit Produksi, Confirm Date, dan Confirm Qty diabaikan. JO berulang pada tanggal berbeda digabung.</p>
+      </div>
+      <div style="border:1px solid #cbd5e1;border-radius:10px;padding:12px;margin:12px 0;background:#f8fafc;">
+        <div style="font-weight:800;color:var(--navy);margin-bottom:5px;">📊 Import Standar Hasil & Qty/Box ke Master FG</div>
+        <label for="masterFgStandardFile">Upload file standar hasil produksi (.ODS / .XLSX / .XLS)</label>
+        <input type="file" id="masterFgStandardFile" accept=".ods,.xlsx,.xls" onchange="bacaFileStandarMasterFg(event)" style="width:100%;font-size:.8rem;margin-top:5px;" />
+        <p style="font-size:.69rem;color:var(--text-muted);margin:6px 0 8px;">Kolom yang dibaca: Nama Produk, Kode Item, Isi per Box (PCS), dan Standar Hasil 8 Jam. Standar 8 Jam menjadi dasar target otomatis; kolom 9 Jam tidak digunakan. Qty/Box kosong atau “-” tidak menghapus nilai lama.</p>
+        <div id="masterFgStandardSummary" style="font-size:.72rem;color:var(--text-muted);margin:6px 0;">Belum ada file standar yang diproses.</div>
+        <div id="masterFgStandardConflicts" style="display:none;padding:8px;border:1px solid #fca5a5;border-radius:8px;background:#fef2f2;color:#991b1b;font-size:.7rem;margin:7px 0;"></div>
+        <div id="masterFgStandardPreview" style="max-height:190px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:7px;background:#fff;margin:7px 0;"></div>
+        <div style="display:flex;gap:7px;flex-wrap:wrap;">
+          <button class="btn btn-primary" id="btnImportStandarMasterFg" type="button" onclick="simpanImportStandarMasterFg()" disabled>☁️ Tambah/Perbarui Master FG</button>
+          <button class="btn btn-outline" type="button" onclick="batalImportStandarMasterFg()">Batal Preview</button>
+        </div>
       </div>
       <div id="masterErpPreviewSummary" style="font-size:.76rem;color:var(--text-muted);margin-bottom:8px;">Belum ada file ERP yang diproses.</div>
       <div id="masterErpPreviewConflicts" style="display:none;padding:9px;border:1px solid #fca5a5;border-radius:8px;background:#fef2f2;color:#991b1b;font-size:.72rem;margin-bottom:10px;"></div>
@@ -2252,6 +2266,9 @@
     let masterErpMappingBootstrapQueued = false;
     let pendingErpImport = [];
     let pendingErpImportConflicts = [];
+    let pendingStandarMasterFgImport = [];
+    let pendingStandarMasterFgConflicts = [];
+    let pendingStandarMasterFgMeta = null;
     let masterJobOrderReady = false;
     let masterJobOrderBusy = false;
     let masterJobOrderConflict = false;
@@ -6554,9 +6571,14 @@
       );
       const mapped=masterErpMappings.filter(x=>x.fgProductName).length;
       info.textContent="Total "+masterErpMappings.length+" Item Code • "+mapped+" dipetakan • "+(masterErpMappings.length-mapped)+" belum dipetakan.";
+      const deleteAllButton=document.getElementById("btnHapusSemuaMasterErp");
+      if(deleteAllButton)deleteAllButton.disabled=!masterErpMappings.length||masterErpMappingBusy;
       if(!items.length){list.innerHTML='<div style="padding:14px;text-align:center;color:var(--text-muted);">Belum ada relasi ERP.</div>';return;}
       list.innerHTML=items.map(({record,index})=>'<div style="padding:9px 3px;border-bottom:1px solid #e2e8f0;">'+
-        '<div style="font-size:.72rem;font-weight:800;color:var(--navy);">'+escapeHtmlMasterErp(record.itemCode)+' • '+record.jobOrders.length+' JO</div>'+
+        '<div style="display:flex;align-items:center;justify-content:space-between;gap:7px;flex-wrap:wrap;">'+
+          '<div style="font-size:.72rem;font-weight:800;color:var(--navy);">'+escapeHtmlMasterErp(record.itemCode)+' • '+record.jobOrders.length+' JO</div>'+
+          '<button class="btn btn-danger" type="button" style="font-size:.65rem;padding:5px 8px;" onclick="hapusMasterErpMapping('+index+')">🗑 Hapus Item Code</button>'+
+        '</div>'+
         '<div style="font-size:.72rem;margin:3px 0;">'+escapeHtmlMasterErp(record.itemName)+'</div>'+
         '<div style="font-size:.65rem;color:var(--text-muted);margin-bottom:5px;">JO: '+escapeHtmlMasterErp(record.jobOrders.join(", "))+'</div>'+
         '<select style="width:100%;font-size:.72rem;" onchange="pilihPemetaanMasterErp('+index+',this.value)"><option value="">— Pilih produk Master FG —</option>'+
@@ -6755,6 +6777,257 @@
       const url=URL.createObjectURL(new Blob([raw],{type:"application/json"}));
       const anchor=document.createElement("a");anchor.href=url;anchor.download="backup-master-erp-"+getTodayWibIso()+".json";
       anchor.click();URL.revokeObjectURL(url);
+    }
+
+    function kunciHeaderStandarMasterFg(value) {
+      return String(value??"").normalize("NFKC").trim().toUpperCase().replace(/[^A-Z0-9]/g,"");
+    }
+
+    function angkaStandarMasterFg(value) {
+      if(typeof value==="number"&&Number.isFinite(value))return Number.isSafeInteger(Math.round(value))?Math.round(value):0;
+      const raw=String(value??"").trim();
+      if(!raw||raw==="-"||raw.toLowerCase()==="n/a")return 0;
+      const digits=raw.replace(/[.,]/g,"").replace(/[^0-9-]/g,"");
+      const number=Number(digits);
+      return Number.isSafeInteger(number)&&number>0?number:0;
+    }
+
+    function parseStandarMasterFgSheet(rows,fileName) {
+      const headerIndex=rows.findIndex(row=>{
+        const keys=(row||[]).map(kunciHeaderStandarMasterFg);
+        return keys.includes("NAMAPRODUK")&&keys.includes("KODEITEM")&&
+          (keys.includes("ISIPERBOXPCS")||keys.includes("ISIPERBOX"));
+      });
+      if(headerIndex<0)throw new Error("Header Nama Produk, Kode Item, dan Isi per Box (PCS) tidak ditemukan.");
+      const headers=(rows[headerIndex]||[]).map(kunciHeaderStandarMasterFg);
+      const nameIndex=headers.indexOf("NAMAPRODUK");
+      const codeIndex=headers.indexOf("KODEITEM");
+      const qtyIndex=headers.findIndex(x=>x==="ISIPERBOXPCS"||x==="ISIPERBOX");
+      let targetIndex=-1;
+      let dataStart=headerIndex+1;
+      for(let offset=0;offset<=4&&headerIndex+offset<rows.length;offset++){
+        const candidate=(rows[headerIndex+offset]||[]).map(kunciHeaderStandarMasterFg);
+        const idx=candidate.findIndex(x=>x==="8JAM"||x==="STANDARHASIL8JAM");
+        if(idx>=0){targetIndex=idx;dataStart=headerIndex+offset+1;break;}
+      }
+      if(targetIndex<0)throw new Error("Kolom Standar Hasil 8 Jam tidak ditemukan.");
+      const byProduct=new Map();
+      const codeNames=new Map();
+      const conflicts=[];
+      let validRows=0,skippedRows=0;
+      (rows||[]).slice(dataStart).forEach((row,offset)=>{
+        const itemName=String(row?.[nameIndex]??"").normalize("NFKC").replace(/[\u200B-\u200D\uFEFF]/g,"").trim().replace(/\s+/g," ");
+        const itemCode=String(row?.[codeIndex]??"").normalize("NFKC").replace(/[\u200B-\u200D\uFEFF]/g,"").trim();
+        if(!itemName&&!itemCode)return;
+        if(!itemName||!itemCode){skippedRows++;return;}
+        const standard8h=angkaStandarMasterFg(row?.[targetIndex]);
+        const pcsPerBox=angkaStandarMasterFg(row?.[qtyIndex]);
+        if(!standard8h&&!pcsPerBox){skippedRows++;return;}
+        validRows++;
+        const key=kunciNamaMasterProdukFg(itemName);
+        if(!byProduct.has(key)){
+          byProduct.set(key,{productName:itemName,standard8h,pcsPerBox,itemCodes:[itemCode]});
+        }else{
+          const old=byProduct.get(key);
+          if((old.standard8h>0&&standard8h>0&&old.standard8h!==standard8h)||
+             (old.pcsPerBox>0&&pcsPerBox>0&&old.pcsPerBox!==pcsPerBox)){
+            conflicts.push("Nama produk "+itemName+" memiliki standar 8 jam atau Qty/Box yang berbeda pada baris sumber.");
+          }else{
+            if(!old.standard8h)old.standard8h=standard8h;
+            if(!old.pcsPerBox)old.pcsPerBox=pcsPerBox;
+            if(!old.itemCodes.includes(itemCode))old.itemCodes.push(itemCode);
+          }
+        }
+        if(!codeNames.has(itemCode))codeNames.set(itemCode,new Set());
+        codeNames.get(itemCode).add(key);
+      });
+      const records=[...byProduct.values()].sort((a,b)=>
+        new Intl.Collator("id",{numeric:true,sensitivity:"base"}).compare(a.productName,b.productName)
+      );
+      const multiVariantCodes=[...codeNames.entries()].filter(([,names])=>names.size>1).length;
+      return {
+        records,conflicts:[...new Set(conflicts)],fileName,
+        validRows,skippedRows,uniqueCodes:codeNames.size,multiVariantCodes,
+        missingQty:records.filter(x=>!x.pcsPerBox).length
+      };
+    }
+
+    function renderPreviewStandarMasterFg() {
+      const summary=document.getElementById("masterFgStandardSummary");
+      const preview=document.getElementById("masterFgStandardPreview");
+      const conflicts=document.getElementById("masterFgStandardConflicts");
+      const button=document.getElementById("btnImportStandarMasterFg");
+      if(!summary||!preview||!conflicts||!button)return;
+      if(!pendingStandarMasterFgImport.length){
+        summary.textContent="Belum ada file standar yang diproses.";
+        preview.innerHTML='<div style="padding:10px;text-align:center;color:var(--text-muted);">Upload file standar untuk melihat preview.</div>';
+        conflicts.style.display="none";button.disabled=true;return;
+      }
+      const rows=pendingStandarMasterFgImport;
+      const newCount=rows.filter(row=>!masterProdukFg.some(name=>kunciNamaMasterProdukFg(name)===kunciNamaMasterProdukFg(row.productName))).length;
+      const changedCount=rows.filter(row=>{
+        const existing=masterProdukFg.find(name=>kunciNamaMasterProdukFg(name)===kunciNamaMasterProdukFg(row.productName));
+        if(!existing)return false;
+        return (row.standard8h>0&&ambilTargetStandarFg(existing)!==row.standard8h)||
+          (row.pcsPerBox>0&&ambilPcsPerBoxStandarFg(existing)!==row.pcsPerBox);
+      }).length;
+      const meta=pendingStandarMasterFgMeta||{};
+      summary.textContent=(meta.fileName||"File standar")+" • "+meta.validRows+" baris valid • "+rows.length+" produk unik • "+newCount+" produk baru • "+changedCount+" produk diperbarui • "+meta.missingQty+" tanpa Qty/Box.";
+      if(meta.multiVariantCodes){
+        summary.textContent+=" • "+meta.multiVariantCodes+" Item Code memiliki beberapa varian nama; masing-masing nama dipertahankan.";
+      }
+      if(pendingStandarMasterFgConflicts.length){
+        conflicts.style.display="block";
+        conflicts.textContent="Import diblokir: "+pendingStandarMasterFgConflicts.join(" | ");
+      }else conflicts.style.display="none";
+      preview.innerHTML=rows.slice(0,18).map(row=>
+        '<div style="padding:6px 2px;border-bottom:1px solid #e2e8f0;">'+
+          '<div style="font-size:.69rem;font-weight:800;color:var(--navy);">'+escapeHtmlMasterErp(row.productName)+'</div>'+
+          '<div style="font-size:.63rem;color:var(--text-muted);">Kode: '+escapeHtmlMasterErp(row.itemCodes.join(", "))+
+          ' • Target 8 Jam: '+(row.standard8h?formatNum(row.standard8h)+" PCS":"—")+
+          ' • Qty/Box: '+(row.pcsPerBox?formatNum(row.pcsPerBox)+" PCS":"tidak diisi")+'</div></div>'
+      ).join("")+(rows.length>18?'<div style="padding:6px;text-align:center;font-size:.65rem;color:var(--text-muted);">Menampilkan 18 dari '+rows.length+' produk unik.</div>':"");
+      button.disabled=!!pendingStandarMasterFgConflicts.length||!rows.length||masterProdukFgBusy;
+    }
+
+    async function bacaFileStandarMasterFg(event) {
+      const file=event?.target?.files?.[0];
+      if(!file)return;
+      try{
+        await ensureSheetJsLoaded();
+        const reader=new FileReader();
+        reader.onload=function(e){
+          try{
+            const workbook=XLSX.read(new Uint8Array(e.target.result),{type:"array",cellDates:false});
+            const sheetName=workbook.SheetNames?.[0];
+            if(!sheetName)throw new Error("Sheet pada file standar tidak ditemukan.");
+            const rows=XLSX.utils.sheet_to_json(workbook.Sheets[sheetName],{header:1,raw:true,defval:""});
+            const parsed=parseStandarMasterFgSheet(rows,file.name);
+            pendingStandarMasterFgImport=parsed.records;
+            pendingStandarMasterFgConflicts=parsed.conflicts;
+            pendingStandarMasterFgMeta=parsed;
+            renderPreviewStandarMasterFg();
+          }catch(error){
+            pendingStandarMasterFgImport=[];pendingStandarMasterFgConflicts=[];pendingStandarMasterFgMeta=null;
+            renderPreviewStandarMasterFg();
+            alert("File standar tidak dapat diproses: "+(error.message||error));
+          }
+        };
+        reader.onerror=function(){alert("File standar gagal dibaca.");};
+        reader.readAsArrayBuffer(file);
+      }catch(error){
+        alert(error.message||"Library Excel gagal dimuat.");
+      }
+    }
+
+    async function simpanImportStandarMasterFg() {
+      if(!pendingStandarMasterFgImport.length||pendingStandarMasterFgConflicts.length)return;
+      if(masterProdukFgBusy)return;
+      if(!masterProdukFgReady){
+        const ready=await tarikMasterProdukFgCloud();
+        if(!ready||!masterProdukFgReady||masterProdukFgConflict)return;
+      }
+      if(masterProdukFgConflict){
+        alert("Master FG sedang mengalami konflik versi Cloud. Sinkronkan Master FG sebelum mengimpor standar.");
+        return;
+      }
+      const previous={
+        products:normalisasiMasterProdukFg(masterProdukFg),
+        targets:normalisasiTargetMasterFg(masterTargetFg,masterProdukFg),
+        pcsPerBox:normalisasiPcsPerBoxMasterFg(masterPcsPerBoxFg,masterProdukFg)
+      };
+      localStorage.setItem(MASTER_PRODUK_FG_BACKUP_KEY,JSON.stringify({
+        savedAt:new Date().toISOString(),products:previous.products,targets:previous.targets,pcsPerBox:previous.pcsPerBox,
+        reason:"Backup sebelum import standar hasil dan qty per box"
+      }));
+      let added=0,updatedCount=0;
+      pendingStandarMasterFgImport.forEach(row=>{
+        const existing=masterProdukFg.find(name=>kunciNamaMasterProdukFg(name)===kunciNamaMasterProdukFg(row.productName));
+        const productName=existing||row.productName;
+        if(!existing){masterProdukFg.push(productName);added++;}
+        let changed=false;
+        if(row.standard8h>0&&ambilTargetStandarFg(productName)!==row.standard8h){
+          masterTargetFg[productName]=row.standard8h;changed=true;
+        }
+        if(row.pcsPerBox>0&&ambilPcsPerBoxStandarFg(productName)!==row.pcsPerBox){
+          masterPcsPerBoxFg[productName]=row.pcsPerBox;changed=true;
+        }
+        if(existing&&changed)updatedCount++;
+      });
+      simpanMasterProdukFgLokal();
+      const saved=await simpanMasterProdukFgCloud();
+      if(!saved){
+        alert("Standar sudah diterapkan pada data lokal perangkat ini, tetapi Cloud belum terverifikasi. Backup Master FG sebelumnya sudah dibuat. Periksa status Master FG sebelum mengulangi import.");
+        renderPreviewStandarMasterFg();
+        return;
+      }
+      const importedCount=pendingStandarMasterFgImport.length;
+      pendingStandarMasterFgImport=[];pendingStandarMasterFgConflicts=[];pendingStandarMasterFgMeta=null;
+      const input=document.getElementById("masterFgStandardFile");if(input)input.value="";
+      renderPreviewStandarMasterFg();
+      renderMasterErpMappingList();renderMasterErpPreview();
+      setStatusMasterErpMapping("success","Standar Master FG tersimpan dan diverifikasi • "+importedCount+" produk • "+added+" produk baru • "+updatedCount+" produk diperbarui.");
+      alert("Import standar berhasil diverifikasi di Cloud.\n• Produk diproses: "+importedCount+"\n• Produk baru: "+added+"\n• Produk diperbarui: "+updatedCount+"\n\nStandar 8 Jam dan Qty/Box kini digunakan pada input Finish Good.");
+    }
+
+    function batalImportStandarMasterFg() {
+      pendingStandarMasterFgImport=[];pendingStandarMasterFgConflicts=[];pendingStandarMasterFgMeta=null;
+      const input=document.getElementById("masterFgStandardFile");if(input)input.value="";
+      renderPreviewStandarMasterFg();
+    }
+
+    async function pastikanMasterErpSiapUntukHapus() {
+      if(masterErpMappingBusy)return false;
+      if(!masterErpMappingReady||masterErpMappingConflict){
+        const ready=await tarikMasterErpMappingCloud();
+        if(!ready||!masterErpMappingReady||masterErpMappingConflict){
+          alert("Data ERP belum berhasil disinkronkan dan diverifikasi. Penghapusan dibatalkan.");
+          return false;
+        }
+      }
+      return true;
+    }
+
+    async function hapusMasterErpMapping(index) {
+      if(!await pastikanMasterErpSiapUntukHapus())return;
+      const current=normalisasiMasterErpMappings(masterErpMappings);
+      const record=current[index];
+      if(!record)return;
+      const joCount=record.jobOrders.length;
+      if(!confirm("Hapus Item Code "+record.itemCode+" dari relasi ERP?\n\n"+record.itemName+"\n"+joCount+" relasi JO akan ikut terhapus dari daftar ERP. Nomor JO pada Master JO umum tidak dihapus."))return;
+      localStorage.setItem(MASTER_ERP_MAPPING_BACKUP_KEY,JSON.stringify({
+        savedAt:new Date().toISOString(),mappings:current,reason:"Backup sebelum menghapus Item Code "+record.itemCode
+      }));
+      masterErpMappings=current.filter((_,i)=>i!==index);
+      simpanMasterErpMappingLokal();
+      const saved=await simpanMasterErpMappingCloud();
+      if(saved){
+        setStatusMasterErpMapping("success","Item Code "+record.itemCode+" berhasil dihapus dan diverifikasi di Cloud.");
+      }else{
+        alert("Penghapusan sudah diterapkan pada perangkat ini, tetapi belum terverifikasi di Cloud. Backup data sebelumnya sudah dibuat. Sinkronkan ERP dan periksa status Cloud sebelum melanjutkan.");
+      }
+      renderMasterErpMappingList();
+    }
+
+    async function hapusSemuaMasterErpMapping() {
+      if(!await pastikanMasterErpSiapUntukHapus())return;
+      const current=normalisasiMasterErpMappings(masterErpMappings);
+      if(!current.length){alert("Belum ada data ERP yang dapat dihapus.");return;}
+      const joCount=current.reduce((sum,row)=>sum+row.jobOrders.length,0);
+      if(!confirm("HAPUS SEMUA DATA RELASI ERP?\n\n"+current.length+" Item Code dan "+joCount+" relasi JO akan dihapus dari daftar ERP.\n\nMaster FG dan Master JO umum TIDAK ikut dihapus. Backup lokal akan dibuat sebelum penghapusan."))return;
+      localStorage.setItem(MASTER_ERP_MAPPING_BACKUP_KEY,JSON.stringify({
+        savedAt:new Date().toISOString(),mappings:current,reason:"Backup sebelum menghapus seluruh relasi ERP"
+      }));
+      masterErpMappings=[];
+      simpanMasterErpMappingLokal();
+      const saved=await simpanMasterErpMappingCloud();
+      if(saved){
+        setStatusMasterErpMapping("success","Seluruh relasi ERP berhasil dihapus dan diverifikasi di Cloud. Master FG serta Master JO umum tetap dipertahankan.");
+        alert("Semua data relasi ERP berhasil dihapus dan diverifikasi di Cloud. Master FG dan Master JO umum tetap aman.");
+      }else{
+        alert("Penghapusan sudah diterapkan pada perangkat ini, tetapi belum terverifikasi di Cloud. Backup data sebelumnya sudah dibuat. Sinkronkan ERP dan periksa status Cloud.");
+      }
+      renderMasterErpMappingList();
     }
 
     async function bukaMasterErpMapping() {
