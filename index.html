@@ -6724,16 +6724,22 @@
       const deleteAllButton=document.getElementById("btnHapusSemuaMasterErp");
       if(deleteAllButton)deleteAllButton.disabled=!masterErpMappings.length||masterErpMappingBusy;
       if(!items.length){list.innerHTML='<div style="padding:14px;text-align:center;color:var(--text-muted);">Belum ada relasi ERP.</div>';return;}
-      list.innerHTML=items.map(({record,index})=>'<div style="padding:9px 3px;border-bottom:1px solid #e2e8f0;">'+
-        '<div style="display:flex;align-items:center;justify-content:space-between;gap:7px;flex-wrap:wrap;">'+
-          '<div style="font-size:.72rem;font-weight:800;color:var(--navy);">'+escapeHtmlMasterErp(record.itemCode)+' • '+record.jobOrders.length+' JO</div>'+
-          '<button class="btn btn-danger" type="button" style="font-size:.65rem;padding:5px 8px;" onclick="hapusMasterErpMapping('+index+')">🗑 Hapus Item Code</button>'+
-        '</div>'+
-        '<div style="font-size:.72rem;margin:3px 0;">'+escapeHtmlMasterErp(record.itemName)+'</div>'+
-        '<div style="font-size:.65rem;color:var(--text-muted);margin-bottom:5px;">JO: '+escapeHtmlMasterErp(record.jobOrders.join(", "))+'</div>'+
-        '<select style="width:100%;font-size:.72rem;" onchange="pilihPemetaanMasterErp('+index+',this.value)"><option value="">— Pilih produk Master FG —</option>'+
-        masterProdukFg.map(name=>'<option value="'+escapeHtmlMasterErp(name)+'" '+(kunciNamaMasterProdukFg(name)===kunciNamaMasterProdukFg(record.fgProductName)?"selected":"")+'>'+escapeHtmlMasterErp(name)+'</option>').join("")+'</select></div>'
-      ).join("");
+      list.innerHTML=items.map(({record,index})=>{
+        const isMapped=!!record.fgProductName;
+        const addButton=isMapped?"":'<button class="btn btn-primary" type="button" style="font-size:.65rem;padding:5px 8px;" onclick="tambahItemErpKeMasterFg('+index+')">＋ Add to Master FG</button>';
+        return '<div style="padding:9px 3px;border-bottom:1px solid #e2e8f0;">'+
+          '<div style="display:flex;align-items:center;justify-content:space-between;gap:7px;flex-wrap:wrap;">'+
+            '<div style="font-size:.72rem;font-weight:800;color:var(--navy);">'+escapeHtmlMasterErp(record.itemCode)+' • '+record.jobOrders.length+' JO</div>'+
+            '<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;">'+addButton+
+              '<button class="btn btn-danger" type="button" style="font-size:.65rem;padding:5px 8px;" onclick="hapusMasterErpMapping('+index+')">🗑 Hapus Item Code</button>'+
+            '</div>'+
+          '</div>'+
+          '<div style="font-size:.72rem;margin:3px 0;">'+escapeHtmlMasterErp(record.itemName)+'</div>'+
+          '<div style="font-size:.65rem;color:var(--text-muted);margin-bottom:5px;">JO: '+escapeHtmlMasterErp(record.jobOrders.join(", "))+'</div>'+
+          (isMapped?'<div style="font-size:.65rem;color:var(--emerald);font-weight:700;margin-bottom:5px;">✓ Terhubung ke Master FG</div>':'')+
+          '<select style="width:100%;font-size:.72rem;" onchange="pilihPemetaanMasterErp('+index+',this.value)"><option value="">— Pilih produk Master FG —</option>'+
+          masterProdukFg.map(name=>'<option value="'+escapeHtmlMasterErp(name)+'" '+(kunciNamaMasterProdukFg(name)===kunciNamaMasterProdukFg(record.fgProductName)?"selected":"")+'>'+escapeHtmlMasterErp(name)+'</option>').join("")+'</select></div>';
+      }).join("");
     }
 
     function renderMasterErpPreview() {
@@ -6907,6 +6913,89 @@
       pendingErpImport=[];pendingErpImportConflicts=[];
       const input=document.getElementById("masterErpFile");if(input)input.value="";
       renderMasterErpPreview();
+    }
+
+    async function tambahItemErpKeMasterFg(index) {
+      const initialRecord=masterErpMappings[index];
+      if(!initialRecord)return;
+      const itemCode=initialRecord.itemCode;
+      if(masterErpMappingBusy||masterProdukFgBusy){
+        alert("Proses sinkronisasi Master sedang berjalan. Coba kembali setelah selesai.");
+        return;
+      }
+
+      // Pastikan kedua sumber Cloud sudah tervalidasi sebelum perubahan.
+      if(!masterErpMappingReady||masterErpMappingConflict){
+        const erpReady=await tarikMasterErpMappingCloud();
+        if(!erpReady||!masterErpMappingReady||masterErpMappingConflict){
+          alert("Data ERP belum berhasil disinkronkan. Item tidak ditambahkan ke Master FG.");
+          return;
+        }
+      }
+      if(!masterProdukFgReady||masterProdukFgConflict){
+        const fgReady=await tarikMasterProdukFgCloud();
+        if(!fgReady||!masterProdukFgReady||masterProdukFgConflict){
+          alert("Master FG Cloud belum berhasil disinkronkan. Item tidak ditambahkan.");
+          return;
+        }
+      }
+
+      const record=masterErpMappings.find(row=>row.itemCode===itemCode);
+      if(!record){alert("Item Code tidak ditemukan setelah sinkronisasi ERP.");return;}
+      const itemName=String(record.itemName||"").normalize("NFKC")
+        .replace(/[\u200B-\u200D\uFEFF]/g,"").trim().replace(/\s+/g," ");
+      if(!itemName){alert("Item Name ERP kosong. Produk tidak dapat ditambahkan.");return;}
+
+      const existing=masterProdukFg.find(name=>
+        kunciNamaMasterProdukFg(name)===kunciNamaMasterProdukFg(itemName)
+      );
+      const productName=existing||itemName;
+      let added=false;
+
+      if(!existing){
+        const previousProducts=normalisasiMasterProdukFg(masterProdukFg);
+        const previousTargets=normalisasiTargetMasterFg(masterTargetFg,masterProdukFg);
+        const previousPcsPerBox=normalisasiPcsPerBoxMasterFg(masterPcsPerBoxFg,masterProdukFg);
+        localStorage.setItem(MASTER_PRODUK_FG_BACKUP_KEY,JSON.stringify({
+          savedAt:new Date().toISOString(),
+          products:previousProducts,targets:previousTargets,pcsPerBox:previousPcsPerBox,
+          reason:"Backup sebelum menambahkan Item Code ERP "+itemCode+" ke Master FG"
+        }));
+        masterProdukFg.push(itemName);
+        simpanMasterProdukFgLokal();
+        const savedFg=await simpanMasterProdukFgCloud();
+        if(!savedFg){
+          masterProdukFg=previousProducts;
+          masterTargetFg=previousTargets;
+          masterPcsPerBoxFg=previousPcsPerBox;
+          simpanMasterProdukFgLokal();
+          alert("Produk belum berhasil diverifikasi di Cloud Master FG. Perubahan lokal dikembalikan; backup juga tersedia.");
+          return;
+        }
+        added=true;
+      }
+
+      // Hubungkan Item Code ERP ke nama Master FG (produk lama jika sudah ada,
+      // atau nama Item Name ERP yang baru ditambahkan).
+      const previousMapping=record.fgProductName;
+      record.fgProductName=productName;
+      simpanMasterErpMappingLokal();
+      const savedMapping=await simpanMasterErpMappingCloud();
+      if(!savedMapping){
+        const current=masterErpMappings.find(row=>row.itemCode===itemCode);
+        if(current)current.fgProductName=previousMapping||"";
+        simpanMasterErpMappingLokal();
+        alert((added?"Produk sudah tersimpan di Master FG, tetapi ":"")+"relasi ERP belum berhasil diverifikasi di Cloud. Sinkronkan ERP sebelum melanjutkan.");
+        renderMasterErpMappingList();
+        return;
+      }
+
+      renderMasterProdukFg();
+      renderMasterErpMappingList();
+      renderMasterErpPreview();
+      setStatusMasterErpMapping("success",
+        (added?"Produk ditambahkan ke Master FG":"Produk sudah tersedia di Master FG")+
+        " dan Item Code "+itemCode+" berhasil dipetakan ke "+productName+".");
     }
 
     async function pilihPemetaanMasterErp(index,value) {
