@@ -3644,6 +3644,10 @@
         alert("Mohon isi Nama Leader/Operator, Nama Produk, dan Nomor JO pertama.");
         return;
       }
+      if(fgLastSelectedProductName&&kunciNamaMasterProdukFg(fgLastSelectedProductName)!==kunciNamaMasterProdukFg(productName)){
+        alert("Nama produk belum dipilih dari Master FG. Pilih produk dari daftar saran, atau tambahkan produk tersebut ke Master FG terlebih dahulu agar target dan Qty/Box tidak tertukar.");
+        return;
+      }
 
       for(let index=1;index<4;index++){
         const current=jobs[index],previous=jobs[index-1];
