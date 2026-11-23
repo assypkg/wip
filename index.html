@@ -1550,26 +1550,42 @@
             <button class="btn btn-danger" onclick="hapusSemuaFg()">🗑️ Reset FG</button>
           </div>
         </div>
-        <div class="fg-report-time-toolbar" style="display:grid;grid-template-columns:minmax(105px,150px) minmax(0,1fr);gap:8px;align-items:end;padding:9px 10px;margin:-2px 0 12px;background:#f8fafc;border:1px solid var(--border);border-radius:9px;">
-          <div>
-            <label for="fgTime" style="margin-bottom:4px;">🕒 Jam Laporan</label>
-            <input type="text" id="fgTime" value="23.00" inputmode="numeric" maxlength="5" placeholder="19.30" aria-label="Jam laporan Finish Good" oninput="onFgReportTimeInput()" onchange="validasiJamLaporanFg(this)" onblur="validasiJamLaporanFg(this)" style="padding:8px 9px;font-size:.9rem;font-weight:800;text-align:center;" />
-          </div>
+        <div class="fg-report-time-toolbar" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 11px;margin:-2px 0 12px;background:#f8fafc;border:1px solid var(--border);border-radius:9px;">
           <div style="min-width:0;">
-            <div style="font-size:.65rem;font-weight:800;color:var(--navy);margin-bottom:5px;">PILIHAN CEPAT JAM LAPORAN</div>
-            <div style="display:flex;gap:5px;flex-wrap:wrap;">
-              <button type="button" class="btn btn-outline fg-time-preset" data-time="10.00" onclick="pilihJamLaporanFg('10.00')" style="padding:6px 9px;font-size:.7rem;">10.00</button>
-              <button type="button" class="btn btn-outline fg-time-preset" data-time="12.00" onclick="pilihJamLaporanFg('12.00')" style="padding:6px 9px;font-size:.7rem;">12.00</button>
-              <button type="button" class="btn btn-outline fg-time-preset" data-time="15.00" onclick="pilihJamLaporanFg('15.00')" style="padding:6px 9px;font-size:.7rem;">15.00</button>
-              <button type="button" class="btn btn-outline fg-time-preset" data-time="17.00" onclick="pilihJamLaporanFg('17.00')" style="padding:6px 9px;font-size:.7rem;">17.00</button>
-              <button type="button" class="btn btn-outline fg-time-preset" data-time="19.30" onclick="pilihJamLaporanFg('19.30')" style="padding:6px 9px;font-size:.7rem;">19.30</button>
-              <button type="button" class="btn btn-outline fg-time-preset" data-time="21.00" onclick="pilihJamLaporanFg('21.00')" style="padding:6px 9px;font-size:.7rem;">21.00</button>
-              <button type="button" class="btn btn-outline fg-time-preset" data-time="23.00" onclick="pilihJamLaporanFg('23.00')" style="padding:6px 9px;font-size:.7rem;">23.00</button>
-              <button type="button" class="btn btn-outline fg-time-preset" data-time="06.00" onclick="pilihJamLaporanFg('06.00')" style="padding:6px 9px;font-size:.7rem;">06.00</button>
-              <button type="button" class="btn btn-outline fg-time-preset" data-time="07.00" onclick="pilihJamLaporanFg('07.00')" style="padding:6px 9px;font-size:.7rem;">07.00</button>
+            <div style="font-size:.66rem;font-weight:800;color:var(--navy);">🕒 JAM LAPORAN</div>
+            <div id="fgTimeDisplay" style="font-size:1.05rem;font-weight:900;color:var(--navy);margin-top:2px;">23.00</div>
+          </div>
+          <button type="button" class="btn btn-outline" onclick="bukaPopupJamLaporanFg()" style="min-height:40px;padding:8px 12px;white-space:nowrap;">🕒 Pilih Jam Laporan</button>
+          <input type="hidden" id="fgTime" value="23.00" />
+        </div>
+
+        <div id="fgTimePickerModal" class="modal-backdrop" onclick="if(event.target===this)toggleModal('fgTimePickerModal',false)">
+          <div class="modal-card" style="max-width:420px;">
+            <div class="card-header">
+              <span class="card-title">🕒 Pilihan Jam Laporan</span>
+              <button type="button" class="btn btn-danger" onclick="toggleModal('fgTimePickerModal',false)">✕ Tutup</button>
+            </div>
+            <p style="font-size:.73rem;color:var(--text-muted);margin:0 0 10px;">Pilih jam yang akan ditampilkan pada judul laporan WhatsApp. Jam per SPA dan per Job Order tetap mengikuti durasi masing-masing.</p>
+            <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;">
+              <button type="button" class="btn btn-outline fg-time-preset" data-time="10.00" onclick="pilihJamLaporanFg('10.00')">10.00</button>
+              <button type="button" class="btn btn-outline fg-time-preset" data-time="12.00" onclick="pilihJamLaporanFg('12.00')">12.00</button>
+              <button type="button" class="btn btn-outline fg-time-preset" data-time="15.00" onclick="pilihJamLaporanFg('15.00')">15.00</button>
+              <button type="button" class="btn btn-outline fg-time-preset" data-time="17.00" onclick="pilihJamLaporanFg('17.00')">17.00</button>
+              <button type="button" class="btn btn-outline fg-time-preset" data-time="19.30" onclick="pilihJamLaporanFg('19.30')">19.30</button>
+              <button type="button" class="btn btn-outline fg-time-preset" data-time="21.00" onclick="pilihJamLaporanFg('21.00')">21.00</button>
+              <button type="button" class="btn btn-outline fg-time-preset" data-time="23.00" onclick="pilihJamLaporanFg('23.00')">23.00</button>
+              <button type="button" class="btn btn-outline fg-time-preset" data-time="06.00" onclick="pilihJamLaporanFg('06.00')">06.00</button>
+              <button type="button" class="btn btn-outline fg-time-preset" data-time="07.00" onclick="pilihJamLaporanFg('07.00')">07.00</button>
+            </div>
+            <div style="border-top:1px solid var(--border);margin-top:14px;padding-top:12px;">
+              <label for="fgTimeCustomInput">Atau masukkan jam sendiri</label>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <input type="text" id="fgTimeCustomInput" inputmode="numeric" maxlength="5" placeholder="Contoh: 14.30" style="text-align:center;font-weight:800;" />
+                <button type="button" class="btn btn-primary" onclick="terapkanJamLaporanManualFg()" style="white-space:nowrap;">Terapkan</button>
+              </div>
+              <div style="font-size:.67rem;color:var(--text-muted);margin-top:6px;">Gunakan format HH.MM, misalnya 14.30 atau 18.45.</div>
             </div>
           </div>
-          <div id="fgReportTimeHint" style="grid-column:1/-1;font-size:.64rem;color:var(--text-muted);margin-top:-2px;">Jam ini otomatis digunakan pada judul Laporan WhatsApp. Anda juga bisa mengetik jam lain, misalnya 14.30.</div>
         </div>
 
         <!-- OPSI GABUNG DENGAN SISA BARANG BAGUS WIP -->
@@ -3542,7 +3558,9 @@
       const input=document.getElementById("fgTime");
       if(!input)return;
       const normalized=normalisasiJamLaporanFinishGood(input.value);
+      const display=document.getElementById("fgTimeDisplay");
       if(normalized)input.dataset.lastValid=normalized;
+      if(display)display.textContent=normalized||input.value||"--.--";
       document.querySelectorAll(".fg-time-preset").forEach(button=>{
         button.classList.toggle("active",!!normalized&&button.dataset.time===normalized);
         button.setAttribute("aria-pressed",String(!!normalized&&button.dataset.time===normalized));
@@ -3571,6 +3589,35 @@
       return !!normalized;
     }
 
+    function bukaPopupJamLaporanFg() {
+      const current=normalisasiJamLaporanFinishGood(document.getElementById("fgTime")?.value)||"23.00";
+      const manual=document.getElementById("fgTimeCustomInput");
+      if(manual)manual.value=current;
+      perbaruiPresetJamLaporanFg();
+      toggleModal("fgTimePickerModal",true);
+    }
+
+    function terapkanJamLaporanManualFg() {
+      const input=document.getElementById("fgTime");
+      const manual=document.getElementById("fgTimeCustomInput");
+      const normalized=normalisasiJamLaporanFinishGood(manual?.value||"");
+      if(!normalized){
+        alert("Format jam tidak valid. Gunakan HH.MM, contoh 14.30.");
+        manual?.focus();
+        return false;
+      }
+      if(input){
+        input.value=normalized;
+        input.dataset.lastValid=normalized;
+      }
+      if(manual)manual.value=normalized;
+      perbaruiPresetJamLaporanFg();
+      simpanDraftLokal();
+      renderFgAll();
+      toggleModal("fgTimePickerModal",false);
+      return true;
+    }
+
     function pilihJamLaporanFg(value) {
       const input=document.getElementById("fgTime");
       const normalized=normalisasiJamLaporanFinishGood(value);
@@ -3580,6 +3627,7 @@
       perbaruiPresetJamLaporanFg();
       simpanDraftLokal();
       renderFgAll();
+      toggleModal("fgTimePickerModal",false);
     }
 
     function onFgShiftChange() {
@@ -4113,7 +4161,9 @@
 
       const tgl=formatTanggalLaporan(document.getElementById("fgDate").value);
       const jam=document.getElementById("fgTime").value.trim()||"23.00";
-      const shift=document.getElementById("fgShift").value;
+      const shiftRaw=document.getElementById("fgShift").value;
+      const shiftMatch=String(shiftRaw||"").match(/^SHIFT\s*[123]/i);
+      const shift=shiftMatch?shiftMatch[0].replace(/\s+/g," ").toUpperCase():String(shiftRaw||"").trim().toUpperCase();
       const plant=document.getElementById("fgPlant").value;
       let wa="*LAPORAN HASIL PRODUKSI "+plant+" JAM "+jam+" TANGGAL "+tgl+" ("+shift+")*\n━━━━━━━━━━━━━━━━━━━━\n\n";
 
