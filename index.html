@@ -6227,6 +6227,256 @@
       }
     }
 
+    function kunciItemCodeErp(value) {
+      return String(value||"").normalize("NFKC").replace(/[\u200B-\u200D\uFEFF]/g,"").trim().toUpperCase().replace(/\s+/g,"");
+    }
+
+    function normalisasiMasterErpMappings(list) {
+      const byCode=new Map();
+      (Array.isArray(list)?list:[]).forEach(raw=>{
+        const itemCode=kunciItemCodeErp(raw?.itemCode);
+        const itemName=String(raw?.itemName||"").normalize("NFKC").replace(/[\u200B-\u200D\uFEFF]/g,"").trim().replace(/\s+/g," ");
+        if(!itemCode||!itemName)return;
+        if(!byCode.has(itemCode))byCode.set(itemCode,{itemCode,itemName,fgProductName:String(raw?.fgProductName||"").trim(),jobOrders:[]});
+        const row=byCode.get(itemCode);
+        (Array.isArray(raw?.jobOrders)?raw.jobOrders:[]).forEach(jo=>{
+          const value=String(jo||"").trim().toUpperCase().replace(/\s+/g,"");
+          if(value&&!row.jobOrders.includes(value))row.jobOrders.push(value);
+        });
+        if(!row.fgProductName&&raw?.fgProductName)row.fgProductName=String(raw.fgProductName).trim();
+      });
+      return [...byCode.values()].map(row=>({
+        itemCode:row.itemCode,
+        itemName:row.itemName,
+        fgProductName:masterProdukFg.find(name=>kunciNamaMasterProdukFg(name)===kunciNamaMasterProdukFg(row.fgProductName||row.itemName))||row.fgProductName||"",
+        jobOrders:normalisasiMasterJobOrder(row.jobOrders)
+      })).sort((a,b)=>new Intl.Collator("id",{numeric:true,sensitivity:"base"}).compare(a.itemCode,b.itemCode));
+    }
+
+    function simpanMasterErpMappingLokal() {
+      masterErpMappings=normalisasiMasterErpMappings(masterErpMappings);
+      localStorage.setItem(MASTER_ERP_MAPPING_KEY,JSON.stringify(masterErpMappings));
+      renderMasterErpMappingList();
+    }
+
+    function setStatusMasterErpMapping(type,message) {
+      const box=document.getElementById("masterErpCloudStatus");
+      if(!box)return;
+      const styles={syncing:["#eff6ff","#1d4ed8","⏳"],success:["#ecfdf5","#166534","☁️"],warning:["#fffbeb","#92400e","⚠️"],error:["#fef2f2","#b91c1c","❌"],conflict:["#fff7ed","#9a3412","🛡️"]};
+      const style=styles[type]||styles.warning;
+      box.style.background=style[0];box.style.color=style[1];box.style.borderColor=style[1]+"66";box.textContent=style[2]+" "+message;
+    }
+
+    async function tarikMasterErpMappingCloud() {
+      if(masterErpMappingBusy)return false;
+      masterErpMappingBusy=true;
+      setStatusMasterErpMapping("syncing","Memeriksa relasi Item Code, produk, dan JO di Cloud...");
+      try {
+        const url=getFirestoreBaseUrl()+"/"+COLLECTION_MASTER+"/master_erp_produk_jo";
+        const res=await fetch(url,{cache:"no-store"});
+        if(res.status===404) {
+          if(localStorage.getItem(MASTER_ERP_MAPPING_UPDATE_KEY)) {
+            masterErpMappingConflict=true;
+            localStorage.setItem(MASTER_ERP_MAPPING_BACKUP_KEY,JSON.stringify({savedAt:new Date().toISOString(),mappings:masterErpMappings}));
+            setStatusMasterErpMapping("conflict","Dokumen ERP Cloud tidak ditemukan. Data lokal diamankan dan tidak ditimpa.");
+            return false;
+          }
+          masterErpMappingReady=true;
+          if(masterErpMappings.length)masterErpMappingBootstrapQueued=true;
+          setStatusMasterErpMapping("warning",masterErpMappings.length?"Dokumen ERP Cloud belum ada. Data lokal siap diinisialisasi ke Cloud.":"Belum ada relasi ERP. Upload file .HTM untuk memulai.");
+          return true;
+        }
+        if(!res.ok)throw new Error("Firestore GET gagal (HTTP "+res.status+")");
+        const doc=await res.json();
+        const remote=JSON.parse(doc.fields?.mappingsJson?.stringValue||"[]");
+        if(!Array.isArray(remote))throw new Error("Struktur relasi ERP Cloud tidak valid.");
+        const normalized=normalisasiMasterErpMappings(remote);
+        const baseTime=localStorage.getItem(MASTER_ERP_MAPPING_UPDATE_KEY);
+        const baseRaw=localStorage.getItem(MASTER_ERP_MAPPING_BASE_KEY);
+        const base=baseRaw?JSON.parse(baseRaw):null;
+        const local=normalisasiMasterErpMappings(masterErpMappings);
+        const localChanged=!!base&&JSON.stringify(local)!==JSON.stringify(normalisasiMasterErpMappings(base));
+        if(!baseTime||!base) {
+          if(local.length&&JSON.stringify(local)!==JSON.stringify(normalized))
+            localStorage.setItem(MASTER_ERP_MAPPING_BACKUP_KEY,JSON.stringify({savedAt:new Date().toISOString(),mappings:local,reason:"Backup sebelum mengikuti ERP Cloud"}));
+          masterErpMappings=normalized;
+        } else if(doc.updateTime!==baseTime) {
+          if(localChanged) {
+            masterErpMappingConflict=true;
+            localStorage.setItem(MASTER_ERP_MAPPING_BACKUP_KEY,JSON.stringify({savedAt:new Date().toISOString(),mappings:local,cloudMappings:normalized}));
+            setStatusMasterErpMapping("conflict","Lokal dan Cloud sama-sama berubah. Backup dibuat; penyimpanan dihentikan.");
+            return false;
+          }
+          masterErpMappings=normalized;
+        } else masterErpMappings=local;
+        localStorage.setItem(MASTER_ERP_MAPPING_BASE_KEY,JSON.stringify(normalized));
+        localStorage.setItem(MASTER_ERP_MAPPING_UPDATE_KEY,doc.updateTime||"");
+        masterErpMappingReady=true;
+        masterErpMappingConflict=false;
+        simpanMasterErpMappingLokal();
+        setStatusMasterErpMapping("success","Sinkron dan terverifikasi • "+masterErpMappings.length+" Item Code • "+masterErpMappings.reduce((n,x)=>n+x.jobOrders.length,0)+" relasi JO.");
+        return true;
+      } catch(e) {
+        masterErpMappingReady=false;
+        setStatusMasterErpMapping("error","Tidak dapat memverifikasi ERP Cloud: "+e.message+". Data lokal tidak diubah.");
+        return false;
+      } finally {
+        masterErpMappingBusy=false;
+        if(masterErpMappingBootstrapQueued&&masterErpMappingReady&&!masterErpMappingConflict) {
+          masterErpMappingBootstrapQueued=false;
+          simpanMasterErpMappingCloud();
+        }
+      }
+    }
+
+    async function simpanMasterErpMappingCloud() {
+      if(!masterErpMappingReady||masterErpMappingBusy||masterErpMappingConflict) {
+        setStatusMasterErpMapping(masterErpMappingConflict?"conflict":"warning","Lokal tersimpan, tetapi Cloud belum siap atau terdapat konflik. Sinkronkan sebelum mencoba lagi.");
+        return false;
+      }
+      masterErpMappingBusy=true;
+      setStatusMasterErpMapping("syncing","Menyimpan relasi ERP dan memverifikasi Cloud...");
+      try {
+        const url=getFirestoreBaseUrl()+"/"+COLLECTION_MASTER+"/master_erp_produk_jo";
+        const check=await fetch(url,{cache:"no-store"});
+        const baseTime=localStorage.getItem(MASTER_ERP_MAPPING_UPDATE_KEY);
+        let updateTime=null;
+        if(check.status===404) {
+          if(baseTime)throw new Error("Dokumen ERP Cloud hilang; data lokal tidak ditimpa.");
+        } else {
+          if(!check.ok)throw new Error("Firestore GET gagal (HTTP "+check.status+")");
+          const current=await check.json();
+          updateTime=current.updateTime;
+          if(!baseTime||updateTime!==baseTime) {
+            masterErpMappingConflict=true;
+            localStorage.setItem(MASTER_ERP_MAPPING_BACKUP_KEY,JSON.stringify({savedAt:new Date().toISOString(),mappings:masterErpMappings}));
+            setStatusMasterErpMapping("conflict","Versi Cloud berubah. Data lokal diamankan; sinkronkan ulang sebelum menyimpan.");
+            return false;
+          }
+        }
+        const snapshot=normalisasiMasterErpMappings(masterErpMappings);
+        const patchUrl=new URL(url);
+        if(updateTime)patchUrl.searchParams.set("currentDocument.updateTime",updateTime);
+        else patchUrl.searchParams.set("currentDocument.exists","false");
+        const payload={fields:{updatedAt:{stringValue:new Date().toISOString()},mappingsJson:{stringValue:JSON.stringify(snapshot)}}};
+        const saved=await fetch(patchUrl.toString(),{method:"PATCH",cache:"no-store",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+        if(saved.status===409||saved.status===412)throw new Error("Konflik versi saat menyimpan (HTTP "+saved.status+")");
+        if(!saved.ok)throw new Error("Firestore PATCH gagal (HTTP "+saved.status+")");
+        const savedDoc=await saved.json();
+        const verify=await fetch(url,{cache:"no-store"});
+        if(!verify.ok)throw new Error("ERP tersimpan tetapi verifikasi baca ulang Cloud gagal (HTTP "+verify.status+").");
+        const verified=await verify.json();
+        const remote=normalisasiMasterErpMappings(JSON.parse(verified.fields?.mappingsJson?.stringValue||"[]"));
+        if(JSON.stringify(remote)!==JSON.stringify(snapshot))throw new Error("Data hasil verifikasi Cloud berbeda dari data ERP yang dikirim.");
+        localStorage.setItem(MASTER_ERP_MAPPING_BASE_KEY,JSON.stringify(snapshot));
+        localStorage.setItem(MASTER_ERP_MAPPING_UPDATE_KEY,verified.updateTime||savedDoc.updateTime||"");
+        masterErpMappingReady=true;
+        setStatusMasterErpMapping("success","Berhasil disimpan dan diverifikasi • "+snapshot.length+" Item Code • "+snapshot.reduce((n,x)=>n+x.jobOrders.length,0)+" relasi JO.");
+        return true;
+      } catch(e) {
+        setStatusMasterErpMapping("error","Gagal menyimpan ERP Cloud: "+e.message+". Data lokal tetap tersedia.");
+        return false;
+      } finally {
+        masterErpMappingBusy=false;
+      }
+    }
+
+    function escapeHtmlMasterErp(value) {
+      return String(value??"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
+    }
+
+    function cariMappingErpDariJo(jobOrder) {
+      const jo=String(jobOrder||"").trim().toUpperCase().replace(/\s+/g,"");
+      return masterErpMappings.find(row=>row.jobOrders.includes(jo))||null;
+    }
+
+    function cariMappingErpDariProduk(productName) {
+      const key=kunciNamaMasterProdukFg(productName);
+      if(!key)return [];
+      return masterErpMappings.filter(row=>row.fgProductName&&kunciNamaMasterProdukFg(row.fgProductName)===key);
+    }
+
+    function daftarJoErpUntukProduk(productName,exclude=[]) {
+      const rows=cariMappingErpDariProduk(productName);
+      if(!rows.length)return normalisasiMasterJobOrder(masterJobOrders).filter(jo=>!exclude.includes(jo));
+      const set=new Set();
+      rows.forEach(row=>row.jobOrders.forEach(jo=>{if(!exclude.includes(jo))set.add(jo);}));
+      return [...set].sort((a,b)=>new Intl.Collator("id",{numeric:true,sensitivity:"base"}).compare(a,b));
+    }
+
+    function pilihProdukMasterFg(productName) {
+      const input=document.getElementById("fgProductName");
+      if(!input)return false;
+      const next=String(productName||"").trim();
+      const current=String(input.value||"").trim();
+      const changed=kunciNamaMasterProdukFg(current)!==kunciNamaMasterProdukFg(next);
+      const hasExisting=!!(document.getElementById("fgJobOrder")?.value||document.getElementById("fgBoxA")?.value||document.getElementById("fgBoxB")?.value||
+        [2,3,4].some(i=>["JobOrder","BoxA","BoxB","RecehAQty","RecehBQty"].some(k=>document.getElementById("fg"+k+i)?.value)));
+      if(changed&&current&&hasExisting) {
+        if(!confirm("Mengganti nama produk akan mengosongkan JO dan hasil yang sudah dimasukkan untuk produk sebelumnya. Lanjutkan?"))return false;
+        kosongkanInputJobOrderTambahanFg();
+        document.getElementById("fgJobOrder").value="";
+      }
+      input.value=next;
+      fgTargetTouched=false;
+      hitungTargetFgOtomatis(true);
+      const perBox=terapkanPcsPerBoxMasterFg(next,true);
+      if(changed) {
+        const list=daftarJoErpUntukProduk(next);
+        document.getElementById("fgJobOrder").value=list.length===1?list[0]:"";
+      }
+      const target=ambilTargetStandarFg(next);
+      if(!target||!perBox) {
+        const status=[];
+        if(!target)status.push("Target 8 jam belum diatur di Master FG.");
+        if(!perBox)status.push("Qty/Box belum diatur di Master FG.");
+        if(status.length)setStatusMasterErpMapping("warning",status.join(" "));
+      }
+      tutupFgProductSuggestions();
+      hitungTargetFgOtomatis(true);
+      hitungPreviewFg();
+      simpanDraftLokal();
+      return true;
+    }
+
+    function pilihJobOrderFg(index,jobOrder) {
+      const jo=String(jobOrder||"").trim().toUpperCase().replace(/\s+/g,"");
+      if(!jo)return false;
+      const productInput=document.getElementById("fgProductName");
+      const currentProduct=String(productInput?.value||"").trim();
+      const selected=[1,2,3,4].filter(i=>{
+        const id="fgJobOrder"+(i===1?"":i);
+        return (document.getElementById(id)?.value||"").trim().toUpperCase().replace(/\s+/g,"")===jo;
+      });
+      if(selected.length&&selected[0]!==index) {
+        alert("Nomor JO sudah dipilih pada JO ke-"+selected[0]+". Pilih nomor JO yang berbeda.");
+        return false;
+      }
+      const mapping=cariMappingErpDariJo(jo);
+      if(mapping?.fgProductName) {
+        if(currentProduct&&kunciNamaMasterProdukFg(currentProduct)!==kunciNamaMasterProdukFg(mapping.fgProductName)) {
+          alert("JO "+jo+" terhubung ke produk "+mapping.fgProductName+", bukan produk yang sedang dipilih.");
+          return false;
+        }
+        if(!currentProduct) {
+          productInput.value=mapping.fgProductName;
+          fgTargetTouched=false;
+          hitungTargetFgOtomatis(true);
+          terapkanPcsPerBoxMasterFg(mapping.fgProductName,true);
+        }
+      }
+      const input=document.getElementById("fgJobOrder"+(index===1?"":index));
+      if(!input)return false;
+      input.value=jo;
+      if(index===1)tutupFgJobOrderSuggestions();
+      else if(index===2)tutupFgJobOrderSuggestions2();
+      else tutupFgJobOrderSuggestionsExtra(index);
+      hitungTargetFgOtomatis(true);
+      hitungPreviewFg();
+      simpanDraftLokal();
+      return true;
+    }
+
     function normalisasiMasterJobOrder(list) {
       const seen = new Set();
       return (Array.isArray(list) ? list : []).map(value => String(value || "").trim().toUpperCase().replace(/\s+/g,""))
