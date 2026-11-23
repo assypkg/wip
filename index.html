@@ -1403,7 +1403,7 @@
         </div>
 
         <details class="fg-second-jo" id="fgSecondJoPanel">
-          <summary>＋ Tambah Job Order ke-2 (Opsional)</summary>
+          <summary>＋ Tambah Job Order ke-2, ke-3, atau ke-4 (Opsional)</summary>
           <div class="fg-second-jo-body">
             <p class="fg-second-jo-help">Gunakan bagian ini jika nama produk yang sama dikerjakan untuk dua nomor JO dalam satu laporan. Qty per box mengikuti Isi Per Box di atas.</p>
             <label for="fgJobOrder2">Nomor Job Order ke-2</label>
@@ -1432,6 +1432,40 @@
               </div>
             </div>
             <div id="fgJo2BreakdownPreview" class="fg-second-jo-preview">Hasil JO 2 akan tampil di sini setelah diisi.</div>
+            <details class="fg-second-jo fg-extra-jo" id="fgThirdJoPanel">
+              <summary>＋ Tambah Job Order ke-3</summary>
+              <div class="fg-second-jo-body">
+                <label for="fgJobOrder3">Nomor Job Order ke-3</label>
+                <div class="fg-job-order-search-wrap" style="position:relative;">
+                  <input type="text" id="fgJobOrder3" placeholder="Pilih atau ketik nomor JO ketiga..." autocomplete="off" oninput="onFgJobOrderType3(); hitungPreviewFg(); simpanDraftLokal();" onfocus="onFgJobOrderType3()" onkeydown="onFgJobOrderKey3(event)" aria-controls="fgJobOrderSuggestions3" aria-expanded="false" />
+                  <div class="quick-results" id="fgJobOrderSuggestions3" role="listbox" aria-label="Saran nomor Job Order ketiga"></div>
+                </div>
+                <div class="fg-second-jo-grid">
+                  <div><label>Lot A JO 3 — Jumlah Box</label><input type="text" inputmode="numeric" id="fgBoxA3" placeholder="Misal: 2" oninput="this.value=this.value.replace(/[^0-9]/g,''); hitungPreviewFg(); simpanDraftLokal();" /></div>
+                  <div><label>Lot B JO 3 — Jumlah Box</label><input type="text" inputmode="numeric" id="fgBoxB3" placeholder="Misal: 3" oninput="this.value=this.value.replace(/[^0-9]/g,''); hitungPreviewFg(); simpanDraftLokal();" /></div>
+                  <div><label>Receh Lot A JO 3 (PCS)</label><input type="text" inputmode="text" id="fgRecehAQty3" placeholder="Misal: 100+250" oninput="this.value=this.value.replace(/[^0-9+]/g,'').replace(/\+{2,}/g,'+'); hitungPreviewFg(); simpanDraftLokal();" /><small>Setiap angka = 1 box receh.</small></div>
+                  <div><label>Receh Lot B JO 3 (PCS)</label><input type="text" inputmode="text" id="fgRecehBQty3" placeholder="Misal: 100+250" oninput="this.value=this.value.replace(/[^0-9+]/g,'').replace(/\+{2,}/g,'+'); hitungPreviewFg(); simpanDraftLokal();" /><small>Setiap angka = 1 box receh.</small></div>
+                </div>
+                <div id="fgJo3BreakdownPreview" class="fg-second-jo-preview">Hasil JO 3 akan tampil di sini setelah diisi.</div>
+              </div>
+            </details>
+            <details class="fg-second-jo fg-extra-jo" id="fgFourthJoPanel">
+              <summary>＋ Tambah Job Order ke-4</summary>
+              <div class="fg-second-jo-body">
+                <label for="fgJobOrder4">Nomor Job Order ke-4</label>
+                <div class="fg-job-order-search-wrap" style="position:relative;">
+                  <input type="text" id="fgJobOrder4" placeholder="Pilih atau ketik nomor JO keempat..." autocomplete="off" oninput="onFgJobOrderType4(); hitungPreviewFg(); simpanDraftLokal();" onfocus="onFgJobOrderType4()" onkeydown="onFgJobOrderKey4(event)" aria-controls="fgJobOrderSuggestions4" aria-expanded="false" />
+                  <div class="quick-results" id="fgJobOrderSuggestions4" role="listbox" aria-label="Saran nomor Job Order keempat"></div>
+                </div>
+                <div class="fg-second-jo-grid">
+                  <div><label>Lot A JO 4 — Jumlah Box</label><input type="text" inputmode="numeric" id="fgBoxA4" placeholder="Misal: 2" oninput="this.value=this.value.replace(/[^0-9]/g,''); hitungPreviewFg(); simpanDraftLokal();" /></div>
+                  <div><label>Lot B JO 4 — Jumlah Box</label><input type="text" inputmode="numeric" id="fgBoxB4" placeholder="Misal: 3" oninput="this.value=this.value.replace(/[^0-9]/g,''); hitungPreviewFg(); simpanDraftLokal();" /></div>
+                  <div><label>Receh Lot A JO 4 (PCS)</label><input type="text" inputmode="text" id="fgRecehAQty4" placeholder="Misal: 100+250" oninput="this.value=this.value.replace(/[^0-9+]/g,'').replace(/\+{2,}/g,'+'); hitungPreviewFg(); simpanDraftLokal();" /><small>Setiap angka = 1 box receh.</small></div>
+                  <div><label>Receh Lot B JO 4 (PCS)</label><input type="text" inputmode="text" id="fgRecehBQty4" placeholder="Misal: 100+250" oninput="this.value=this.value.replace(/[^0-9+]/g,'').replace(/\+{2,}/g,'+'); hitungPreviewFg(); simpanDraftLokal();" /><small>Setiap angka = 1 box receh.</small></div>
+                </div>
+                <div id="fgJo4BreakdownPreview" class="fg-second-jo-preview">Hasil JO 4 akan tampil di sini setelah diisi.</div>
+              </div>
+            </details>
           </div>
         </details>
 
@@ -2385,6 +2419,18 @@
             fgBoxB2: document.getElementById("fgBoxB2")?.value || "",
             fgRecehAQty2: document.getElementById("fgRecehAQty2")?.value || "",
             fgRecehBQty2: document.getElementById("fgRecehBQty2")?.value || "",
+            fgJobOrder3: document.getElementById("fgJobOrder3")?.value || "",
+            fgBoxA3: document.getElementById("fgBoxA3")?.value || "",
+            fgBoxB3: document.getElementById("fgBoxB3")?.value || "",
+            fgRecehAQty3: document.getElementById("fgRecehAQty3")?.value || "",
+            fgRecehBQty3: document.getElementById("fgRecehBQty3")?.value || "",
+            fgJobOrder4: document.getElementById("fgJobOrder4")?.value || "",
+            fgBoxA4: document.getElementById("fgBoxA4")?.value || "",
+            fgBoxB4: document.getElementById("fgBoxB4")?.value || "",
+            fgRecehAQty4: document.getElementById("fgRecehAQty4")?.value || "",
+            fgRecehBQty4: document.getElementById("fgRecehBQty4")?.value || "",
+            fgThirdJoOpen: document.getElementById("fgThirdJoPanel")?.open || false,
+            fgFourthJoOpen: document.getElementById("fgFourthJoPanel")?.open || false,
             fgSecondJoOpen: document.getElementById("fgSecondJoPanel")?.open || false,
             mergeWipToggle: document.getElementById("mergeWipToggle")?.checked ?? true,
             waPreviewFg: document.getElementById("waPreviewFg")?.value || "",
@@ -2494,7 +2540,19 @@
         if (f.fgBoxB2 !== undefined) document.getElementById("fgBoxB2").value = f.fgBoxB2;
         if (f.fgRecehAQty2 !== undefined) document.getElementById("fgRecehAQty2").value = f.fgRecehAQty2;
         if (f.fgRecehBQty2 !== undefined) document.getElementById("fgRecehBQty2").value = f.fgRecehBQty2;
+        if (f.fgJobOrder3 !== undefined) document.getElementById("fgJobOrder3").value = f.fgJobOrder3;
+        if (f.fgBoxA3 !== undefined) document.getElementById("fgBoxA3").value = f.fgBoxA3;
+        if (f.fgBoxB3 !== undefined) document.getElementById("fgBoxB3").value = f.fgBoxB3;
+        if (f.fgRecehAQty3 !== undefined) document.getElementById("fgRecehAQty3").value = f.fgRecehAQty3;
+        if (f.fgRecehBQty3 !== undefined) document.getElementById("fgRecehBQty3").value = f.fgRecehBQty3;
+        if (f.fgJobOrder4 !== undefined) document.getElementById("fgJobOrder4").value = f.fgJobOrder4;
+        if (f.fgBoxA4 !== undefined) document.getElementById("fgBoxA4").value = f.fgBoxA4;
+        if (f.fgBoxB4 !== undefined) document.getElementById("fgBoxB4").value = f.fgBoxB4;
+        if (f.fgRecehAQty4 !== undefined) document.getElementById("fgRecehAQty4").value = f.fgRecehAQty4;
+        if (f.fgRecehBQty4 !== undefined) document.getElementById("fgRecehBQty4").value = f.fgRecehBQty4;
         if (f.fgSecondJoOpen) document.getElementById("fgSecondJoPanel").open = true;
+        if (f.fgThirdJoOpen) { document.getElementById("fgSecondJoPanel").open = true; document.getElementById("fgThirdJoPanel").open = true; }
+        if (f.fgFourthJoOpen) { document.getElementById("fgSecondJoPanel").open = true; document.getElementById("fgThirdJoPanel").open = true; document.getElementById("fgFourthJoPanel").open = true; }
         if (f.mergeWipToggle !== undefined) document.getElementById("mergeWipToggle").checked = f.mergeWipToggle;
         if (f.waFgManuallyEdited !== undefined) waFgManuallyEdited = !!f.waFgManuallyEdited;
         if (f.waPreviewFg !== undefined) document.getElementById("waPreviewFg").value = f.waPreviewFg;
@@ -3376,41 +3434,39 @@
         : formatNum(jo.totalBox) + " BOX @" + formatNum(jo.pcsPerBox);
     }
 
-    function hitungPreviewFg() {
-      const perBox = Number(document.getElementById("fgPcsPerBox").value) || 0;
-      const first = hitungDataHasilJoFg(
-        document.getElementById("fgJobOrder").value,
-        document.getElementById("fgBoxA").value,
-        document.getElementById("fgBoxB").value,
-        document.getElementById("fgRecehAQty").value,
-        document.getElementById("fgRecehBQty").value,
-        perBox
-      );
-      const secondJo = String(document.getElementById("fgJobOrder2")?.value || "").trim();
-      const second = hitungDataHasilJoFg(
-        secondJo,
-        document.getElementById("fgBoxA2")?.value,
-        document.getElementById("fgBoxB2")?.value,
-        document.getElementById("fgRecehAQty2")?.value,
-        document.getElementById("fgRecehBQty2")?.value,
-        perBox
-      );
-      const includeSecond = !!secondJo || second.totalBox > 0;
-      const totalBox = first.totalBox + (includeSecond ? second.totalBox : 0);
-      const totalPcs = first.totalPcs + (includeSecond ? second.totalPcs : 0);
+    function ambilInputJobOrdersFg() {
+      const perBox=Number(document.getElementById("fgPcsPerBox").value)||0;
+      return [1,2,3,4].map(index=>{
+        const suffix=index===1?"":String(index);
+        const byId=id=>document.getElementById("fg"+id+suffix)?.value ?? "";
+        return hitungDataHasilJoFg(
+          byId("JobOrder"),byId("BoxA"),byId("BoxB"),
+          byId("RecehAQty"),byId("RecehBQty"),perBox
+        );
+      });
+    }
 
+    function hitungPreviewFg() {
+      const jobs=ambilInputJobOrdersFg();
+      const first=jobs[0];
+      const validJobs=jobs.filter((jo,index)=>index===0||jo.jobOrder||jo.totalBox>0);
+      const totalBox=validJobs.reduce((sum,jo)=>sum+jo.totalBox,0);
+      const totalPcs=validJobs.reduce((sum,jo)=>sum+jo.totalPcs,0);
+      const lines=[];
+      validJobs.forEach((jo,index)=>{
+        lines.push("JO "+(index+1)+": "+(jo.jobOrder||"Nomor JO belum diisi")+" • "+formatNum(jo.totalBox)+" BOX • "+formatNum(jo.totalPcs)+" PCS");
+      });
       document.getElementById("fgBreakdownPreview").innerHTML =
-        "A : <b>" + formatNum(first.boxA) + " BOX @" + formatNum(perBox) + " = " + formatNum(first.pcsA) + " PCS</b> &nbsp;|&nbsp; B : <b>" + formatNum(first.boxB) + " BOX @" + formatNum(perBox) + " = " + formatNum(first.pcsB) + " PCS</b>" +
-        (first.recehABoxes.length ? "<br>RECEH A : <b>" + first.recehABoxes.length + " BOX (" + first.recehABoxes.map(formatNum).join(" + ") + ") = " + formatNum(first.pcsRecehA) + " PCS</b>" : "") +
-        (first.recehBBoxes.length ? "<br>RECEH B : <b>" + first.recehBBoxes.length + " BOX (" + first.recehBBoxes.map(formatNum).join(" + ") + ") = " + formatNum(first.pcsRecehB) + " PCS</b>" : "");
-      const jo2Preview = document.getElementById("fgJo2BreakdownPreview");
-      if (jo2Preview) jo2Preview.textContent = includeSecond
-        ? (second.jobOrder || "JO ke-2 belum diisi") + " • " + formatNum(second.totalBox) + " BOX • " + formatNum(second.totalPcs) + " PCS"
-        : "Hasil JO 2 akan tampil di sini setelah diisi.";
-      document.getElementById("fgLiveTotalPreview").textContent = includeSecond
-        ? "TOTAL FG : " + formatNum(totalBox) + " BOX = " + formatNum(totalPcs) + " PCS"
-        : "TOTAL : " + formatNum(totalBox) + " BOX = " + formatNum(totalPcs) + " PCS";
-      return {first,second,includeSecond,totalBox,totalPcs};
+        "A : <b>"+formatNum(first.boxA)+" BOX @"+formatNum(first.pcsPerBox)+" = "+formatNum(first.pcsA)+" PCS</b> &nbsp;|&nbsp; B : <b>"+formatNum(first.boxB)+" BOX @"+formatNum(first.pcsPerBox)+" = "+formatNum(first.pcsB)+" PCS</b>" +
+        (first.recehABoxes.length?"<br>RECEH A : <b>"+first.recehABoxes.length+" BOX ("+first.recehABoxes.map(formatNum).join(" + ")+") = "+formatNum(first.pcsRecehA)+" PCS</b>":"")+
+        (first.recehBBoxes.length?"<br>RECEH B : <b>"+first.recehBBoxes.length+" BOX ("+first.recehBBoxes.map(formatNum).join(" + ")+") = "+formatNum(first.pcsRecehB)+" PCS</b>":"");
+      [2,3,4].forEach(index=>{
+        const box=document.getElementById("fgJo"+index+"BreakdownPreview");
+        if(box)box.textContent=lines[index-1]||"Hasil JO "+index+" akan tampil setelah diisi.";
+      });
+      document.getElementById("fgLiveTotalPreview").textContent=
+        "TOTAL FG : "+formatNum(totalBox)+" BOX = "+formatNum(totalPcs)+" PCS";
+      return {jobs:validJobs,totalBox,totalPcs};
     }
 
         function copySpekFgTerakhir() {
@@ -3439,165 +3495,140 @@
     }
 
     function simpanItemFg() {
-      const leader = document.getElementById("fgLeader").value.trim().toUpperCase();
-      const productName = document.getElementById("fgProductName").value.trim().toUpperCase();
-      const jobOrder = document.getElementById("fgJobOrder").value.trim().toUpperCase();
-      const jobOrder2 = document.getElementById("fgJobOrder2").value.trim().toUpperCase();
-      const note = document.getElementById("fgNote").value.trim();
-      const gapNote = document.getElementById("fgGapNote").value.trim();
-      const duration = document.getElementById("fgDuration").value.trim();
-      const target = Number(document.getElementById("fgTarget").value) || 0;
-      const pcsPerBox = Number(document.getElementById("fgPcsPerBox").value) || 0;
-      const first = hitungDataHasilJoFg(
-        jobOrder,document.getElementById("fgBoxA").value,document.getElementById("fgBoxB").value,
-        document.getElementById("fgRecehAQty").value,document.getElementById("fgRecehBQty").value,pcsPerBox
-      );
-      const second = hitungDataHasilJoFg(
-        jobOrder2,document.getElementById("fgBoxA2").value,document.getElementById("fgBoxB2").value,
-        document.getElementById("fgRecehAQty2").value,document.getElementById("fgRecehBQty2").value,pcsPerBox
-      );
-      const rawReceh = [
-        document.getElementById("fgRecehAQty").value,
-        document.getElementById("fgRecehBQty").value,
-        document.getElementById("fgRecehAQty2").value,
-        document.getElementById("fgRecehBQty2").value
-      ];
-      const recehInvalid = rawReceh.some(raw => {
-        const value=String(raw || "").trim();
-        return value && (value.split("+").some(part => !/^\d+$/.test(part.trim())) || parseRecehFg(value).length===0);
+      const leader=document.getElementById("fgLeader").value.trim().toUpperCase();
+      const productName=document.getElementById("fgProductName").value.trim().toUpperCase();
+      const note=document.getElementById("fgNote").value.trim();
+      const gapNote=document.getElementById("fgGapNote").value.trim();
+      const duration=document.getElementById("fgDuration").value.trim();
+      const target=Number(document.getElementById("fgTarget").value)||0;
+      const pcsPerBox=Number(document.getElementById("fgPcsPerBox").value)||0;
+      const jobs=ambilInputJobOrdersFg();
+      const rawReceh=[1,2,3,4].flatMap(index=>{
+        const suffix=index===1?"":String(index);
+        return ["RecehAQty","RecehBQty"].map(kind=>String(document.getElementById("fg"+kind+suffix)?.value||"").trim());
       });
-
-      if (!leader || !productName || !jobOrder) {
+      const recehInvalid=rawReceh.some(value=>value&&(value.split("+").some(part=>!/^\d+$/.test(part.trim()))||parseRecehFg(value).length===0));
+      if(!leader||!productName||!jobs[0].jobOrder){
         alert("Mohon isi Nama Leader/Operator, Nama Produk, dan Nomor JO pertama.");
         return;
       }
-      if (jobOrder2 && jobOrder2.toUpperCase() === jobOrder.toUpperCase()) {
-        alert("Nomor JO pertama dan JO kedua tidak boleh sama.");
-        return;
+      const usedJobs=jobs.filter((jo,index)=>index===0||jo.jobOrder||jo.totalBox>0);
+      if(usedJobs.length>4){alert("Maksimal 4 Job Order untuk satu produk.");return;}
+      for(let i=0;i<usedJobs.length;i++){
+        const jo=usedJobs[i];
+        if(!jo.jobOrder){alert("Nomor JO ke-"+(i+1)+" belum diisi, tetapi hasil box/recehnya sudah dimasukkan.");return;}
+        if(i>0&&jo.totalBox===0){alert("JO ke-"+(i+1)+" sudah diisi. Masukkan hasil Lot A, Lot B, atau receh.");return;}
+        if(usedJobs.slice(0,i).some(prev=>prev.jobOrder.toUpperCase()===jo.jobOrder.toUpperCase())){
+          alert("Nomor Job Order tidak boleh duplikat dalam satu produk: "+jo.jobOrder);return;
+        }
       }
-      if (!jobOrder2 && second.totalBox > 0) {
-        alert("Isi Nomor Job Order ke-2 untuk hasil box/receh pada bagian JO kedua.");
-        return;
+      if(jobs[0].totalBox===0){alert("Masukkan hasil Lot A, Lot B, atau qty receh untuk JO pertama.");return;}
+      if(usedJobs.some(jo=>(jo.boxA>0||jo.boxB>0)&&pcsPerBox<=0)){
+        alert("Isi Per Box (@) wajib diisi jika ada hasil box normal.");return;
       }
-      if (jobOrder2 && second.totalBox === 0) {
-        alert("Nomor JO kedua sudah diisi. Masukkan hasil Lot A, Lot B, atau qty receh untuk JO kedua.");
-        return;
-      }
-      if (first.totalBox === 0) {
-        alert("Masukkan hasil Lot A, Lot B, atau qty receh untuk JO pertama.");
-        return;
-      }
-      if ((first.boxA > 0 || first.boxB > 0 || second.boxA > 0 || second.boxB > 0) && pcsPerBox <= 0) {
-        alert("Isi Per Box (@) wajib diisi jika ada hasil box normal pada JO pertama atau kedua.");
-        return;
-      }
-      if (recehInvalid) {
-        alert("Qty receh tidak valid. Gunakan angka dan pisahkan setiap box dengan tanda +, contoh 100+250.");
-        return;
-      }
+      if(recehInvalid){alert("Qty receh tidak valid. Gunakan angka dan pisahkan setiap box dengan tanda +, contoh 100+250.");return;}
 
-      const jobOrders = [first];
-      if (jobOrder2) jobOrders.push(second);
-      const totalBox = jobOrders.reduce((sum,jo) => sum + jo.totalBox,0);
-      const totalPcs = jobOrders.reduce((sum,jo) => sum + jo.totalPcs,0);
-      const productJo = productName + " (" + jobOrders.map(jo=>jo.jobOrder).join(" dan ") + ")";
-      const record = {
-        id: editingFgId !== null ? editingFgId : Date.now() + Math.random(),
-        leader,productName,jobOrder,productJo,jobOrders,
+      const totalBox=usedJobs.reduce((sum,jo)=>sum+jo.totalBox,0);
+      const totalPcs=usedJobs.reduce((sum,jo)=>sum+jo.totalPcs,0);
+      const productJo=productName+" ("+usedJobs.map(jo=>jo.jobOrder).join(" dan ")+")";
+      const record={
+        id:editingFgId!==null?editingFgId:Date.now()+Math.random(),
+        leader,productName,jobOrder:usedJobs[0].jobOrder,productJo,
+        jobOrders:usedJobs,
         note,gapNote,duration,target,pcsPerBox,
-        boxA:first.boxA,pcsA:first.pcsA,boxB:first.boxB,pcsB:first.pcsB,
-        recehABoxes:first.recehABoxes,recehBBoxes:first.recehBBoxes,
-        pcsRecehA:first.pcsRecehA,pcsRecehB:first.pcsRecehB,
-        recehBoxes:first.recehBBoxes,pcsReceh:first.pcsRecehB,
-        totalBox,totalPcs
+        boxA:jobs[0].boxA,pcsA:jobs[0].pcsA,boxB:jobs[0].boxB,pcsB:jobs[0].pcsB,
+        recehABoxes:jobs[0].recehABoxes,recehBBoxes:jobs[0].recehBBoxes,
+        pcsRecehA:jobs[0].pcsRecehA,pcsRecehB:jobs[0].pcsRecehB,
+        recehBoxes:jobs[0].recehBBoxes,pcsReceh:jobs[0].pcsRecehB,totalBox,totalPcs
       };
-
-      if (editingFgId !== null) {
-        const idx = fgList.findIndex((x) => x.id === editingFgId);
-        if (idx !== -1) fgList[idx] = record;
+      if(editingFgId!==null){
+        const idx=fgList.findIndex(x=>x.id===editingFgId);
+        if(idx!==-1)fgList[idx]=record;
         batalEditFg();
-      } else {
-        fgList.push(record);
-      }
+      }else fgList.push(record);
 
-      document.getElementById("fgLeader").value = "";
-      document.getElementById("fgTarget").value = "";
-      fgTargetTouched = false;
-      document.getElementById("fgGapNote").value = "";
-      document.getElementById("fgBoxA").value = "";
-      document.getElementById("fgBoxB").value = "";
-      document.getElementById("fgRecehAQty").value = "";
-      document.getElementById("fgRecehBQty").value = "";
-      document.getElementById("fgJobOrder2").value = "";
-      document.getElementById("fgBoxA2").value = "";
-      document.getElementById("fgBoxB2").value = "";
-      document.getElementById("fgRecehAQty2").value = "";
-      document.getElementById("fgRecehBQty2").value = "";
-      document.getElementById("fgSecondJoPanel").open = false;
+      document.getElementById("fgLeader").value="";
+      document.getElementById("fgTarget").value="";
+      fgTargetTouched=false;
+      document.getElementById("fgGapNote").value="";
+      [2,3,4].forEach(index=>{
+        const suffix=String(index);
+        ["JobOrder","BoxA","BoxB","RecehAQty","RecehBQty"].forEach(kind=>{
+          const el=document.getElementById("fg"+kind+suffix);
+          if(el)el.value="";
+        });
+      });
+      document.getElementById("fgSecondJoPanel").open=false;
+      document.getElementById("fgThirdJoPanel").open=false;
+      document.getElementById("fgFourthJoPanel").open=false;
+      ["fgBoxA","fgBoxB","fgRecehAQty","fgRecehBQty"].forEach(id=>document.getElementById(id).value="");
       hitungPreviewFg();
       renderFgAll();
       simpanDraftLokal();
     }
 
         function mulaiEditFg(id) {
-      const item = fgList.find((x) => x.id === id);
-      if (!item) return;
-      const jobOrders = ambilRincianJobOrderFg(item);
-      const first = jobOrders[0];
-      const second = jobOrders[1] || null;
-      editingFgId = item.id;
-      document.getElementById("fgLeader").value = item.leader;
-      const itemProduct = item.productName !== undefined ? {productName:item.productName,jobOrder:item.jobOrder || ""} : pisahProdukDanJo(item.productJo);
-      document.getElementById("fgProductName").value = itemProduct.productName;
-      document.getElementById("fgJobOrder").value = first.jobOrder || itemProduct.jobOrder;
-      document.getElementById("fgNote").value = item.note || "";
-      document.getElementById("fgGapNote").value = item.gapNote || "";
-      document.getElementById("fgDuration").value = item.duration;
-      document.getElementById("fgTarget").value = item.target;
-      fgTargetTouched = true;
-      document.getElementById("fgPcsPerBox").value = item.pcsPerBox;
-      fgPcsPerBoxAutoFilled = false;
-      document.getElementById("fgBoxA").value = first.boxA;
-      document.getElementById("fgBoxB").value = first.boxB;
-      document.getElementById("fgRecehAQty").value = (first.recehABoxes || []).join("+");
-      document.getElementById("fgRecehBQty").value = (first.recehBBoxes || []).join("+");
-      document.getElementById("fgJobOrder2").value = second ? second.jobOrder : "";
-      document.getElementById("fgBoxA2").value = second ? second.boxA : "";
-      document.getElementById("fgBoxB2").value = second ? second.boxB : "";
-      document.getElementById("fgRecehAQty2").value = second ? second.recehABoxes.join("+") : "";
-      document.getElementById("fgRecehBQty2").value = second ? second.recehBBoxes.join("+") : "";
-      document.getElementById("fgSecondJoPanel").open = !!second;
+      const item=fgList.find(x=>x.id===id);
+      if(!item)return;
+      const jobs=ambilRincianJobOrderFg(item);
+      editingFgId=item.id;
+      document.getElementById("fgLeader").value=item.leader;
+      const itemProduct=item.productName!==undefined?{productName:item.productName,jobOrder:item.jobOrder||""}:pisahProdukDanJo(item.productJo);
+      document.getElementById("fgProductName").value=itemProduct.productName;
+      document.getElementById("fgJobOrder").value=jobs[0]?.jobOrder||itemProduct.jobOrder;
+      document.getElementById("fgNote").value=item.note||"";
+      document.getElementById("fgGapNote").value=item.gapNote||"";
+      document.getElementById("fgDuration").value=item.duration||"";
+      document.getElementById("fgTarget").value=item.target||"";
+      fgTargetTouched=true;
+      document.getElementById("fgPcsPerBox").value=item.pcsPerBox||"";
+      fgPcsPerBoxAutoFilled=false;
+      [1,2,3,4].forEach(index=>{
+        const jo=jobs[index-1];
+        const suffix=index===1?"":String(index);
+        const val=(id,value)=>{const el=document.getElementById("fg"+id+suffix);if(el)el.value=value??"";};
+        val("JobOrder",jo?.jobOrder||"");
+        val("BoxA",jo?.boxA||"");
+        val("BoxB",jo?.boxB||"");
+        val("RecehAQty",(jo?.recehABoxes||[]).join("+"));
+        val("RecehBQty",(jo?.recehBBoxes||[]).join("+"));
+      });
+      document.getElementById("fgSecondJoPanel").open=jobs.length>1;
+      document.getElementById("fgThirdJoPanel").open=jobs.length>2;
+      document.getElementById("fgFourthJoPanel").open=jobs.length>3;
       hitungPreviewFg();
-
       document.getElementById("fgInputCard").classList.add("editing-mode");
-      document.getElementById("fgEditBanner").style.display = "flex";
-      document.getElementById("fgEditBannerText").innerHTML = "✏️ <b>MODE EDIT FG: " + item.leader + "</b>";
-      const btn = document.getElementById("btnSubmitFg");
-      btn.textContent = "💾 UPDATE DATA FINISH GOOD";
-      btn.style.background = "var(--orange)";
+      document.getElementById("fgEditBanner").style.display="flex";
+      document.getElementById("fgEditBannerText").innerHTML="✏️ <b>MODE EDIT FG: "+item.leader+"</b>";
+      const btn=document.getElementById("btnSubmitFg");
+      btn.textContent="💾 UPDATE DATA FINISH GOOD";
+      btn.style.background="var(--orange)";
       bukaModalEditFg();
     }
 
-    function batalEditFg() {
-      editingFgId = null;
-      document.getElementById("fgLeader").value = "";
-      document.getElementById("fgBoxA").value = "";
-      document.getElementById("fgBoxB").value = "";
-      document.getElementById("fgRecehAQty").value = "";
-      document.getElementById("fgRecehBQty").value = "";
-      document.getElementById("fgJobOrder2").value = "";
-      document.getElementById("fgBoxA2").value = "";
-      document.getElementById("fgBoxB2").value = "";
-      document.getElementById("fgRecehAQty2").value = "";
-      document.getElementById("fgRecehBQty2").value = "";
-      document.getElementById("fgSecondJoPanel").open = false;
-      hitungPreviewFg();
+    function kosongkanInputJobOrderTambahanFg() {
+      [2,3,4].forEach(index=>{
+        const suffix=String(index);
+        ["JobOrder","BoxA","BoxB","RecehAQty","RecehBQty"].forEach(kind=>{
+          const el=document.getElementById("fg"+kind+suffix);if(el)el.value="";
+        });
+      });
+      ["fgBoxA","fgBoxB","fgRecehAQty","fgRecehBQty"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
+      document.getElementById("fgSecondJoPanel").open=false;
+      document.getElementById("fgThirdJoPanel").open=false;
+      document.getElementById("fgFourthJoPanel").open=false;
+    }
 
+    function batalEditFg() {
+      editingFgId=null;
+      document.getElementById("fgLeader").value="";
+      kosongkanInputJobOrderTambahanFg();
+      hitungPreviewFg();
       document.getElementById("fgInputCard").classList.remove("editing-mode");
-      document.getElementById("fgEditBanner").style.display = "none";
-      const btn = document.getElementById("btnSubmitFg");
-      btn.textContent = "✅ TAMBAHKAN KE LAPORAN FINISH GOOD";
-      btn.style.background = "var(--emerald)";
+      document.getElementById("fgEditBanner").style.display="none";
+      const btn=document.getElementById("btnSubmitFg");
+      btn.textContent="✅ TAMBAHKAN KE LAPORAN FINISH GOOD";
+      btn.style.background="var(--emerald)";
       tutupModalEditFgVisual();
       simpanDraftLokal();
     }
@@ -3619,8 +3650,9 @@
     function resetSemuaDataFg() {
       if (!confirm("RESET ALL DATA FINISH GOOD?\n\nSemua daftar FG, input operator/hasil box, dan laporan WhatsApp FG akan dikosongkan. Data WIP, Master Katalog, riwayat Cloud, dan data SPA TIDAK dihapus.")) return;
       editingFgId = null; fgList = []; waFgManuallyEdited = false;
-      ["fgLeader", "fgProductName", "fgJobOrder", "fgJobOrder2", "fgNote", "fgBoxA", "fgBoxB", "fgRecehAQty", "fgRecehBQty", "fgBoxA2", "fgBoxB2", "fgRecehAQty2", "fgRecehBQty2"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
-      document.getElementById("fgSecondJoPanel").open = false;
+      ["fgLeader", "fgProductName", "fgNote"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+      kosongkanInputJobOrderTambahanFg();
+      document.getElementById("fgJobOrder").value = "";
       document.getElementById("fgEditBanner").style.display = "none";
       document.getElementById("fgInputCard").classList.remove("editing-mode");
       document.getElementById("btnSubmitFg").textContent = "✅ TAMBAHKAN KE LAPORAN FINISH GOOD";
@@ -6501,6 +6533,62 @@
       }
     }
 
+    function tutupFgJobOrderSuggestionsExtra(index) {
+      const box=document.getElementById("fgJobOrderSuggestions"+index);
+      const input=document.getElementById("fgJobOrder"+index);
+      if(box){box.style.display="none";box.innerHTML="";}
+      if(input)input.setAttribute("aria-expanded","false");
+    }
+
+    function onFgJobOrderTypeExtra(index) {
+      const input=document.getElementById("fgJobOrder"+index);
+      const box=document.getElementById("fgJobOrderSuggestions"+index);
+      if(!input||!box)return;
+      const q=input.value.trim().toLowerCase();
+      const matches=normalisasiMasterJobOrder(masterJobOrders).filter(jo=>!q||jo.toLowerCase().includes(q)).slice(0,30);
+      box.innerHTML="";
+      if(!matches.length) {
+        const empty=document.createElement("div");
+        empty.style.cssText="padding:10px 12px;font-size:.78rem;color:var(--text-muted);";
+        empty.textContent=masterJobOrders.length?"Tidak ada nomor JO yang cocok. Anda tetap bisa mengetik manual.":"Master JO belum berisi data. Anda tetap bisa mengetik manual.";
+        box.appendChild(empty);
+      } else {
+        matches.forEach(jo=>{
+          const option=document.createElement("div");
+          option.className="quick-item";
+          option.setAttribute("role","option");
+          option.tabIndex=-1;
+          const label=document.createElement("span");
+          label.className="quick-item-left";
+          label.textContent=jo;
+          option.appendChild(label);
+          option.addEventListener("pointerdown",event=>event.preventDefault());
+          option.addEventListener("click",()=>{
+            input.value=jo;
+            tutupFgJobOrderSuggestionsExtra(index);
+            hitungPreviewFg();
+            simpanDraftLokal();
+          });
+          box.appendChild(option);
+        });
+      }
+      box.style.display="block";
+      input.setAttribute("aria-expanded","true");
+    }
+
+    function onFgJobOrderType3(){onFgJobOrderTypeExtra(3);}
+    function onFgJobOrderType4(){onFgJobOrderTypeExtra(4);}
+    function onFgJobOrderKey3(event){onFgJobOrderKeyExtra(event,3);}
+    function onFgJobOrderKey4(event){onFgJobOrderKeyExtra(event,4);}
+    function onFgJobOrderKeyExtra(event,index){
+      if(event.key==="Escape"){tutupFgJobOrderSuggestionsExtra(index);return;}
+      if(event.key==="Enter"){
+        const box=document.getElementById("fgJobOrderSuggestions"+index);
+        const first=box?.querySelector(".quick-item");
+        if(box?.style.display==="block"&&first){event.preventDefault();first.click();}
+      }
+    }
+
     function tutupFgLeaderSuggestions() {
       const box=document.getElementById("fgLeaderSuggestions");
       const input=document.getElementById("fgLeader");
@@ -6606,6 +6694,8 @@
     document.addEventListener("pointerdown",event=>{
       if(!event.target.closest(".fg-job-order-search-wrap"))tutupFgJobOrderSuggestions();
       if(!event.target.closest("#fgSecondJoPanel .fg-job-order-search-wrap"))tutupFgJobOrderSuggestions2();
+      if(!event.target.closest("#fgThirdJoPanel .fg-job-order-search-wrap"))tutupFgJobOrderSuggestionsExtra(3);
+      if(!event.target.closest("#fgFourthJoPanel .fg-job-order-search-wrap"))tutupFgJobOrderSuggestionsExtra(4);
       if(!event.target.closest(".fg-leader-search-wrap"))tutupFgLeaderSuggestions();
     });
 
