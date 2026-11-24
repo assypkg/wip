@@ -4329,8 +4329,16 @@
         const sequence=fgList.filter(item=>normalisasiKunciLeaderFg(item.leader)===leaderKey).length+
           rows.filter(item=>normalisasiKunciLeaderFg(item.leader)===leaderKey).length+1;
         const targetStandard8h=(typeof ambilTargetStandarFg==="function")?Number(ambilTargetStandarFg(name))||0:0;
-        const target=Number(product.target)||targetStandard8h;
-        const targetMasterFactor=targetStandard8h>0?target/targetStandard8h:null;
+        const importedTarget=Number(product.target)||targetStandard8h;
+        const regularBreakMinutes=ambilIstirahatRegulerFg(product.duration||"","");
+        const overtimeBreakMinutes=hitungIstirahatTambahanOvertimeFg(product.duration||"");
+        const durationDetail=rincianDurasiKerjaFg(product.duration||"");
+        const effectiveHours=durationDetail
+          ?hitungDurasiJamKerja(product.duration||"",regularBreakMinutes+overtimeBreakMinutes):0;
+        const masterBasedDayShift=!!durationDetail&&durationDetail.startMinutes<12*60&&targetStandard8h>0&&effectiveHours>0;
+        const target=masterBasedDayShift?Math.round(targetStandard8h*effectiveHours/8):importedTarget;
+        const targetMasterFactor=targetStandard8h>0
+          ?(masterBasedDayShift?effectiveHours/8:target/targetStandard8h):null;
         rows.push({
           id:Date.now()+Math.random(),
           productSequence:sequence,
@@ -4344,7 +4352,7 @@
           duration:product.duration||"",
           target,
           targetMode:"master",targetMasterFactor,targetStandard8h,
-          breakMinutes:0,overtimeBreakMinutes:hitungIstirahatTambahanOvertimeFg(product.duration||""),
+          breakMinutes:regularBreakMinutes,overtimeBreakMinutes,
           pcsPerBox:perBox,
           boxA:first.boxA,pcsA:first.pcsA,boxB:first.boxB,pcsB:first.pcsB,
           recehABoxes:first.recehABoxes,recehBBoxes:first.recehBBoxes,
@@ -4674,7 +4682,12 @@
       const tgl=formatTanggalLaporan(document.getElementById("fgDate").value);
       const jam=document.getElementById("fgTime").value.trim()||"23.00";
       const shiftRaw=document.getElementById("fgShift").value;
-      const shift=String(shiftRaw||"").trim().toUpperCase();
+      let shift=String(shiftRaw||"").trim().toUpperCase();
+      const jamMatch=jam.match(/^(\d{2})\.(\d{2})$/);
+      const jamMinutes=jamMatch?Number(jamMatch[1])*60+Number(jamMatch[2]):-1;
+      if(/^SHIFT 1\b/.test(shift)&&jamMinutes>17*60&&jamMinutes<21*60){
+        shift="SHIFT 1 (08.00-"+jam+")";
+      }
       const plant=document.getElementById("fgPlant").value;
       let wa="*LAPORAN HASIL PRODUKSI "+plant+" JAM "+jam+" TANGGAL "+tgl+" ("+shift+")*\n━━━━━━━━━━━━━━━━━━━━\n\n";
 
