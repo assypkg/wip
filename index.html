@@ -9841,7 +9841,10 @@
 
       pulihkanDraftLokalJikaHariSama();
       const targetLegacyUpdated=migrasikanTargetFgLamaKeMaster();
-      if(targetLegacyUpdated>0)simpanDraftLokal();
+      if(targetLegacyUpdated>0){
+        waFgManuallyEdited=false;
+        simpanDraftLokal();
+      }
       terapkanJamLaporanDariDurasiFg();
       perbaruiTombolHapusNamaProdukFg();
       perbaruiInfoIstirahatOvertimeFg();
