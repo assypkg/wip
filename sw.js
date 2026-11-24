@@ -1,4 +1,4 @@
-const CACHE_NAME = "smart-wip-assy-v15-fg-search-update";
+const CACHE_NAME = "smart-wip-assy-v16-jo-closed-x";
 const ASSETS_TO_CACHE = [
   "./",
   "./index.html",
