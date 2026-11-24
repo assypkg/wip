@@ -1382,14 +1382,14 @@
             <input type="text" id="fgDuration" value="15.00-23.00" placeholder="Contoh: 15.00-23.00" oninput="onFgDurationInput()" />
           </div>
           <div>
-            <label>Durasi Istirahat (Menit)</label>
-            <input type="number" id="fgBreakMinutes" inputmode="numeric" min="0" step="1" placeholder="Kosongkan jika tidak istirahat" oninput="onFgDurationInput()" />
-            <div class="fg-break-presets" aria-label="Pilihan cepat durasi istirahat">
-              <button type="button" class="btn btn-outline fg-break-preset" data-minutes="0" onclick="pilihDurasiIstirahat(0)">0 • Tidak istirahat</button>
+            <label>Istirahat Reguler Shift (Menit)</label>
+            <input type="number" id="fgBreakMinutes" inputmode="numeric" min="0" step="1" placeholder="Isi istirahat reguler shift" oninput="onFgDurationInput()" />
+            <div class="fg-break-presets" aria-label="Pilihan cepat durasi istirahat reguler">
+              <button type="button" class="btn btn-outline fg-break-preset" data-minutes="0" onclick="pilihDurasiIstirahat(0)">0 menit</button>
               <button type="button" class="btn btn-outline fg-break-preset" data-minutes="30" onclick="pilihDurasiIstirahat(30)">30 menit</button>
               <button type="button" class="btn btn-outline fg-break-preset" data-minutes="60" onclick="pilihDurasiIstirahat(60)">60 menit</button>
             </div>
-            <div style="font-size:.66rem;color:var(--text-muted);margin-top:3px;">Pilih saran di atas atau isi durasi istirahat secara manual.</div>
+            <div id="fgOvertimeBreakInfo" style="font-size:.66rem;color:var(--text-muted);margin-top:3px;">Istirahat reguler diisi sesuai jadwal shift. Tambahan istirahat lembur 30 menit dihitung otomatis bila Shift 1 melewati pukul 17.00.</div>
           </div>
           <div id="fgProductChangeHint" style="display:none;grid-column:1/-1;padding:8px 10px;border-radius:8px;background:#eff6ff;color:#1d4ed8;font-size:.72rem;font-weight:700;"></div>
           <div style="grid-column: 1 / -1;">
@@ -1568,7 +1568,7 @@
               <span class="card-title">🕒 Pilihan Jam Laporan</span>
               <button type="button" class="btn btn-danger" onclick="toggleModal('fgTimePickerModal',false)">✕ Tutup</button>
             </div>
-            <p style="font-size:.73rem;color:var(--text-muted);margin:0 0 10px;">Pilih jam yang akan ditampilkan pada judul laporan WhatsApp. Jam per SPA dan per Job Order tetap mengikuti durasi masing-masing.</p>
+            <p style="font-size:.73rem;color:var(--text-muted);margin:0 0 10px;">Jam laporan otomatis mengikuti waktu selesai paling akhir pada Durasi FG. Pilihan manual tetap tersedia untuk kondisi khusus.</p>
             <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;">
               <button type="button" class="btn btn-outline fg-time-preset" data-time="10.00" onclick="pilihJamLaporanFg('10.00')">10.00</button>
               <button type="button" class="btn btn-outline fg-time-preset" data-time="12.00" onclick="pilihJamLaporanFg('12.00')">12.00</button>
@@ -3906,6 +3906,11 @@
       const gapNote=document.getElementById("fgGapNote").value.trim();
       const duration=document.getElementById("fgDuration").value.trim();
       const target=Number(document.getElementById("fgTarget").value)||0;
+      const targetMode=fgTargetTouched?"manual":"master";
+      const targetStandard8h=ambilTargetStandarFg(productName);
+      const targetMasterFactor=targetMode==="master"&&targetStandard8h>0?target/targetStandard8h:null;
+      const breakMinutes=Math.max(0,Number(document.getElementById("fgBreakMinutes").value)||0);
+      const overtimeBreakMinutes=hitungIstirahatTambahanOvertimeFg(duration);
       const pcsPerBox=Number(document.getElementById("fgPcsPerBox").value)||0;
       const jobs=ambilInputJobOrdersFg();
       const rawReceh=[1,2,3,4].flatMap(index=>{
@@ -3974,6 +3979,8 @@
         leader,productName,jobOrder:usedJobs[0].jobOrder,productJo,
         jobOrders:usedJobs,
         note,gapNote,duration,target,pcsPerBox,
+        targetMode,targetMasterFactor,targetStandard8h,
+        breakMinutes,overtimeBreakMinutes,
         boxA:jobs[0].boxA,pcsA:jobs[0].pcsA,boxB:jobs[0].boxB,pcsB:jobs[0].pcsB,
         recehABoxes:jobs[0].recehABoxes,recehBBoxes:jobs[0].recehBBoxes,
         pcsRecehA:jobs[0].pcsRecehA,pcsRecehB:jobs[0].pcsRecehB,
@@ -4004,6 +4011,8 @@
       document.getElementById("btnSubmitFg").style.background="var(--emerald)";
       if(formWasInModal)tutupModalEditFgVisual();
       hitungPreviewFg();
+      waFgManuallyEdited=false;
+      terapkanJamLaporanDariDurasiFg();
       renderFgAll();
       simpanDraftLokal();
     }
@@ -4021,8 +4030,11 @@
       document.getElementById("fgNote").value=item.note||"";
       document.getElementById("fgGapNote").value=item.gapNote||"";
       document.getElementById("fgDuration").value=item.duration||"";
+      document.getElementById("fgBreakMinutes").value=item.breakMinutes!==undefined?String(item.breakMinutes):"";
       document.getElementById("fgTarget").value=item.target||"";
-      fgTargetTouched=true;
+      fgTargetTouched=item.targetMode==="manual";
+      if(item.targetMode!=="manual")hitungTargetFgOtomatis(true);
+      perbaruiInfoIstirahatOvertimeFg();
       document.getElementById("fgPcsPerBox").value=item.pcsPerBox||"";
       fgPcsPerBoxAutoFilled=false;
       [1,2,3,4].forEach(index=>{
@@ -4314,7 +4326,9 @@
         const leaderKey=normalisasiKunciLeaderFg(currentLeader);
         const sequence=fgList.filter(item=>normalisasiKunciLeaderFg(item.leader)===leaderKey).length+
           rows.filter(item=>normalisasiKunciLeaderFg(item.leader)===leaderKey).length+1;
-        const target=Number(product.target)||((typeof ambilTargetStandarFg==="function")?Number(ambilTargetStandarFg(name))||0:0);
+        const targetStandard8h=(typeof ambilTargetStandarFg==="function")?Number(ambilTargetStandarFg(name))||0:0;
+        const target=Number(product.target)||targetStandard8h;
+        const targetMasterFactor=targetStandard8h>0?target/targetStandard8h:null;
         rows.push({
           id:Date.now()+Math.random(),
           productSequence:sequence,
@@ -4327,6 +4341,8 @@
           gapNote:product.gapNote||"",
           duration:product.duration||"",
           target,
+          targetMode:"master",targetMasterFactor,targetStandard8h,
+          breakMinutes:0,overtimeBreakMinutes:hitungIstirahatTambahanOvertimeFg(product.duration||""),
           pcsPerBox:perBox,
           boxA:first.boxA,pcsA:first.pcsA,boxB:first.boxB,pcsB:first.pcsB,
           recehABoxes:first.recehABoxes,recehBBoxes:first.recehBBoxes,
@@ -4476,6 +4492,7 @@
       }
       const count=pendingFgImport.length;
       fgList.push(...pendingFgImport.map(item=>JSON.parse(JSON.stringify(item))));
+      terapkanJamLaporanDariDurasiFg();
       pendingFgImport=[];
       pendingFgImportMeta=null;
       waFgManuallyEdited=false;
@@ -6574,6 +6591,73 @@
       return effectiveMinutes > 0 && effectiveMinutes <= 24 * 60 ? effectiveMinutes / 60 : 0;
     }
 
+    function rincianDurasiKerjaFg(value) {
+      const match=String(value||"").trim().match(/^(\d{1,2})[.:](\d{2})\s*[-–—]\s*(\d{1,2})[.:](\d{2})$/);
+      if(!match)return null;
+      const sh=Number(match[1]),sm=Number(match[2]),eh=Number(match[3]),em=Number(match[4]);
+      if(sh>23||eh>23||sm>59||em>59)return null;
+      const start=sh*60+sm;
+      let end=eh*60+em;
+      if(end<=start)end+=1440;
+      return {startMinutes:start,endMinutes:end,grossMinutes:end-start,endClockMinutes:end%1440};
+    }
+
+    function hitungIstirahatTambahanOvertimeFg(duration) {
+      const detail=rincianDurasiKerjaFg(duration);
+      if(!detail)return 0;
+      // Istirahat tambahan hanya untuk Shift 1 yang dimulai sebelum tengah hari
+      // dan melanjutkan pekerjaan melewati batas normal pukul 17.00.
+      const batasLembur=17*60;
+      return detail.startMinutes<12*60 && detail.endMinutes>batasLembur ? 30 : 0;
+    }
+
+    function hitungTotalIstirahatFg(duration, istirahatReguler) {
+      const reguler=Math.max(0,Number(istirahatReguler)||0);
+      const overtime=hitungIstirahatTambahanOvertimeFg(duration);
+      return {regularMinutes:reguler,overtimeMinutes:overtime,totalMinutes:reguler+overtime};
+    }
+
+    function perbaruiInfoIstirahatOvertimeFg() {
+      const info=document.getElementById("fgOvertimeBreakInfo");
+      if(!info)return;
+      const duration=document.getElementById("fgDuration")?.value||"";
+      const extra=hitungIstirahatTambahanOvertimeFg(duration);
+      info.textContent=extra
+        ? "Istirahat lembur tambahan 30 menit otomatis diterapkan setelah pukul 17.00, di luar istirahat reguler."
+        : "Istirahat reguler diisi sesuai jadwal shift. Tambahan 30 menit otomatis berlaku jika Shift 1 bekerja melewati pukul 17.00.";
+      info.style.color=extra?"#b45309":"var(--text-muted)";
+      info.style.fontWeight=extra?"700":"400";
+    }
+
+    function ambilJamLaporanTerbaruFg() {
+      let latestEnd=null;
+      (Array.isArray(fgList)?fgList:[]).forEach(item=>{
+        const detail=rincianDurasiKerjaFg(item?.duration);
+        if(!detail)return;
+        if(latestEnd===null||detail.endMinutes>latestEnd)latestEnd=detail.endMinutes;
+      });
+      if(latestEnd===null)return "";
+      const clock=latestEnd%1440;
+      return String(Math.floor(clock/60)).padStart(2,"0")+"."+String(clock%60).padStart(2,"0");
+    }
+
+    function terapkanJamLaporanDariDurasiFg() {
+      const jam=ambilJamLaporanTerbaruFg();
+      if(!jam)return "";
+      const input=document.getElementById("fgTime");
+      if(input){
+        input.value=jam;
+        input.dataset.lastValid=jam;
+      }
+      const display=document.getElementById("fgTimeDisplay");
+      if(display)display.textContent=jam;
+      document.querySelectorAll(".fg-time-preset").forEach(button=>{
+        button.classList.toggle("active",button.dataset.time===jam);
+        button.setAttribute("aria-pressed",String(button.dataset.time===jam));
+      });
+      return jam;
+    }
+
     function hitungTargetFgOtomatis(force = false) {
       const productInput = document.getElementById("fgProductName");
       const durationInput = document.getElementById("fgDuration");
@@ -6591,7 +6675,9 @@
         return 0;
       }
       const breakInput = document.getElementById("fgBreakMinutes");
-      const hours = hitungDurasiJamKerja(durationInput.value, breakInput ? breakInput.value : "");
+      const breakDetail=hitungTotalIstirahatFg(durationInput.value,breakInput ? breakInput.value : "");
+      const hours = hitungDurasiJamKerja(durationInput.value, breakDetail.totalMinutes);
+      perbaruiInfoIstirahatOvertimeFg();
       if (!hours) {
         if (force) {
           targetInput.value = "";
@@ -6618,6 +6704,7 @@
     }
 
     function onFgDurationInput() {
+      perbaruiInfoIstirahatOvertimeFg();
       hitungTargetFgOtomatis(true);
       simpanDraftLokal();
     }
@@ -6637,15 +6724,61 @@
       }));
     }
 
+    function ambilTargetDariSnapshotMasterFg(targets,name) {
+      const key=kunciNamaMasterProdukFg(name);
+      if(!key||!targets||typeof targets!=="object")return 0;
+      const found=Object.entries(targets).find(([product])=>kunciNamaMasterProdukFg(product)===key);
+      return found?Math.max(0,Math.round(Number(found[1])||0)):0;
+    }
+
+    function sinkronkanTargetFgSaatMasterBerubah(previousTargets,currentTargets) {
+      let updated=0;
+      (Array.isArray(fgList)?fgList:[]).forEach(item=>{
+        if(item.targetMode==="manual")return;
+        const productName=item.productName||pisahProdukDanJo(item.productJo||"").productName;
+        if(!productName)return;
+        const oldStandard=ambilTargetDariSnapshotMasterFg(previousTargets,productName);
+        const newStandard=ambilTargetDariSnapshotMasterFg(currentTargets,productName);
+        if(!newStandard||oldStandard===newStandard)return;
+
+        let factor=Number(item.targetMasterFactor);
+        if(!Number.isFinite(factor)||factor<0){
+          // Data lama belum menyimpan faktor target. Gunakan rasio target rekaman
+          // terhadap standar Master sebelumnya agar target durasi parsial tetap proporsional.
+          factor=oldStandard>0?(Number(item.target)||0)/oldStandard:1;
+        }
+        if(!Number.isFinite(factor)||factor<0)factor=1;
+        const nextTarget=Math.max(0,Math.round(newStandard*factor));
+        if(nextTarget!==Number(item.target)||item.targetMode!=="master"||item.targetStandard8h!==newStandard){
+          item.target=nextTarget;
+          item.targetMode="master";
+          item.targetMasterFactor=factor;
+          item.targetStandard8h=newStandard;
+          item.overtimeBreakMinutes=hitungIstirahatTambahanOvertimeFg(item.duration||"");
+          updated++;
+        }
+      });
+      return updated;
+    }
+
     function simpanMasterProdukFgLokal() {
+      let previousTargets={};
+      try{previousTargets=JSON.parse(localStorage.getItem(MASTER_PRODUK_FG_TARGET_KEY)||"{}")||{};}catch(e){}
       masterProdukFg = normalisasiMasterProdukFg(masterProdukFg);
       rebuildMasterProdukFgSearchIndex();
       masterTargetFg = normalisasiTargetMasterFg(masterTargetFg, masterProdukFg);
+      const updatedFgTargets=sinkronkanTargetFgSaatMasterBerubah(previousTargets,masterTargetFg);
       masterPcsPerBoxFg = normalisasiPcsPerBoxMasterFg(masterPcsPerBoxFg, masterProdukFg);
       localStorage.setItem(MASTER_PRODUK_FG_KEY,JSON.stringify(masterProdukFg));
       localStorage.setItem(MASTER_PRODUK_FG_TARGET_KEY,JSON.stringify(masterTargetFg));
       localStorage.setItem(MASTER_PRODUK_FG_PCS_PER_BOX_KEY,JSON.stringify(masterPcsPerBoxFg));
       const count=document.getElementById("masterProdukFgCount"); if(count)count.textContent=masterProdukFg.length;
+      if(updatedFgTargets>0){
+        // Master adalah sumber target; saat berubah, susun ulang WA dari data FG terbaru.
+        waFgManuallyEdited=false;
+        if(document.getElementById("fgListContainer"))renderFgAll();
+        simpanDraftLokal();
+      }
       if(document.getElementById("masterProdukFgModal")?.style.display==="flex")renderMasterProdukFg();
       hitungTargetFgOtomatis(false);
       const currentProduct = document.getElementById("fgProductName")?.value || "";
