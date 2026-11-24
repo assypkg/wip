@@ -1,4 +1,4 @@
-const CACHE_NAME = "smart-wip-assy-v17-weekly-erp-validation";
+const CACHE_NAME = "smart-wip-assy-v18-weekly-erp-mapping-cleanup";
 const ASSETS_TO_CACHE = [
   "./",
   "./index.html",
