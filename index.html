@@ -6929,6 +6929,18 @@
       return String(value||"").normalize("NFKC").replace(/[\u200B-\u200D\uFEFF]/g,"").trim().toUpperCase().replace(/\s+/g,"");
     }
 
+    function cariProdukMasterFgValid(value) {
+      const key=kunciNamaMasterProdukFg(value);
+      if(!key)return "";
+      return masterProdukFg.find(name=>kunciNamaMasterProdukFg(name)===key)||"";
+    }
+
+    function tentukanPemetaanMasterErp(row) {
+      // Retain the previous mapping only while that product still exists.
+      // If it no longer exists, try exact Item Name matching; otherwise leave unmapped.
+      return cariProdukMasterFgValid(row?.fgProductName)||cariProdukMasterFgValid(row?.itemName)||"";
+    }
+
     function normalisasiMasterErpMappings(list) {
       const byCode=new Map();
       (Array.isArray(list)?list:[]).forEach(raw=>{
@@ -6946,7 +6958,7 @@
       return [...byCode.values()].map(row=>({
         itemCode:row.itemCode,
         itemName:row.itemName,
-        fgProductName:masterProdukFg.find(name=>kunciNamaMasterProdukFg(name)===kunciNamaMasterProdukFg(row.fgProductName||row.itemName))||row.fgProductName||"",
+        fgProductName:tentukanPemetaanMasterErp(row),
         jobOrders:normalisasiMasterJobOrder(row.jobOrders)
       })).sort((a,b)=>new Intl.Collator("id",{numeric:true,sensitivity:"base"}).compare(a.itemCode,b.itemCode));
     }
@@ -7640,12 +7652,15 @@
         const record=byCode.get(itemCode);
         if(!record.jobOrders.includes(jo))record.jobOrders.push(jo);
       });
+      let staleMappingCount=0;
       const records=[...byCode.values()].map(record=>{
         const previous=masterErpMappings.find(x=>x.itemCode===record.itemCode);
-        const exact=masterProdukFg.find(name=>kunciNamaMasterProdukFg(name)===kunciNamaMasterProdukFg(record.itemName));
-        return {...record,fgProductName:previous?.fgProductName||exact||""};
+        const previousMapped=cariProdukMasterFgValid(previous?.fgProductName);
+        const exact=cariProdukMasterFgValid(record.itemName);
+        if(previous?.fgProductName&&!previousMapped)staleMappingCount++;
+        return {...record,fgProductName:previousMapped||exact||""};
       }).sort((a,b)=>new Intl.Collator("id",{numeric:true,sensitivity:"base"}).compare(a.itemCode,b.itemCode));
-      return {records,conflicts,dataRows,uniqueJobs:joOwner.size};
+      return {records,conflicts,dataRows,uniqueJobs:joOwner.size,staleMappingCount};
     }
 
     async function bacaFileMasterErp(event) {
@@ -7658,8 +7673,9 @@
         pendingErpImport=parsed.records;
         pendingErpImportConflicts=parsed.conflicts;
         renderMasterErpPreview();
-        setStatusMasterErpMapping(parsed.conflicts.length?"warning":"success",
-          "File terbaca • "+parsed.dataRows+" baris • "+parsed.uniqueJobs+" JO unik • "+parsed.records.length+" Item Code unik • "+Math.max(0,parsed.dataRows-parsed.uniqueJobs)+" pengulangan digabung.");
+        setStatusMasterErpMapping(parsed.conflicts.length?"warning":parsed.staleMappingCount?"warning":"success",
+          "File terbaca • "+parsed.dataRows+" baris • "+parsed.uniqueJobs+" JO unik • "+parsed.records.length+" Item Code unik • "+Math.max(0,parsed.dataRows-parsed.uniqueJobs)+" pengulangan digabung."+
+          (parsed.staleMappingCount?" • "+parsed.staleMappingCount+" pemetaan lama tidak valid akan dikosongkan menjadi Belum dipetakan.":""));
       } catch(e) {
         pendingErpImport=[];pendingErpImportConflicts=[e.message];
         renderMasterErpPreview();
@@ -7670,18 +7686,25 @@
 
     async function simpanImportMasterErp() {
       if(!pendingErpImport.length||pendingErpImportConflicts.length)return;
-      if(!masterProdukFgReady) {
-        const fgReady=await tarikMasterProdukFgCloud();
-        if(!fgReady||!masterProdukFgReady)return;
-      }
-      if(pendingErpImport.some(x=>x.fgProductName&&!masterProdukFg.some(name=>kunciNamaMasterProdukFg(name)===kunciNamaMasterProdukFg(x.fgProductName)))) {
-        alert("Ada pemetaan yang menunjuk ke produk yang tidak tersedia di Master FG. Periksa kembali pemetaannya.");
-        return;
-      }
-      if(!masterErpMappingReady) {
-        const ready=await tarikMasterErpMappingCloud();
-        if(!ready||!masterErpMappingReady)return;
-      }
+
+      // Refresh Master FG each time because weekly ERP imports must validate against
+      // the latest product list, not a product list left in the browser from last week.
+      const fgReady=await tarikMasterProdukFgCloud();
+      if(!fgReady||!masterProdukFgReady||masterProdukFgConflict)return;
+
+      // Refresh ERP relations as well. normalisasiMasterErpMappings now clears
+      // references to products that no longer exist in Master FG.
+      const erpReady=await tarikMasterErpMappingCloud();
+      if(!erpReady||!masterErpMappingReady||masterErpMappingConflict)return;
+
+      let clearedPendingMappings=0;
+      pendingErpImport.forEach(item=>{
+        const valid=cariProdukMasterFgValid(item.fgProductName);
+        const exact=cariProdukMasterFgValid(item.itemName);
+        if(item.fgProductName&&!valid)clearedPendingMappings++;
+        item.fgProductName=valid||exact||"";
+      });
+      if(clearedPendingMappings)renderMasterErpPreview();
       if(!masterErpJoStatusReady) {
         const ready=await tarikMasterErpJoStatusCloud();
         if(!ready||!masterErpJoStatusReady||masterErpJoStatusConflict){alert("Status JO Cloud belum berhasil diverifikasi. Import dibatalkan agar JO Closed tidak aktif kembali.");return;}
@@ -7729,7 +7752,8 @@
       pendingErpImport=[];pendingErpImportConflicts=[];
       renderMasterErpPreview();renderMasterErpMappingList();
       const unmappedCount=masterErpMappings.filter(x=>!x.fgProductName).length;
-      setStatusMasterErpMapping(unmappedCount?"warning":"success","Import terverifikasi • "+itemCount+" Item Code • "+joCount+" JO unik • "+unmappedCount+" belum dipetakan ke Master FG. "+(joSaved?"Master JO umum juga diperbarui di Cloud.":"Relasi ERP tersimpan; daftar Master JO umum belum berhasil disinkronkan.")+" Item yang belum dipetakan belum mengisi target/Qty Box otomatis.");
+      const cleanupNote=clearedPendingMappings?" "+clearedPendingMappings+" pemetaan tidak valid dibersihkan.":"";
+      setStatusMasterErpMapping(unmappedCount?"warning":"success","Import terverifikasi • "+itemCount+" Item Code • "+joCount+" JO unik • "+unmappedCount+" belum dipetakan ke Master FG."+cleanupNote+" "+(joSaved?"Master JO umum juga diperbarui di Cloud.":"Relasi ERP tersimpan; daftar Master JO umum belum berhasil disinkronkan.")+" Item yang belum dipetakan belum mengisi target/Qty Box otomatis.");
     }
 
     function batalImportMasterErp() {
