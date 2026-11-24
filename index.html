@@ -7330,6 +7330,232 @@
     }
 
 
+    async function hapusPermanenJoErp(jobOrder) {
+      const jo=String(jobOrder||"").trim().toUpperCase().replace(/\s+/g,"");
+      if(!jo)return;
+
+      if(masterErpMappingBusy||masterErpJoStatusBusy||masterJobOrderBusy) {
+        alert("Sinkronisasi Master sedang berjalan. Tunggu sampai selesai sebelum menghapus JO.");
+        return;
+      }
+
+      // Semua sumber harus diverifikasi sebelum penghapusan dimulai.
+      if(!masterErpMappingReady||masterErpMappingConflict) {
+        const ready=await tarikMasterErpMappingCloud();
+        if(!ready||!masterErpMappingReady||masterErpMappingConflict)return;
+      }
+      if(!masterErpJoStatusReady||masterErpJoStatusConflict) {
+        const ready=await tarikMasterErpJoStatusCloud();
+        if(!ready||!masterErpJoStatusReady||masterErpJoStatusConflict)return;
+      }
+      if(!masterJobOrderReady||masterJobOrderConflict) {
+        const ready=await tarikMasterJobOrderCloud();
+        if(!ready||!masterJobOrderReady||masterJobOrderConflict)return;
+      }
+
+      if(!masterErpDisabledJoSet.has(jo)) {
+        alert("Hapus permanen hanya tersedia untuk JO yang sudah berstatus Nonaktif / Closed.");
+        return;
+      }
+      const localMappingRows=masterErpMappings.filter(row=>(row.jobOrders||[]).includes(jo));
+      if(!localMappingRows.length) {
+        alert("Relasi JO tidak ditemukan pada Master ERP. Sinkronkan ulang sebelum menghapus.");
+        return;
+      }
+
+      const itemInfo=localMappingRows.map(row=>row.itemCode+" • "+row.itemName).join("\n");
+      if(!confirm(
+        "HAPUS PERMANEN JO "+jo+"?\n\n"+
+        itemInfo+"\n\n"+
+        "JO akan dihapus dari:\n"+
+        "• Relasi Job Order pada Master ERP\n"+
+        "• Master Job Order umum\n"+
+        "• Daftar JO Nonaktif / Closed\n\n"+
+        "Produk Master FG, Item Code, dan JO lain TIDAK dihapus.\n"+
+        "JO ini tidak akan kembali pada pilihan input kecuali tercantum lagi pada impor ERP berikutnya.\n\n"+
+        "Tindakan ini permanen. Lanjutkan?"
+      ))return;
+
+      masterErpMappingBusy=true;
+      masterErpJoStatusBusy=true;
+      masterJobOrderBusy=true;
+      setStatusMasterErpMapping("syncing","Menghapus JO "+jo+" secara permanen dari Cloud...");
+      setStatusMasterJobOrder("syncing","Menghapus JO "+jo+" dari Master Job Order Cloud...");
+
+      const backupTime=new Date().toISOString();
+      let transactionCommitted=false;
+      try {
+        const baseUrl=getFirestoreBaseUrl();
+        const docIds={
+          mapping:"master_erp_produk_jo",
+          status:"master_erp_jo_status",
+          jobOrder:"master_job_order"
+        };
+        const urls={
+          mapping:baseUrl+"/"+COLLECTION_MASTER+"/"+docIds.mapping,
+          status:baseUrl+"/"+COLLECTION_MASTER+"/"+docIds.status,
+          jobOrder:baseUrl+"/"+COLLECTION_MASTER+"/"+docIds.jobOrder
+        };
+
+        const [mappingRes,statusRes,jobOrderRes]=await Promise.all([
+          fetch(urls.mapping,{cache:"no-store"}),
+          fetch(urls.status,{cache:"no-store"}),
+          fetch(urls.jobOrder,{cache:"no-store"})
+        ]);
+        if(!mappingRes.ok)throw new Error("Gagal membaca relasi ERP Cloud (HTTP "+mappingRes.status+").");
+        if(!statusRes.ok)throw new Error("Gagal membaca daftar JO Nonaktif Cloud (HTTP "+statusRes.status+").");
+        if(!jobOrderRes.ok&&jobOrderRes.status!==404)throw new Error("Gagal membaca Master Job Order Cloud (HTTP "+jobOrderRes.status+").");
+
+        const [mappingDoc,statusDoc,jobOrderDoc]=await Promise.all([
+          mappingRes.json(),statusRes.json(),jobOrderRes.status===404?Promise.resolve(null):jobOrderRes.json()
+        ]);
+        let remoteMappings,remoteDisabled,remoteJobOrders;
+        try {
+          remoteMappings=JSON.parse(mappingDoc.fields?.mappingsJson?.stringValue||"[]");
+          remoteDisabled=JSON.parse(statusDoc.fields?.disabledJOsJson?.stringValue||"[]");
+          remoteJobOrders=jobOrderDoc?JSON.parse(jobOrderDoc.fields?.jobOrdersJson?.stringValue||"[]"):[];
+        } catch(e) {
+          throw new Error("Data JO pada Cloud tidak dapat dibaca dalam format yang benar.");
+        }
+        if(!Array.isArray(remoteMappings)||!Array.isArray(remoteDisabled)||!Array.isArray(remoteJobOrders))
+          throw new Error("Struktur data Master ERP, JO Nonaktif, atau Master JO tidak valid.");
+
+        const disabled=normalisasiMasterErpJoStatus(remoteDisabled);
+        if(!disabled.includes(jo))throw new Error("JO "+jo+" tidak ditemukan pada daftar JO Nonaktif Cloud. Penghapusan dibatalkan.");
+        const remoteJoExists=remoteMappings.some(row=>Array.isArray(row.jobOrders)&&row.jobOrders.some(value=>String(value||"").trim().toUpperCase().replace(/\s+/g,"")===jo));
+        if(!remoteJoExists)throw new Error("Relasi JO "+jo+" tidak ditemukan pada Master ERP Cloud. Tidak ada data yang dihapus.");
+
+        const nextMappings=remoteMappings.map(row=>({
+          ...row,
+          jobOrders:normalisasiMasterJobOrder((Array.isArray(row.jobOrders)?row.jobOrders:[])
+            .filter(value=>String(value||"").trim().toUpperCase().replace(/\s+/g,"")!==jo))
+        }));
+        // Keep the Item Code and product mapping even if this JO was its last active relation.
+        const nextDisabled=disabled.filter(value=>value!==jo);
+        const nextJobOrders=normalisasiMasterJobOrder(remoteJobOrders)
+          .filter(value=>value!==jo);
+
+        // Keep recoverable local backups before committing the three Cloud documents.
+        localStorage.setItem(MASTER_ERP_MAPPING_BACKUP_KEY,JSON.stringify({
+          savedAt:backupTime,mappings:remoteMappings,disabledJOs:disabled,reason:"Backup sebelum hapus permanen JO "+jo
+        }));
+        localStorage.setItem(MASTER_ERP_JO_STATUS_BACKUP_KEY,JSON.stringify({
+          savedAt:backupTime,disabledJOs:disabled,proposedDisabledJOs:nextDisabled,reason:"Backup sebelum hapus permanen JO "+jo
+        }));
+        localStorage.setItem(MASTER_JOB_ORDER_BACKUP_KEY,JSON.stringify({
+          savedAt:backupTime,jobOrders:remoteJobOrders,reason:"Backup sebelum hapus permanen JO "+jo
+        }));
+
+        // Commit all present documents atomically, with update-time preconditions.
+        const project=encodeURIComponent(getActiveProjectId());
+        const database=FIRESTORE_DATABASE;
+        const resource=id=>"projects/"+project+"/databases/"+database+"/documents/"+COLLECTION_MASTER+"/"+id;
+        const writes=[
+          {
+            update:{name:resource(docIds.mapping),fields:{
+              updatedAt:{stringValue:backupTime},
+              mappingsJson:{stringValue:JSON.stringify(nextMappings)}
+            }},
+            updateMask:{fieldPaths:["updatedAt","mappingsJson"]},
+            currentDocument:{updateTime:mappingDoc.updateTime}
+          },
+          {
+            update:{name:resource(docIds.status),fields:{
+              updatedAt:{stringValue:backupTime},
+              disabledJOsJson:{stringValue:JSON.stringify(nextDisabled)}
+            }},
+            updateMask:{fieldPaths:["updatedAt","disabledJOsJson"]},
+            currentDocument:{updateTime:statusDoc.updateTime}
+          }
+        ];
+        if(jobOrderDoc) {
+          writes.push({
+            update:{name:resource(docIds.jobOrder),fields:{
+              updatedAt:{stringValue:backupTime},
+              jobOrdersJson:{stringValue:JSON.stringify(nextJobOrders)}
+            }},
+            updateMask:{fieldPaths:["updatedAt","jobOrdersJson"]},
+            currentDocument:{updateTime:jobOrderDoc.updateTime}
+          });
+        }
+
+        const commitRes=await fetch(baseUrl+":commit",{
+          method:"POST",cache:"no-store",
+          headers:{"Content-Type":"application/json"},
+          body:JSON.stringify({writes})
+        });
+        if(!commitRes.ok) {
+          let detail="";
+          try{const error=await commitRes.json();detail=error.error?.message||"";}catch(e){}
+          throw new Error("Transaksi penghapusan Cloud gagal (HTTP "+commitRes.status+")"+(detail?": "+detail:""));
+        }
+        await commitRes.json();
+        transactionCommitted=true;
+
+        // Read back all three sources and verify that the JO is gone everywhere.
+        const [verifyMapping,verifyStatus,verifyJobOrder]=await Promise.all([
+          fetch(urls.mapping,{cache:"no-store"}),
+          fetch(urls.status,{cache:"no-store"}),
+          fetch(urls.jobOrder,{cache:"no-store"})
+        ]);
+        if(!verifyMapping.ok||!verifyStatus.ok||(!verifyJobOrder.ok&&verifyJobOrder.status!==404))
+          throw new Error("Transaksi tersimpan, tetapi pembacaan ulang salah satu dokumen Cloud gagal.");
+        const [mappingVerified,statusVerified,jobOrderVerified]=await Promise.all([
+          verifyMapping.json(),verifyStatus.json(),verifyJobOrder.status===404?Promise.resolve(null):verifyJobOrder.json()
+        ]);
+        const verifiedMappings=JSON.parse(mappingVerified.fields?.mappingsJson?.stringValue||"[]");
+        const verifiedDisabled=normalisasiMasterErpJoStatus(JSON.parse(statusVerified.fields?.disabledJOsJson?.stringValue||"[]"));
+        const verifiedJobOrders=jobOrderVerified?normalisasiMasterJobOrder(JSON.parse(jobOrderVerified.fields?.jobOrdersJson?.stringValue||"[]")):[];
+        const remainsInMappings=verifiedMappings.some(row=>(row.jobOrders||[]).some(value=>String(value||"").trim().toUpperCase().replace(/\s+/g,"")===jo));
+        if(remainsInMappings||verifiedDisabled.includes(jo)||verifiedJobOrders.includes(jo))
+          throw new Error("Verifikasi Cloud menemukan JO masih tersimpan pada salah satu sumber.");
+
+        masterErpMappings=normalisasiMasterErpMappings(verifiedMappings);
+        masterErpDisabledJOs=verifiedDisabled;
+        masterJobOrders=verifiedJobOrders;
+        rebuildMasterErpDisabledJoSet();
+        simpanMasterErpMappingLokal();
+        simpanMasterErpJoStatusLokal();
+        simpanMasterJobOrderLokal();
+
+        localStorage.setItem(MASTER_ERP_MAPPING_BASE_KEY,JSON.stringify(masterErpMappings));
+        localStorage.setItem(MASTER_ERP_MAPPING_UPDATE_KEY,mappingVerified.updateTime||"");
+        localStorage.setItem(MASTER_ERP_JO_STATUS_BASE_KEY,JSON.stringify(masterErpDisabledJOs));
+        localStorage.setItem(MASTER_ERP_JO_STATUS_UPDATE_KEY,statusVerified.updateTime||"");
+        localStorage.setItem(MASTER_JOB_ORDER_BASE_KEY,JSON.stringify(masterJobOrders));
+        localStorage.setItem(MASTER_JOB_ORDER_UPDATE_KEY,jobOrderVerified?.updateTime||"");
+
+        masterErpMappingReady=true;masterErpMappingConflict=false;
+        masterErpJoStatusReady=true;masterErpJoStatusConflict=false;
+        masterJobOrderReady=true;masterJobOrderConflict=false;
+
+        renderMasterErpMappingList();
+        renderMasterErpJoStatusList();
+        renderMasterJobOrder();
+        for(let i=1;i<=4;i++) {
+          const box=document.getElementById(idFgJobOrderSuggestions(i));
+          if(box?.style.display==="block")onFgJobOrderTypeIndex(i);
+        }
+
+        const removedFromJobOrder=remoteJobOrders.includes(jo);
+        setStatusMasterErpMapping("success","JO "+jo+" berhasil dihapus permanen dan diverifikasi dari seluruh Cloud Master.");
+        setStatusMasterJobOrder("success","JO "+jo+" dihapus permanen. Master Job Order tersisa "+masterJobOrders.length+" JO.");
+        alert("JO "+jo+" berhasil dihapus permanen.\n\nRelasi ERP: dihapus\nJO Nonaktif: dihapus\nMaster JO umum: "+(removedFromJobOrder?"dihapus":"tidak tercatat")+"\n\nProduk Master FG, Item Code, dan JO lain tetap aman.");
+      } catch(e) {
+        const message=transactionCommitted
+          ?"Transaksi sudah terkirim ke Cloud, tetapi verifikasi baca ulang gagal. Jangan ulangi penghapusan dulu; sinkronkan ketiga Master dan periksa status JO. Detail: "+e.message
+          :e.message;
+        setStatusMasterErpMapping(transactionCommitted?"warning":"error",message);
+        alert(message);
+      } finally {
+        masterErpMappingBusy=false;
+        masterErpJoStatusBusy=false;
+        masterJobOrderBusy=false;
+        renderMasterErpJoStatusList();
+        renderMasterErpMappingList();
+      }
+    }
+
     function resetCariMaster(listName) {
       if(listName==="catalog"){masterCatalogVisibleLimit=MASTER_LIST_PAGE_SIZE;renderMasterModalList();}
       else if(listName==="produkFg"){masterProdukFgVisibleLimit=MASTER_LIST_PAGE_SIZE;renderMasterProdukFg();}
@@ -7384,13 +7610,21 @@
         const context=row.record
           ?'<div style="font-size:.65rem;color:var(--text-muted);margin-top:3px;">'+escapeHtmlMasterErp(row.record.itemCode)+' • '+escapeHtmlMasterErp(row.record.itemName)+(row.record.fgProductName?' • '+escapeHtmlMasterErp(row.record.fgProductName):"")+'</div>'
           :'<div style="font-size:.65rem;color:var(--text-muted);margin-top:3px;">Relasi Item Code saat ini tidak ditemukan.</div>';
+        const permanentDeleteButton=row.disabled
+          ?'<button class="btn btn-danger" type="button" style="font-size:.62rem;padding:5px 7px;white-space:nowrap;" data-delete-jo="'+encoded+'" '+(masterErpJoStatusBusy||masterErpMappingBusy||masterJobOrderBusy?'disabled':"")+'>Hapus Permanen</button>'
+          :"";
         return '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 2px;border-bottom:1px solid #e2e8f0;">'+
           '<div style="min-width:0;flex:1;"><div style="font-size:.74rem;font-weight:800;color:var(--navy);">'+escapeHtmlMasterErp(row.jo)+' <span style="font-size:.62rem;font-weight:700;color:'+(row.disabled?'#b45309':'#047857')+';">'+(row.disabled?'• NONAKTIF / CLOSED':'• AKTIF')+'</span></div>'+context+'</div>'+
-          '<button class="btn '+(row.disabled?'btn-primary':'btn-outline')+'" type="button" style="font-size:.62rem;padding:5px 7px;white-space:nowrap;" data-jo="'+encoded+'" data-reactivate="'+(row.disabled?'1':'0')+'" '+(masterErpJoStatusBusy?'disabled':"")+'>'+action+'</button>'+
-          '</div>';
+          '<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;justify-content:flex-end;">'+
+            '<button class="btn '+(row.disabled?'btn-primary':'btn-outline')+'" type="button" style="font-size:.62rem;padding:5px 7px;white-space:nowrap;" data-jo="'+encoded+'" data-reactivate="'+(row.disabled?'1':'0')+'" '+(masterErpJoStatusBusy?'disabled':"")+'>'+action+'</button>'+
+            permanentDeleteButton+
+          '</div></div>';
       }).join("")+htmlTombolMuatLebihBanyak("erpJo",visible.length,displayed.length);
       list.querySelectorAll("button[data-jo]").forEach(button=>button.addEventListener("click",()=>{
         ubahStatusJoErp(decodeURIComponent(button.dataset.jo),button.dataset.reactivate!=="1");
+      }));
+      list.querySelectorAll("button[data-delete-jo]").forEach(button=>button.addEventListener("click",()=>{
+        hapusPermanenJoErp(decodeURIComponent(button.dataset.deleteJo));
       }));
     }
 
