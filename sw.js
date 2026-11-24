@@ -1,4 +1,4 @@
-const CACHE_NAME = "smart-wip-assy-v19-permanent-jo-delete";
+const CACHE_NAME = "smart-wip-assy-v20-fg-master-overtime";
 const ASSETS_TO_CACHE = [
   "./",
   "./index.html",
