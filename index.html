@@ -1383,7 +1383,7 @@
           </div>
           <div>
             <label>Istirahat Reguler Shift (Menit)</label>
-            <input type="number" id="fgBreakMinutes" inputmode="numeric" min="0" step="1" placeholder="Otomatis 60 menit jika melewati tengah hari" oninput="onFgDurationInput()" />
+            <input type="number" id="fgBreakMinutes" inputmode="numeric" min="0" step="1" placeholder="Otomatis 60 menit untuk durasi 6 jam atau lebih" oninput="onFgDurationInput()" />
             <div class="fg-break-presets" aria-label="Pilihan cepat durasi istirahat reguler">
               <button type="button" class="btn btn-outline fg-break-preset" data-minutes="0" onclick="pilihDurasiIstirahat(0)">0 menit</button>
               <button type="button" class="btn btn-outline fg-break-preset" data-minutes="30" onclick="pilihDurasiIstirahat(30)">30 menit</button>
@@ -1637,7 +1637,7 @@
           <button class="btn btn-edit" onclick="buatUlangWaFg()">↻ Format Otomatis</button>
         </div>
         <p style="font-size:0.73rem; color:var(--text-muted); margin:-3px 0 8px;">
-          Laporan Finish Good dapat diedit langsung. Perubahan manual dipertahankan saat daftar FG atau WIP diperbarui. Gunakan Format Otomatis untuk menyusun ulang.
+          Laporan WhatsApp disusun dari Daftar FG. Saat data FG diperbarui, angka target, PCS, dan persentase akan disinkronkan otomatis. Untuk catatan tambahan, gunakan kolom Catatan pada data FG.
         </p>
         <textarea id="waPreviewFg" class="wa-preview" oninput="waFgManuallyEdited=true; simpanDraftLokal();" placeholder="Laporan Finish Good akan tampil di sini dan dapat diedit..."></textarea>
       </div>
@@ -6657,6 +6657,12 @@
         : detail&&detail.grossMinutes>=6*60
           ? "Istirahat reguler minimum "+regular+" menit otomatis/tercatat untuk durasi 6 jam atau lebih."
           : "Istirahat reguler mengikuti input/jadwal shift. Tambahan 30 menit otomatis berlaku jika Shift 1 melewati pukul 17.00.";
+      const minimumRegular=detail&&detail.grossMinutes>=6*60?60:0;
+      document.querySelectorAll(".fg-break-preset").forEach(button=>{
+        const value=Number(button.dataset.minutes)||0;
+        button.disabled=value<minimumRegular;
+        button.title=button.disabled?"Istirahat reguler minimum 60 menit untuk durasi 6 jam atau lebih":"Pilih durasi istirahat reguler";
+      });
       info.style.color=extra?"#b45309":"var(--text-muted)";
       info.style.fontWeight=extra?"700":"400";
     }
@@ -9836,6 +9842,7 @@
       pulihkanDraftLokalJikaHariSama();
       const targetLegacyUpdated=migrasikanTargetFgLamaKeMaster();
       if(targetLegacyUpdated>0)simpanDraftLokal();
+      terapkanJamLaporanDariDurasiFg();
       perbaruiTombolHapusNamaProdukFg();
       perbaruiInfoIstirahatOvertimeFg();
       hitungTargetFgOtomatis(false);
