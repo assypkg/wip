@@ -1,4 +1,4 @@
-const CACHE_NAME = "smart-wip-assy-v20-fg-master-overtime";
+const CACHE_NAME = "smart-wip-assy-v21-fg-target-migration-wa-refresh";
 const ASSETS_TO_CACHE = [
   "./",
   "./index.html",
