@@ -2670,6 +2670,7 @@
             fgPlant: document.getElementById("fgPlant")?.value || "PLANT ALPHA",
             fgLeader: document.getElementById("fgLeader")?.value || "",
             fgDuration: document.getElementById("fgDuration")?.value || "15.00-23.00",
+            fgBreakMinutes: document.getElementById("fgBreakMinutes")?.value ?? "",
             fgProductName: document.getElementById("fgProductName")?.value || "",
             fgLastSelectedProductName: fgLastSelectedProductName || "",
             fgJobOrder: document.getElementById("fgJobOrder")?.value || "",
@@ -2786,6 +2787,7 @@
         if (f.fgPlant) document.getElementById("fgPlant").value = f.fgPlant;
         if (f.fgLeader !== undefined) document.getElementById("fgLeader").value = f.fgLeader;
         if (f.fgDuration !== undefined) document.getElementById("fgDuration").value = f.fgDuration;
+        if (f.fgBreakMinutes !== undefined) document.getElementById("fgBreakMinutes").value = f.fgBreakMinutes;
         if (f.fgProductName !== undefined || f.fgJobOrder !== undefined) {
           document.getElementById("fgProductName").value = f.fgProductName || "";
           fgLastSelectedProductName = f.fgProductName || "";
