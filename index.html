@@ -1389,7 +1389,7 @@
               <button type="button" class="btn btn-outline fg-break-preset" data-minutes="30" onclick="pilihDurasiIstirahat(30)">30 menit</button>
               <button type="button" class="btn btn-outline fg-break-preset" data-minutes="60" onclick="pilihDurasiIstirahat(60)">60 menit</button>
             </div>
-            <div id="fgOvertimeBreakInfo" style="font-size:.66rem;color:var(--text-muted);margin-top:3px;">Istirahat reguler diisi sesuai jadwal shift. Tambahan istirahat lembur 30 menit dihitung otomatis bila Shift 1 melewati pukul 17.00.</div>
+            <div id="fgOvertimeBreakInfo" style="font-size:.66rem;color:var(--text-muted);margin-top:3px;">Istirahat reguler minimum 60 menit untuk durasi 6 jam atau lebih. Tambahan lembur 30 menit otomatis bila Shift 1 melewati pukul 17.00.</div>
           </div>
           <div id="fgProductChangeHint" style="display:none;grid-column:1/-1;padding:8px 10px;border-radius:8px;background:#eff6ff;color:#1d4ed8;font-size:.72rem;font-weight:700;"></div>
           <div style="grid-column: 1 / -1;">
@@ -6630,10 +6630,11 @@
       const detail=rincianDurasiKerjaFg(duration);
       const manualText=String(nilaiManual??"").trim();
       const manual=manualText===""?0:Math.max(0,Number(manualText)||0);
-      // Shift siang yang melewati tengah hari memiliki istirahat reguler minimum 60 menit.
-      // Nilai manual yang lebih besar tetap dihormati; nilai lebih kecil tidak mengurangi aturan minimum.
-      const defaultLunch=detail&&detail.startMinutes<12*60&&detail.endMinutes>12*60?60:0;
-      return Math.max(defaultLunch,manual);
+      // Durasi kerja 6 jam atau lebih mendapat istirahat reguler minimum 60 menit.
+      // Tambahan istirahat lembur 30 menit dihitung terpisah hanya untuk Shift 1 melewati 17.00.
+      // Nilai manual yang lebih besar tetap dihormati; nilai lebih kecil tidak mengurangi minimum.
+      const defaultRegular=detail&&detail.grossMinutes>=6*60?60:0;
+      return Math.max(defaultRegular,manual);
     }
 
     function hitungTotalIstirahatFg(duration, istirahatReguler) {
@@ -6648,11 +6649,13 @@
       const duration=document.getElementById("fgDuration")?.value||"";
       const extra=hitungIstirahatTambahanOvertimeFg(duration);
       const detail=rincianDurasiKerjaFg(duration);
-      const lunchDefault=detail&&detail.startMinutes<12*60&&detail.endMinutes>12*60;
+      const regular=ambilIstirahatRegulerFg(duration,document.getElementById("fgBreakMinutes")?.value);
+      const regularInput=String(document.getElementById("fgBreakMinutes")?.value??"").trim();
+      const regularLabel=regularInput===""?"60 menit otomatis":regular+" menit";
       info.textContent=extra
-        ? "Istirahat reguler "+(lunchDefault?"60 menit otomatis":"sesuai input")+" + istirahat lembur tambahan 30 menit otomatis setelah pukul 17.00."
-        : lunchDefault
-          ? "Istirahat reguler minimum 60 menit otomatis diterapkan karena durasi melewati tengah hari."
+        ? "Istirahat reguler "+regularLabel+" + istirahat lembur tambahan 30 menit otomatis setelah pukul 17.00."
+        : detail&&detail.grossMinutes>=6*60
+          ? "Istirahat reguler minimum "+regular+" menit otomatis/tercatat untuk durasi 6 jam atau lebih."
           : "Istirahat reguler mengikuti input/jadwal shift. Tambahan 30 menit otomatis berlaku jika Shift 1 melewati pukul 17.00.";
       info.style.color=extra?"#b45309":"var(--text-muted)";
       info.style.fontWeight=extra?"700":"400";
@@ -6725,14 +6728,23 @@
       if (![0, 30, 60].includes(value)) return;
       const input = document.getElementById("fgBreakMinutes");
       if (!input) return;
-      input.value = String(value);
+      const applied=ambilIstirahatRegulerFg(document.getElementById("fgDuration")?.value||"",value);
+      input.value = String(applied);
       document.querySelectorAll(".fg-break-preset").forEach(button => {
-        button.classList.toggle("selected", Number(button.dataset.minutes) === value);
+        button.classList.toggle("selected", Number(button.dataset.minutes) === applied);
       });
       onFgDurationInput();
     }
 
     function onFgDurationInput() {
+      const breakInput=document.getElementById("fgBreakMinutes");
+      if(breakInput&&String(breakInput.value||"").trim()!==""){
+        const applied=ambilIstirahatRegulerFg(document.getElementById("fgDuration")?.value||"",breakInput.value);
+        breakInput.value=String(applied);
+        document.querySelectorAll(".fg-break-preset").forEach(button=>{
+          button.classList.toggle("selected",Number(button.dataset.minutes)===applied);
+        });
+      }
       perbaruiInfoIstirahatOvertimeFg();
       hitungTargetFgOtomatis(true);
       simpanDraftLokal();
