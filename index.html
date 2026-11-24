@@ -7416,6 +7416,8 @@
         }
         if(!Array.isArray(remoteMappings)||!Array.isArray(remoteDisabled)||!Array.isArray(remoteJobOrders))
           throw new Error("Struktur data Master ERP, JO Nonaktif, atau Master JO tidak valid.");
+        if(!mappingDoc.updateTime||!statusDoc.updateTime||(jobOrderDoc&&!jobOrderDoc.updateTime))
+          throw new Error("Versi dokumen Cloud tidak lengkap. Sinkronkan ulang sebelum menghapus.");
 
         const disabled=normalisasiMasterErpJoStatus(remoteDisabled);
         if(!disabled.includes(jo))throw new Error("JO "+jo+" tidak ditemukan pada daftar JO Nonaktif Cloud. Penghapusan dibatalkan.");
@@ -7535,10 +7537,10 @@
           if(box?.style.display==="block")onFgJobOrderTypeIndex(i);
         }
 
-        const removedFromJobOrder=remoteJobOrders.includes(jo);
+        const removedFromJobOrder=!!jobOrderDoc&&normalisasiMasterJobOrder(remoteJobOrders).includes(jo);
         setStatusMasterErpMapping("success","JO "+jo+" berhasil dihapus permanen dan diverifikasi dari seluruh Cloud Master.");
         setStatusMasterJobOrder("success","JO "+jo+" dihapus permanen. Master Job Order tersisa "+masterJobOrders.length+" JO.");
-        alert("JO "+jo+" berhasil dihapus permanen.\n\nRelasi ERP: "+(remoteJoExists?"dihapus":"sudah tidak ada")+"\nJO Nonaktif: dihapus\nMaster JO umum: "+(removedFromJobOrder?"dihapus":"tidak tercatat")+"\n\nProduk Master FG, Item Code, dan JO lain tetap aman.");
+        alert("JO "+jo+" berhasil dihapus permanen.\n\nRelasi ERP: "+(remoteJoExists?"dihapus":"sudah tidak ada")+"\nJO Nonaktif: dihapus\nMaster JO umum: "+(removedFromJobOrder?"dihapus dari Cloud":jobOrderDoc?"tidak tercatat":"dokumen Cloud tidak tersedia; daftar lokal dibersihkan")+"\n\nProduk Master FG, Item Code, dan JO lain tetap aman.");
       } catch(e) {
         const message=transactionCommitted
           ?"Transaksi sudah terkirim ke Cloud, tetapi verifikasi baca ulang gagal. Jangan ulangi penghapusan dulu; sinkronkan ketiga Master dan periksa status JO. Detail: "+e.message
