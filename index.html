@@ -7358,12 +7358,9 @@
         return;
       }
       const localMappingRows=masterErpMappings.filter(row=>(row.jobOrders||[]).includes(jo));
-      if(!localMappingRows.length) {
-        alert("Relasi JO tidak ditemukan pada Master ERP. Sinkronkan ulang sebelum menghapus.");
-        return;
-      }
-
-      const itemInfo=localMappingRows.map(row=>row.itemCode+" • "+row.itemName).join("\n");
+      const itemInfo=localMappingRows.length
+        ?localMappingRows.map(row=>row.itemCode+" • "+row.itemName).join("\n")
+        :"Tidak ada relasi Item Code di Master ERP; daftar JO Nonaktif dan Master JO tetap akan dibersihkan.";
       if(!confirm(
         "HAPUS PERMANEN JO "+jo+"?\n\n"+
         itemInfo+"\n\n"+
@@ -7423,7 +7420,6 @@
         const disabled=normalisasiMasterErpJoStatus(remoteDisabled);
         if(!disabled.includes(jo))throw new Error("JO "+jo+" tidak ditemukan pada daftar JO Nonaktif Cloud. Penghapusan dibatalkan.");
         const remoteJoExists=remoteMappings.some(row=>Array.isArray(row.jobOrders)&&row.jobOrders.some(value=>String(value||"").trim().toUpperCase().replace(/\s+/g,"")===jo));
-        if(!remoteJoExists)throw new Error("Relasi JO "+jo+" tidak ditemukan pada Master ERP Cloud. Tidak ada data yang dihapus.");
 
         const nextMappings=remoteMappings.map(row=>({
           ...row,
@@ -7542,7 +7538,7 @@
         const removedFromJobOrder=remoteJobOrders.includes(jo);
         setStatusMasterErpMapping("success","JO "+jo+" berhasil dihapus permanen dan diverifikasi dari seluruh Cloud Master.");
         setStatusMasterJobOrder("success","JO "+jo+" dihapus permanen. Master Job Order tersisa "+masterJobOrders.length+" JO.");
-        alert("JO "+jo+" berhasil dihapus permanen.\n\nRelasi ERP: dihapus\nJO Nonaktif: dihapus\nMaster JO umum: "+(removedFromJobOrder?"dihapus":"tidak tercatat")+"\n\nProduk Master FG, Item Code, dan JO lain tetap aman.");
+        alert("JO "+jo+" berhasil dihapus permanen.\n\nRelasi ERP: "+(remoteJoExists?"dihapus":"sudah tidak ada")+"\nJO Nonaktif: dihapus\nMaster JO umum: "+(removedFromJobOrder?"dihapus":"tidak tercatat")+"\n\nProduk Master FG, Item Code, dan JO lain tetap aman.");
       } catch(e) {
         const message=transactionCommitted
           ?"Transaksi sudah terkirim ke Cloud, tetapi verifikasi baca ulang gagal. Jangan ulangi penghapusan dulu; sinkronkan ketiga Master dan periksa status JO. Detail: "+e.message
