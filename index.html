@@ -8864,9 +8864,10 @@
           const closeButton=document.createElement("button");
           closeButton.type="button";
           closeButton.className="btn btn-outline";
-          closeButton.textContent="JO Closed";
-          closeButton.style.cssText="font-size:.58rem;padding:4px 6px;margin-left:6px;white-space:nowrap;";
+          closeButton.textContent="×";
+          closeButton.style.cssText="width:30px;height:30px;display:inline-flex;align-items:center;justify-content:center;font-size:1rem;font-weight:900;line-height:1;padding:0;margin-left:6px;flex:0 0 auto;color:#b91c1c;border-color:#fecaca;background:#fff1f2;";
           closeButton.title="Nonaktifkan JO karena sudah Closed";
+          closeButton.setAttribute("aria-label","Nonaktifkan JO "+jo+" karena sudah Closed");
           closeButton.addEventListener("pointerdown",event=>event.preventDefault());
           closeButton.addEventListener("click",event=>{
             event.preventDefault();event.stopPropagation();
