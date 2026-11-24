@@ -7692,6 +7692,13 @@
       const fgReady=await tarikMasterProdukFgCloud();
       if(!fgReady||!masterProdukFgReady||masterProdukFgConflict)return;
 
+      // Track legacy Item Codes that still refer to products no longer in Master FG.
+      const clearedMappingItemCodes=new Set(
+        masterErpMappings
+          .filter(row=>row.fgProductName&&!cariProdukMasterFgValid(row.fgProductName))
+          .map(row=>row.itemCode)
+      );
+
       // Refresh ERP relations as well. normalisasiMasterErpMappings now clears
       // references to products that no longer exist in Master FG.
       const erpReady=await tarikMasterErpMappingCloud();
@@ -7702,6 +7709,7 @@
         const valid=cariProdukMasterFgValid(item.fgProductName);
         const exact=cariProdukMasterFgValid(item.itemName);
         if(item.fgProductName&&!valid)clearedPendingMappings++;
+        if(item.fgProductName&&!valid)clearedMappingItemCodes.add(item.itemCode);
         item.fgProductName=valid||exact||"";
       });
       if(clearedPendingMappings)renderMasterErpPreview();
@@ -7752,7 +7760,8 @@
       pendingErpImport=[];pendingErpImportConflicts=[];
       renderMasterErpPreview();renderMasterErpMappingList();
       const unmappedCount=masterErpMappings.filter(x=>!x.fgProductName).length;
-      const cleanupNote=clearedPendingMappings?" "+clearedPendingMappings+" pemetaan tidak valid dibersihkan.":"";
+      const cleanupCount=clearedMappingItemCodes.size;
+      const cleanupNote=cleanupCount?" "+cleanupCount+" pemetaan lama tidak valid dibersihkan menjadi Belum dipetakan.":"";
       setStatusMasterErpMapping(unmappedCount?"warning":"success","Import terverifikasi • "+itemCount+" Item Code • "+joCount+" JO unik • "+unmappedCount+" belum dipetakan ke Master FG."+cleanupNote+" "+(joSaved?"Master JO umum juga diperbarui di Cloud.":"Relasi ERP tersimpan; daftar Master JO umum belum berhasil disinkronkan.")+" Item yang belum dipetakan belum mengisi target/Qty Box otomatis.");
     }
 
