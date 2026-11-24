@@ -7413,7 +7413,7 @@
         try {
           remoteMappings=JSON.parse(mappingDoc.fields?.mappingsJson?.stringValue||"[]");
           remoteDisabled=JSON.parse(statusDoc.fields?.disabledJOsJson?.stringValue||"[]");
-          remoteJobOrders=jobOrderDoc?JSON.parse(jobOrderDoc.fields?.jobOrdersJson?.stringValue||"[]"):[];
+          remoteJobOrders=jobOrderDoc?JSON.parse(jobOrderDoc.fields?.jobOrdersJson?.stringValue||"[]"):normalisasiMasterJobOrder(masterJobOrders);
         } catch(e) {
           throw new Error("Data JO pada Cloud tidak dapat dibaca dalam format yang benar.");
         }
@@ -7505,7 +7505,9 @@
         ]);
         const verifiedMappings=JSON.parse(mappingVerified.fields?.mappingsJson?.stringValue||"[]");
         const verifiedDisabled=normalisasiMasterErpJoStatus(JSON.parse(statusVerified.fields?.disabledJOsJson?.stringValue||"[]"));
-        const verifiedJobOrders=jobOrderVerified?normalisasiMasterJobOrder(JSON.parse(jobOrderVerified.fields?.jobOrdersJson?.stringValue||"[]")):[];
+        const verifiedJobOrders=jobOrderVerified
+          ?normalisasiMasterJobOrder(JSON.parse(jobOrderVerified.fields?.jobOrdersJson?.stringValue||"[]"))
+          :normalisasiMasterJobOrder(remoteJobOrders).filter(value=>value!==jo);
         const remainsInMappings=verifiedMappings.some(row=>(row.jobOrders||[]).some(value=>String(value||"").trim().toUpperCase().replace(/\s+/g,"")===jo));
         if(remainsInMappings||verifiedDisabled.includes(jo)||verifiedJobOrders.includes(jo))
           throw new Error("Verifikasi Cloud menemukan JO masih tersimpan pada salah satu sumber.");
