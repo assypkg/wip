@@ -1428,6 +1428,31 @@
         </div>
 
         <!-- AUTO KALKULATOR HASIL PRODUKSI (A & B @ ISI PER BOX) -->
+        <div style="grid-column:1/-1;border:1px solid #cbd5e1;border-radius:10px;padding:10px;background:#f8fafc;">
+          <label style="display:flex;align-items:center;gap:8px;margin:0;font-weight:800;color:var(--navy);">
+            <input type="checkbox" id="fgManpowerEnabled" onchange="onFgManpowerToggle()" style="width:18px;min-height:18px;margin:0;flex:0 0 auto;" />
+            <span>Penyesuaian target berdasarkan jumlah operator (opsional)</span>
+          </label>
+          <div id="fgManpowerFields" style="display:none;margin-top:10px;">
+            <div class="fg-main-calc-grid">
+              <div>
+                <label>Standar Operator (Orang)</label>
+                <input type="number" id="fgManpowerStandard" inputmode="numeric" min="1" step="1" placeholder="Contoh: 11" oninput="onFgManpowerInput()" />
+              </div>
+              <div>
+                <label>Operator Aktual (Orang)</label>
+                <input type="number" id="fgManpowerActual" inputmode="numeric" min="1" step="1" placeholder="Contoh: 7" oninput="onFgManpowerInput()" />
+              </div>
+            </div>
+            <div id="fgManpowerInfo" style="font-size:.7rem;color:var(--text-muted);margin-top:7px;line-height:1.45;">
+              Isi standar operator dan jumlah operator aktual. Target akan dihitung proporsional setelah memperhitungkan durasi kerja efektif.
+            </div>
+          </div>
+          <div id="fgManpowerDefaultInfo" style="font-size:.68rem;color:var(--text-muted);margin-top:5px;">
+            Kondisi normal: biarkan tidak dicentang. Target mengikuti Master Produk FG.
+          </div>
+        </div>
+
         <div class="calc-panel">
           <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px; margin-bottom:8px;">
             <label style="color:var(--emerald); margin:0;">🧮 HASIL JOB ORDER PERTAMA</label>
@@ -2671,6 +2696,9 @@
             fgLeader: document.getElementById("fgLeader")?.value || "",
             fgDuration: document.getElementById("fgDuration")?.value || "15.00-23.00",
             fgBreakMinutes: document.getElementById("fgBreakMinutes")?.value ?? "",
+            fgManpowerEnabled: !!document.getElementById("fgManpowerEnabled")?.checked,
+            fgManpowerStandard: document.getElementById("fgManpowerStandard")?.value || "",
+            fgManpowerActual: document.getElementById("fgManpowerActual")?.value || "",
             fgProductName: document.getElementById("fgProductName")?.value || "",
             fgLastSelectedProductName: fgLastSelectedProductName || "",
             fgJobOrder: document.getElementById("fgJobOrder")?.value || "",
@@ -2788,6 +2816,9 @@
         if (f.fgLeader !== undefined) document.getElementById("fgLeader").value = f.fgLeader;
         if (f.fgDuration !== undefined) document.getElementById("fgDuration").value = f.fgDuration;
         if (f.fgBreakMinutes !== undefined) document.getElementById("fgBreakMinutes").value = f.fgBreakMinutes;
+        if (f.fgManpowerEnabled !== undefined) document.getElementById("fgManpowerEnabled").checked = !!f.fgManpowerEnabled;
+        if (f.fgManpowerStandard !== undefined) document.getElementById("fgManpowerStandard").value = f.fgManpowerStandard;
+        if (f.fgManpowerActual !== undefined) document.getElementById("fgManpowerActual").value = f.fgManpowerActual;
         if (f.fgProductName !== undefined || f.fgJobOrder !== undefined) {
           document.getElementById("fgProductName").value = f.fgProductName || "";
           fgLastSelectedProductName = f.fgProductName || "";
@@ -2844,6 +2875,9 @@
         if (f.spaGudangQtyBoxCount !== undefined) document.getElementById("spaGudangQtyBoxCount").value = f.spaGudangQtyBoxCount;
         if (f.waSpaManuallyEdited !== undefined) waSpaManuallyEdited = !!f.waSpaManuallyEdited;
         if (f.waPreviewSpa !== undefined) document.getElementById("waPreviewSpa").value = f.waPreviewSpa;
+
+        perbaruiInfoPenyesuaianManpowerFg();
+        if (!fgTargetTouched) hitungTargetFgOtomatis(true);
 
         if (draft.activeTabMode) {
           switchMode(draft.activeTabMode);
@@ -3913,6 +3947,20 @@
       const targetMasterFactor=targetMode==="master"&&targetStandard8h>0?target/targetStandard8h:null;
       const breakMinutes=ambilIstirahatRegulerFg(duration,document.getElementById("fgBreakMinutes").value);
       const overtimeBreakMinutes=hitungIstirahatTambahanOvertimeFg(duration);
+      const manpower=ambilDataPenyesuaianManpowerFg();
+      if(manpower.enabled&&!manpower.valid){
+        alert("Penyesuaian manpower aktif. Isi Standar Operator dan Operator Aktual dengan bilangan bulat lebih besar dari 0.");
+        document.getElementById("fgManpowerStandard")?.focus();
+        return;
+      }
+      if(manpower.enabled&&targetStandard8h<=0){
+        alert("Penyesuaian manpower memerlukan Target Standar 8 Jam dari Master Produk FG. Periksa Master FG terlebih dahulu.");
+        return;
+      }
+      const effectiveHours=hitungDurasiJamKerja(duration,breakMinutes+overtimeBreakMinutes);
+      const targetBeforeManpower=targetStandard8h>0&&effectiveHours>0?Math.round(targetStandard8h*effectiveHours/8):null;
+      const targetManpowerCalculated=manpower.enabled&&targetBeforeManpower!==null
+        ?Math.round(targetBeforeManpower*manpower.actualOperators/manpower.standardOperators):null;
       const pcsPerBox=Number(document.getElementById("fgPcsPerBox").value)||0;
       const jobs=ambilInputJobOrdersFg();
       const rawReceh=[1,2,3,4].flatMap(index=>{
@@ -3983,6 +4031,12 @@
         note,gapNote,duration,target,pcsPerBox,
         targetMode,targetMasterFactor,targetStandard8h,
         breakMinutes,overtimeBreakMinutes,
+        manpowerAdjusted:manpower.enabled,
+        manpowerStandardOperators:manpower.enabled?manpower.standardOperators:null,
+        manpowerActualOperators:manpower.enabled?manpower.actualOperators:null,
+        targetBeforeManpower,
+        targetManpowerCalculated,
+        targetManuallyAdjusted:targetMode==="manual",
         boxA:jobs[0].boxA,pcsA:jobs[0].pcsA,boxB:jobs[0].boxB,pcsB:jobs[0].pcsB,
         recehABoxes:jobs[0].recehABoxes,recehBBoxes:jobs[0].recehBBoxes,
         pcsRecehA:jobs[0].pcsRecehA,pcsRecehB:jobs[0].pcsRecehB,
@@ -3997,6 +4051,7 @@
       document.getElementById("fgLeader").value="";
       document.getElementById("fgTarget").value="";
       fgTargetTouched=false;
+      resetPenyesuaianManpowerFg();
       document.getElementById("fgGapNote").value="";
       [2,3,4].forEach(index=>{
         const suffix=String(index);
@@ -4033,6 +4088,10 @@
       document.getElementById("fgGapNote").value=item.gapNote||"";
       document.getElementById("fgDuration").value=item.duration||"";
       document.getElementById("fgBreakMinutes").value=item.breakMinutes!==undefined?String(item.breakMinutes):"";
+      document.getElementById("fgManpowerEnabled").checked=!!item.manpowerAdjusted;
+      document.getElementById("fgManpowerStandard").value=item.manpowerStandardOperators??"";
+      document.getElementById("fgManpowerActual").value=item.manpowerActualOperators??"";
+      perbaruiInfoPenyesuaianManpowerFg();
       document.getElementById("fgTarget").value=item.target||"";
       fgTargetTouched=item.targetMode==="manual";
       if(item.targetMode!=="manual")hitungTargetFgOtomatis(true);
@@ -4138,6 +4197,7 @@
       document.getElementById("fgDuration").value="";
       document.getElementById("fgTarget").value="";
       fgTargetTouched=false;
+      resetPenyesuaianManpowerFg();
       document.getElementById("fgPcsPerBox").value="550";
       fgPcsPerBoxAutoFilled=false;
       const breakInput=document.getElementById("fgBreakMinutes");
@@ -4180,6 +4240,7 @@
       editingFgId = null; fgList = []; waFgManuallyEdited = false;
       fgLastSelectedProductName = "";
       ["fgLeader", "fgProductName", "fgNote"].forEach(id => { const el = document.getElementById(id); if (el) el.value = ""; });
+      resetPenyesuaianManpowerFg();
       kosongkanInputJobOrderTambahanFg();
       document.getElementById("fgJobOrder").value = "";
       document.getElementById("fgEditBanner").style.display = "none";
@@ -4702,6 +4763,9 @@
           else wa+=productHeader+"\n";
           if(it.note)wa+="*"+it.note+"*\n";
           wa+="DURASI  : "+it.duration+"\n";
+          if(it.manpowerAdjusted&&Number(it.manpowerActualOperators)>0){
+            wa+="NOTE: Pakai "+formatNum(it.manpowerActualOperators)+" operator\n";
+          }
           wa+="TARGET : "+formatNum(it.target)+"\n";
           wa+="HASIL\n";
 
@@ -6718,7 +6782,74 @@
       return jam;
     }
 
-    function hitungTargetFgOtomatis(force = false) {
+    function hitungTargetFgOtomatis(force = false) {    function ambilDataPenyesuaianManpowerFg() {
+      const enabled=!!document.getElementById("fgManpowerEnabled")?.checked;
+      const standardRaw=String(document.getElementById("fgManpowerStandard")?.value||"").trim();
+      const actualRaw=String(document.getElementById("fgManpowerActual")?.value||"").trim();
+      const standard=standardRaw===""?0:Number(standardRaw);
+      const actual=actualRaw===""?0:Number(actualRaw);
+      const valid=!enabled || (
+        Number.isInteger(standard) && standard>0 &&
+        Number.isInteger(actual) && actual>0
+      );
+      return {
+        enabled,
+        standardOperators:standard,
+        actualOperators:actual,
+        valid
+      };
+    }
+
+    function perbaruiInfoPenyesuaianManpowerFg() {
+      const checkbox=document.getElementById("fgManpowerEnabled");
+      const fields=document.getElementById("fgManpowerFields");
+      const defaultInfo=document.getElementById("fgManpowerDefaultInfo");
+      const info=document.getElementById("fgManpowerInfo");
+      if(!checkbox||!fields)return;
+      const manpower=ambilDataPenyesuaianManpowerFg();
+      fields.style.display=manpower.enabled?"block":"none";
+      if(defaultInfo)defaultInfo.style.display=manpower.enabled?"none":"block";
+      if(!info)return;
+      if(!manpower.enabled){
+        info.textContent="Penyesuaian tidak aktif. Target mengikuti Master Produk FG dan durasi kerja efektif.";
+        info.style.color="var(--text-muted)";
+        return;
+      }
+      if(!manpower.valid){
+        info.textContent="Isi standar operator dan operator aktual dengan bilangan bulat lebih besar dari 0.";
+        info.style.color="#b45309";
+        return;
+      }
+      const ratio=(manpower.actualOperators/manpower.standardOperators)*100;
+      info.textContent="Penyesuaian aktif: "+manpower.actualOperators+" dari "+manpower.standardOperators+" operator ("+ratio.toFixed(2)+"% dari standar). Target dihitung otomatis dan masih dapat dikoreksi manual.";
+      info.style.color="var(--navy)";
+    }
+
+    function onFgManpowerToggle() {
+      fgTargetTouched=false;
+      perbaruiInfoPenyesuaianManpowerFg();
+      hitungTargetFgOtomatis(true);
+      simpanDraftLokal();
+    }
+
+    function onFgManpowerInput() {
+      fgTargetTouched=false;
+      perbaruiInfoPenyesuaianManpowerFg();
+      hitungTargetFgOtomatis(true);
+      simpanDraftLokal();
+    }
+
+    function resetPenyesuaianManpowerFg() {
+      const checkbox=document.getElementById("fgManpowerEnabled");
+      const standard=document.getElementById("fgManpowerStandard");
+      const actual=document.getElementById("fgManpowerActual");
+      if(checkbox)checkbox.checked=false;
+      if(standard)standard.value="";
+      if(actual)actual.value="";
+      perbaruiInfoPenyesuaianManpowerFg();
+    }
+
+
       const productInput = document.getElementById("fgProductName");
       const durationInput = document.getElementById("fgDuration");
       const targetInput = document.getElementById("fgTarget");
@@ -6745,9 +6876,24 @@
         }
         return 0;
       }
-      const calculated = Math.round(standard8h * hours / 8);
+      const targetBeforeManpower = Math.round(standard8h * hours / 8);
+      const manpower=ambilDataPenyesuaianManpowerFg();
+      if(manpower.enabled&&!manpower.valid){
+        targetInput.value="";
+        perbaruiInfoPenyesuaianManpowerFg();
+        fgTargetTouched=false;
+        return 0;
+      }
+      const calculated = manpower.enabled
+        ? Math.round(targetBeforeManpower * manpower.actualOperators / manpower.standardOperators)
+        : targetBeforeManpower;
       targetInput.value = String(calculated);
       fgTargetTouched = false;
+      perbaruiInfoPenyesuaianManpowerFg();
+      if(manpower.enabled){
+        const info=document.getElementById("fgManpowerInfo");
+        if(info)info.textContent="Target otomatis: "+formatNum(calculated)+" PCS untuk "+hours+" jam efektif. Rasio operator "+manpower.actualOperators+"/"+manpower.standardOperators+". Target masih dapat dikoreksi manual.";
+      }
       return calculated;
     }
 
