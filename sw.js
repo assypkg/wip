@@ -1,4 +1,4 @@
-const CACHE_NAME = "smart-wip-assy-v21-fg-target-migration-wa-refresh";
+const CACHE_NAME = "smart-wip-assy-v22-fg-manpower-adjustment";
 const ASSETS_TO_CACHE = [
   "./",
   "./index.html",
