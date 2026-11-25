@@ -6782,7 +6782,7 @@
       return jam;
     }
 
-    function hitungTargetFgOtomatis(force = false) {    function ambilDataPenyesuaianManpowerFg() {
+    function ambilDataPenyesuaianManpowerFg() {
       const enabled=!!document.getElementById("fgManpowerEnabled")?.checked;
       const standardRaw=String(document.getElementById("fgManpowerStandard")?.value||"").trim();
       const actualRaw=String(document.getElementById("fgManpowerActual")?.value||"").trim();
@@ -6806,10 +6806,12 @@
       const defaultInfo=document.getElementById("fgManpowerDefaultInfo");
       const info=document.getElementById("fgManpowerInfo");
       if(!checkbox||!fields)return;
+
       const manpower=ambilDataPenyesuaianManpowerFg();
       fields.style.display=manpower.enabled?"block":"none";
       if(defaultInfo)defaultInfo.style.display=manpower.enabled?"none":"block";
       if(!info)return;
+
       if(!manpower.enabled){
         info.textContent="Penyesuaian tidak aktif. Target mengikuti Master Produk FG dan durasi kerja efektif.";
         info.style.color="var(--text-muted)";
@@ -6820,8 +6822,9 @@
         info.style.color="#b45309";
         return;
       }
+
       const ratio=(manpower.actualOperators/manpower.standardOperators)*100;
-      info.textContent="Penyesuaian aktif: "+manpower.actualOperators+" dari "+manpower.standardOperators+" operator ("+ratio.toFixed(2)+"% dari standar). Target dihitung otomatis dan masih dapat dikoreksi manual.";
+      info.textContent="Penyesuaian aktif: "+manpower.actualOperators+" dari "+manpower.standardOperators+" operator ("+ratio.toFixed(2)+"% dari standar). Target dihitung proporsional setelah durasi kerja dan masih dapat dikoreksi manual.";
       info.style.color="var(--navy)";
     }
 
@@ -6849,7 +6852,7 @@
       perbaruiInfoPenyesuaianManpowerFg();
     }
 
-
+    function hitungTargetFgOtomatis(force = false) {
       const productInput = document.getElementById("fgProductName");
       const durationInput = document.getElementById("fgDuration");
       const targetInput = document.getElementById("fgTarget");
@@ -6863,8 +6866,10 @@
           targetInput.value = "";
           fgTargetTouched = false;
         }
+        perbaruiInfoPenyesuaianManpowerFg();
         return 0;
       }
+
       const breakInput = document.getElementById("fgBreakMinutes");
       const breakDetail=hitungTotalIstirahatFg(durationInput.value,breakInput ? breakInput.value : "");
       const hours = hitungDurasiJamKerja(durationInput.value, breakDetail.totalMinutes);
@@ -6874,25 +6879,34 @@
           targetInput.value = "";
           fgTargetTouched = false;
         }
+        perbaruiInfoPenyesuaianManpowerFg();
         return 0;
       }
+
       const targetBeforeManpower = Math.round(standard8h * hours / 8);
       const manpower=ambilDataPenyesuaianManpowerFg();
+
+      // Jangan kosongkan target standar ketika admin baru mengisi salah satu
+      // kolom manpower. Target penyesuaian baru berlaku setelah kedua angka valid.
       if(manpower.enabled&&!manpower.valid){
-        targetInput.value="";
-        perbaruiInfoPenyesuaianManpowerFg();
+        targetInput.value=String(targetBeforeManpower);
         fgTargetTouched=false;
-        return 0;
+        perbaruiInfoPenyesuaianManpowerFg();
+        return targetBeforeManpower;
       }
+
       const calculated = manpower.enabled
         ? Math.round(targetBeforeManpower * manpower.actualOperators / manpower.standardOperators)
         : targetBeforeManpower;
       targetInput.value = String(calculated);
       fgTargetTouched = false;
       perbaruiInfoPenyesuaianManpowerFg();
+
       if(manpower.enabled){
         const info=document.getElementById("fgManpowerInfo");
-        if(info)info.textContent="Target otomatis: "+formatNum(calculated)+" PCS untuk "+hours+" jam efektif. Rasio operator "+manpower.actualOperators+"/"+manpower.standardOperators+". Target masih dapat dikoreksi manual.";
+        if(info){
+          info.textContent="Target otomatis: "+formatNum(calculated)+" PCS untuk "+hours+" jam efektif. Rasio operator "+manpower.actualOperators+"/"+manpower.standardOperators+". Target masih dapat dikoreksi manual.";
+        }
       }
       return calculated;
     }
