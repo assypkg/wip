@@ -3849,7 +3849,7 @@
       ["A","B"].forEach(lot=>["L01","L02"].forEach(line=>{
         const boxRaw=String(document.getElementById(idPembagianLineFg(index,lot,"Box",line))?.value||"").trim(),recehRaw=String(document.getElementById(idPembagianLineFg(index,lot,"Receh",line))?.value||"").trim(),box=boxRaw===""?0:Number(boxRaw);
         if(boxRaw!==""&&(!Number.isSafeInteger(box)||box<0))result.errors.push("Lot "+lot+" "+line+": jumlah box harus bilangan bulat 0 atau lebih.");
-        let recehBoxes=[];if(recehRaw!==""){if(!/^[0-9]+(?:\\+[0-9]+)*$/.test(recehRaw))result.errors.push("Lot "+lot+" "+line+": format receh tidak valid. Gunakan contoh 352+500.");else{recehBoxes=recehRaw.split("+").map(Number);if(recehBoxes.some(v=>!Number.isSafeInteger(v)||v<=0))result.errors.push("Lot "+lot+" "+line+": setiap qty receh harus lebih besar dari 0.");}}
+        let recehBoxes=[];if(recehRaw!==""){if(!/^[0-9]+(?:\+[0-9]+)*$/.test(recehRaw))result.errors.push("Lot "+lot+" "+line+": format receh tidak valid. Gunakan contoh 352+500.");else{recehBoxes=recehRaw.split("+").map(Number);if(recehBoxes.some(v=>!Number.isSafeInteger(v)||v<=0))result.errors.push("Lot "+lot+" "+line+": setiap qty receh harus lebih besar dari 0.");}}
         data["lot"+lot][line]={box:Number.isSafeInteger(box)&&box>=0?box:0,recehBoxes,recehPcs:recehBoxes.reduce((sum,v)=>sum+v,0)};
         if(lot==="A"){result.boxA+=Number.isSafeInteger(box)&&box>=0?box:0;result.recehA.push(...recehBoxes);}else{result.boxB+=Number.isSafeInteger(box)&&box>=0?box:0;result.recehB.push(...recehBoxes);}
       }));
