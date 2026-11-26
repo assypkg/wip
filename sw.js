@@ -1,4 +1,4 @@
-const CACHE_NAME = "smart-wip-assy-v24-fg-line-split-receh";
+const CACHE_NAME = "smart-wip-assy-v25-fg-wa-no-duplicate-lot-total";
 const ASSETS_TO_CACHE = [
   "./",
   "./index.html",
