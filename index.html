@@ -332,6 +332,11 @@
       margin-bottom: 4px;
     }
 
+    .fg-option-toggle {position:absolute!important;width:1px!important;height:1px!important;min-height:1px!important;padding:0!important;margin:-1px!important;border:0!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;clip-path:inset(50%)!important;}
+    .fg-option-toggle-ui {width:19px;height:19px;flex:0 0 19px;box-sizing:border-box;display:inline-grid;place-items:center;border:2px solid #64748b;border-radius:4px;background:#fff;vertical-align:middle;}
+    .fg-option-toggle:checked + .fg-option-toggle-ui {background:var(--navy);border-color:var(--navy);}
+    .fg-option-toggle:checked + .fg-option-toggle-ui::after {content:"";width:8px;height:4px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg);margin-top:-2px;}
+    .fg-option-toggle:focus-visible + .fg-option-toggle-ui {outline:3px solid rgba(26,35,126,.22);outline-offset:2px;}
     input, select, textarea {
       width: 100%;
       padding: 10px 11px;
@@ -1430,7 +1435,8 @@
         <!-- AUTO KALKULATOR HASIL PRODUKSI (A & B @ ISI PER BOX) -->
         <div style="grid-column:1/-1;border:1px solid #cbd5e1;border-radius:10px;padding:10px;background:#f8fafc;">
           <label style="display:flex;align-items:center;gap:8px;margin:0;font-weight:800;color:var(--navy);">
-            <input type="checkbox" id="fgManpowerEnabled" onchange="onFgManpowerToggle()" style="width:18px;min-height:18px;margin:0;flex:0 0 auto;" />
+            <input type="checkbox" id="fgManpowerEnabled" class="fg-option-toggle" onchange="onFgManpowerToggle()" />
+            <span class="fg-option-toggle-ui" aria-hidden="true"></span>
             <span>Penyesuaian target berdasarkan jumlah operator (opsional)</span>
           </label>
           <div id="fgManpowerFields" style="display:none;margin-top:10px;">
@@ -3825,6 +3831,7 @@
 
     function suffixPembagianLineFg(index){return index===1?"":String(index);}
     function idPembagianLineFg(index,lot,kind,line){return "fgLine"+lot+kind+line+suffixPembagianLineFg(index);}
+    function ambilNamaLinePembagianFg(index){return {L01:String(document.getElementById(idNamaLineFg(index,"L01"))?.value||"").trim(),L02:String(document.getElementById(idNamaLineFg(index,"L02"))?.value||"").trim()};}
     function buatHtmlPembagianLineFg(index){
       const field=(lot,kind,line,label,placeholder,help="")=>{
         const id=idPembagianLineFg(index,lot,kind,line);
@@ -3832,30 +3839,30 @@
         const sanitize=kind==="Box"?"this.value=this.value.replace(/[^0-9]/g,'');":"this.value=this.value.replace(/[^0-9+]/g,'');";
         return "<div style='min-width:0;'><label for='"+id+"'>"+label+"</label><input type='text' inputmode='"+inputMode+"' id='"+id+"' placeholder='"+placeholder+"' oninput=\""+sanitize+" onFgLineSplitInput("+index+");\" />"+(help?"<small style='color:var(--text-muted);'>"+help+"</small>":"")+"</div>";
       };
-      const line=(lot,name)=>"<div style='border:1px solid #dbe2ed;border-radius:8px;padding:8px;background:#fff;'><b style='display:block;font-size:.72rem;color:var(--navy);margin-bottom:6px;'>"+name+"</b><div class='fg-second-jo-grid'>"+field(lot,"Box",name,name+" — Jumlah Box","Contoh: 5")+field(lot,"Receh",name,name+" — Receh (PCS)","Contoh: 352+500","Setiap angka = 1 box receh.")+"</div></div>";
+      const line=(lot,name)=>"<div style='border:1px solid #dbe2ed;border-radius:8px;padding:8px;background:#fff;'><b style='display:block;font-size:.72rem;color:var(--navy);margin-bottom:6px;'>Line "+(name==="L01"?"1":"2")+"</b><div class='fg-second-jo-grid'>"+field(lot,"Box",name,"Line "+(name==="L01"?"1":"2")+" — Jumlah Box","Contoh: 5")+field(lot,"Receh",name,"Line "+(name==="L01"?"1":"2")+" — Receh (PCS)","Contoh: 352+500","Setiap angka = 1 box receh.")+"</div></div>";
       const lot=key=>"<div style='margin-top:9px;'><div style='font-size:.76rem;font-weight:900;color:var(--navy);margin-bottom:6px;'>LOT "+key+"</div><div class='fg-second-jo-grid'>"+line(key,"L01")+line(key,"L02")+"</div></div>";
       const suffix=suffixPembagianLineFg(index);
-      return "<div style='grid-column:1/-1;border:1px solid #cbd5e1;border-radius:9px;padding:10px;margin-top:8px;background:#f8fafc;'><label style='display:flex;align-items:center;gap:8px;margin:0;font-weight:800;color:var(--navy);'><input type='checkbox' id='fgLineSplitEnabled"+suffix+"' onchange='togglePembagianLineFg("+index+")' style='width:18px;min-height:18px;margin:0;flex:0 0 auto;' /><span>PEMBAGIAN HASIL PRODUKSI PER LINE (OPSIONAL)</span></label><div id='fgLineSplitFields"+suffix+"' style='display:none;margin-top:8px;'>"+lot("A")+lot("B")+"<div style='font-size:.67rem;color:var(--text-muted);margin-top:7px;'>Qty per Box mengikuti kalkulator utama. Receh diisi per line; pisahkan beberapa box dengan tanda +.</div></div><div id='fgLineSplitHint"+suffix+"' style='font-size:.67rem;color:var(--text-muted);margin-top:6px;'>Kondisi normal: biarkan tidak dicentang. Input Lot A/B dan receh menggunakan form biasa.</div></div>";
+      return "<div style='grid-column:1/-1;border:1px solid #cbd5e1;border-radius:9px;padding:10px;margin-top:8px;background:#f8fafc;'><label style='display:flex;align-items:center;gap:8px;margin:0;font-weight:800;color:var(--navy);'><input type='checkbox' class='fg-option-toggle' id='fgLineSplitEnabled"+suffix+"' onchange='togglePembagianLineFg("+index+")' style='width:18px;min-height:18px;margin:0;flex:0 0 auto;' /><span class='fg-option-toggle-ui' aria-hidden='true'></span><span>PEMBAGIAN HASIL PRODUKSI PER LINE (OPSIONAL)</span></label><div id='fgLineSplitFields"+suffix+"' style='display:none;margin-top:8px;'><div style='font-size:.76rem;font-weight:900;color:var(--navy);margin:4px 0 6px;'>NAMA LINE</div><div class='fg-second-jo-grid'><div><label for='fgLineNameL01"+suffix+"'>Nama Line 1</label><input type='text' id='fgLineNameL01"+suffix+"' placeholder='Isi nama line' oninput='hitungPreviewFg();simpanDraftLokal();' /></div><div><label for='fgLineNameL02"+suffix+"'>Nama Line 2</label><input type='text' id='fgLineNameL02"+suffix+"' placeholder='Isi nama line' oninput='hitungPreviewFg();simpanDraftLokal();' /></div></div>"+lot("A")+lot("B")+"<div style='font-size:.67rem;color:var(--text-muted);margin-top:7px;'>Nama line berlaku untuk Lot A dan Lot B. Qty per Box mengikuti kalkulator utama. Receh diisi per line; pisahkan beberapa box dengan tanda +.</div></div><div id='fgLineSplitHint"+suffix+"' style='font-size:.67rem;color:var(--text-muted);margin-top:6px;'>Kondisi normal: biarkan tidak dicentang. Input Lot A/B dan receh menggunakan form biasa.</div></div>";
     }
     function inisialisasiFormPembagianLineFg(){[1,2,3,4].forEach(index=>{const mount=document.getElementById("fgLineSplitMount"+index);if(mount)mount.innerHTML=buatHtmlPembagianLineFg(index);terapkanTampilanPembagianLineFg(index);});}
     function ambilDraftPembagianLineFg(){
-      const draft={};[1,2,3,4].forEach(index=>{const item={enabled:!!document.getElementById("fgLineSplitEnabled"+suffixPembagianLineFg(index))?.checked,values:{}};["A","B"].forEach(lot=>{item.values[lot]={};["L01","L02"].forEach(line=>{item.values[lot][line]={box:document.getElementById(idPembagianLineFg(index,lot,"Box",line))?.value||"",receh:document.getElementById(idPembagianLineFg(index,lot,"Receh",line))?.value||""};});});draft[index]=item;});return draft;
+      const draft={};[1,2,3,4].forEach(index=>{const item={enabled:!!document.getElementById("fgLineSplitEnabled"+suffixPembagianLineFg(index))?.checked,lineNames:ambilNamaLinePembagianFg(index),values:{}};["A","B"].forEach(lot=>{item.values[lot]={};["L01","L02"].forEach(line=>{item.values[lot][line]={box:document.getElementById(idPembagianLineFg(index,lot,"Box",line))?.value||"",receh:document.getElementById(idPembagianLineFg(index,lot,"Receh",line))?.value||""};});});draft[index]=item;});return draft;
     }
     function pulihkanDraftPembagianLineFg(draft){
-      [1,2,3,4].forEach(index=>{const item=draft?.[index];if(!item)return;const check=document.getElementById("fgLineSplitEnabled"+suffixPembagianLineFg(index));if(check)check.checked=!!item.enabled;["A","B"].forEach(lot=>["L01","L02"].forEach(line=>{const value=item.values?.[lot]?.[line]||{};const box=document.getElementById(idPembagianLineFg(index,lot,"Box",line));const receh=document.getElementById(idPembagianLineFg(index,lot,"Receh",line));if(box)box.value=value.box??"";if(receh)receh.value=value.receh??"";}));terapkanTampilanPembagianLineFg(index);});
+      [1,2,3,4].forEach(index=>{const item=draft?.[index];if(!item)return;const check=document.getElementById("fgLineSplitEnabled"+suffixPembagianLineFg(index));if(check)check.checked=!!item.enabled;["L01","L02"].forEach(line=>{const el=document.getElementById(idNamaLineFg(index,line));if(el)el.value=item.lineNames?.[line]??"";});["A","B"].forEach(lot=>["L01","L02"].forEach(line=>{const value=item.values?.[lot]?.[line]||{};const box=document.getElementById(idPembagianLineFg(index,lot,"Box",line));const receh=document.getElementById(idPembagianLineFg(index,lot,"Receh",line));if(box)box.value=value.box??"";if(receh)receh.value=value.receh??"";}));terapkanTampilanPembagianLineFg(index);});
     }
     function dataPembagianLineFgDariInput(index){
       const enabled=!!document.getElementById("fgLineSplitEnabled"+suffixPembagianLineFg(index))?.checked;
       if(!enabled)return {enabled:false,data:null,boxA:0,boxB:0,recehA:[],recehB:[],errors:[]};
-      const data={enabled:true,lotA:{},lotB:{}},result={boxA:0,boxB:0,recehA:[],recehB:[],errors:[]};
+      const lineNames=ambilNamaLinePembagianFg(index),data={enabled:true,lineNames,lotA:{},lotB:{}},result={boxA:0,boxB:0,recehA:[],recehB:[],errors:[]};
       ["A","B"].forEach(lot=>["L01","L02"].forEach(line=>{
         const boxRaw=String(document.getElementById(idPembagianLineFg(index,lot,"Box",line))?.value||"").trim(),recehRaw=String(document.getElementById(idPembagianLineFg(index,lot,"Receh",line))?.value||"").trim(),box=boxRaw===""?0:Number(boxRaw);
         if(boxRaw!==""&&(!Number.isSafeInteger(box)||box<0))result.errors.push("Lot "+lot+" "+line+": jumlah box harus bilangan bulat 0 atau lebih.");
         let recehBoxes=[];if(recehRaw!==""){if(!/^[0-9]+(?:\+[0-9]+)*$/.test(recehRaw))result.errors.push("Lot "+lot+" "+line+": format receh tidak valid. Gunakan contoh 352+500.");else{recehBoxes=recehRaw.split("+").map(Number);if(recehBoxes.some(v=>!Number.isSafeInteger(v)||v<=0))result.errors.push("Lot "+lot+" "+line+": setiap qty receh harus lebih besar dari 0.");}}
-        data["lot"+lot][line]={box:Number.isSafeInteger(box)&&box>=0?box:0,recehBoxes,recehPcs:recehBoxes.reduce((sum,v)=>sum+v,0)};
+        const safeBox=Number.isSafeInteger(box)&&box>=0?box:0;if((safeBox>0||recehBoxes.length)&&!lineNames[line])result.errors.push("Nama "+(line==="L01"?"Line 1":"Line 2")+" wajib diisi jika ada hasil produksi.");data["lot"+lot][line]={name:lineNames[line],box:Number.isSafeInteger(box)&&box>=0?box:0,recehBoxes,recehPcs:recehBoxes.reduce((sum,v)=>sum+v,0)};
         if(lot==="A"){result.boxA+=Number.isSafeInteger(box)&&box>=0?box:0;result.recehA.push(...recehBoxes);}else{result.boxB+=Number.isSafeInteger(box)&&box>=0?box:0;result.recehB.push(...recehBoxes);}
       }));
-      return {enabled:true,data,boxA:result.boxA,boxB:result.boxB,recehA:result.recehA,recehB:result.recehB,errors:result.errors};
+      const usedNames=["L01","L02"].filter(line=>lineNames[line]&&["A","B"].some(lot=>{const it=data["lot"+lot][line];return it.box>0||it.recehBoxes.length;})).map(line=>lineNames[line].toUpperCase());if(usedNames.length===2&&usedNames[0]===usedNames[1])result.errors.push("Nama Line 1 dan Line 2 tidak boleh sama.");return {enabled:true,data,boxA:result.boxA,boxB:result.boxB,recehA:result.recehA,recehB:result.recehB,errors:result.errors};
     }
     function terapkanTampilanPembagianLineFg(index){
       const enabled=!!document.getElementById("fgLineSplitEnabled"+suffixPembagianLineFg(index))?.checked,fields=document.getElementById("fgLineSplitFields"+suffixPembagianLineFg(index)),hint=document.getElementById("fgLineSplitHint"+suffixPembagianLineFg(index));
@@ -4785,8 +4792,8 @@
       const split=jo.lineSplit["lot"+lot]||{},rows=[];
       ["L01","L02"].forEach(line=>{
         const item=split[line]||{},boxes=Number(item.box)||0,receh=Array.isArray(item.recehBoxes)?item.recehBoxes:[];
-        rows.push({label:line,value:formatNum(boxes)+" BOX @"+formatNum(pcsPerBox)+" = "+formatNum(boxes*(Number(pcsPerBox)||0))+" PCS"});
-        if(receh.length){const total=receh.reduce((sum,v)=>sum+(Number(v)||0),0);rows.push({label:line+" RECEH",value:receh.length+" BOX ("+receh.map(formatNum).join(" + ")+") = "+formatNum(total)+" PCS"});}
+        const lineName=String(item.name||jo.lineSplit.lineNames?.[line]||(!jo.lineSplit.lineNames?line:" ")).trim();if(!lineName)return;rows.push({label:lineName,value:formatNum(boxes)+" BOX @"+formatNum(pcsPerBox)+" = "+formatNum(boxes*(Number(pcsPerBox)||0))+" PCS"});
+        if(receh.length){const total=receh.reduce((sum,v)=>sum+(Number(v)||0),0);rows.push({label:lineName+" RECEH",value:receh.length+" BOX ("+receh.map(formatNum).join(" + ")+") = "+formatNum(total)+" PCS"});}
       });
       return rows;
     }
