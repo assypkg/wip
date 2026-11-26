@@ -6810,24 +6810,30 @@
       return {startMinutes:start,endMinutes:end,grossMinutes:end-start,endClockMinutes:end%1440};
     }
 
+    function isShift2OvertimeFg(detail) {
+      if(!detail)return false;
+      const selectedShift=String(document.getElementById("fgShift")?.value||"").trim().toUpperCase();
+      if(selectedShift!=="SHIFT 2 (21.00-06.00)")return false;
+
+      // Shift 2 memiliki 9 jam bruto dari waktu mulai yang dipilih:
+      // 20.00-05.00 atau 21.00-06.00. Jika durasi melewati 9 jam,
+      // tambahkan 30 menit istirahat lembur di luar istirahat reguler.
+      const startClock=detail.startMinutes%1440;
+      const validStart=startClock===20*60||startClock===21*60;
+      return validStart&&detail.grossMinutes>9*60;
+    }
+
     function hitungIstirahatTambahanOvertimeFg(duration) {
       const detail=rincianDurasiKerjaFg(duration);
       if(!detail)return 0;
 
-      const selectedShift=String(document.getElementById("fgShift")?.value||"").trim().toUpperCase();
-      const isShift2Malam=selectedShift==="SHIFT 2 (21.00-06.00)";
-
-      // Shift 2 malam saat lembur menggunakan blok reguler 20.00-05.00
-      // (8 jam efektif setelah istirahat reguler 60 menit).
-      // Jika pekerjaan berlanjut melewati 05.00, tambahkan 30 menit istirahat lembur.
-      const batasAkhirRegulerShift2=24*60+5*60;
-      if(isShift2Malam && detail.startMinutes===20*60 && detail.endMinutes>batasAkhirRegulerShift2){
-        return 30;
-      }
+      if(isShift2OvertimeFg(detail))return 30;
 
       // Aturan Shift 1 tetap: tambahan istirahat 30 menit jika melewati 17.00.
+      const selectedShift=String(document.getElementById("fgShift")?.value||"").trim().toUpperCase();
       const batasLemburShift1=17*60;
-      return detail.startMinutes<12*60 && detail.endMinutes>batasLemburShift1 ? 30 : 0;
+      return selectedShift!=="SHIFT 2 (21.00-06.00)" &&
+        detail.startMinutes<12*60 && detail.endMinutes>batasLemburShift1 ? 30 : 0;
     }
 
     function ambilIstirahatRegulerFg(duration, nilaiManual) {
@@ -6855,15 +6861,15 @@
       const detail=rincianDurasiKerjaFg(duration);
       const shiftValue=String(document.getElementById("fgShift")?.value||"").trim().toUpperCase();
       const isShift2Malam=shiftValue==="SHIFT 2 (21.00-06.00)";
-      const isShift2Overtime=isShift2Malam&&!!detail&&detail.startMinutes===20*60&&detail.endMinutes>24*60+5*60;
+      const isShift2Overtime=isShift2Malam&&isShift2OvertimeFg(detail);
       const regular=ambilIstirahatRegulerFg(duration,document.getElementById("fgBreakMinutes")?.value);
       const regularInput=String(document.getElementById("fgBreakMinutes")?.value??"").trim();
       const regularLabel=regularInput===""?"60 menit otomatis":regular+" menit";
 
       if(isShift2Malam){
         info.textContent=isShift2Overtime
-          ? "Shift 2 lembur: istirahat reguler "+regularLabel+" + istirahat lembur tambahan 30 menit otomatis setelah pukul 05.00."
-          : "Shift 2 normal: 21.00-06.00 dengan istirahat reguler 60 menit. Untuk lembur, isi durasi mulai 20.00; tambahan istirahat 30 menit otomatis dihitung jika selesai setelah 05.00.";
+          ? "Shift 2 lembur: istirahat reguler "+regularLabel+" + istirahat lembur tambahan 30 menit otomatis setelah durasi kerja melewati 9 jam."
+          : "Shift 2 normal: 21.00-06.00 dengan istirahat reguler 60 menit. Jika durasi mulai 20.00 atau 21.00 melewati 9 jam, sistem menambahkan istirahat lembur 30 menit.";
       }else if(extra){
         info.textContent="Istirahat reguler "+regularLabel+" + istirahat lembur tambahan 30 menit otomatis setelah pukul 17.00.";
       }else{
