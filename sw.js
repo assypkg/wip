@@ -1,4 +1,4 @@
-const CACHE_NAME = "smart-wip-assy-v26-fg-line-names-checkbox-tick";
+const CACHE_NAME = "smart-wip-assy-v27-fg-wa-plain-lot-headers";
 const ASSETS_TO_CACHE = [
   "./",
   "./index.html",
