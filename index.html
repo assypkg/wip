@@ -3828,7 +3828,9 @@
     function buatHtmlPembagianLineFg(index){
       const field=(lot,kind,line,label,placeholder,help="")=>{
         const id=idPembagianLineFg(index,lot,kind,line);
-        return "<div style='min-width:0;'><label for='"+id+"'>"+label+"</label><input type='text' inputmode='numeric' id='"+id+"' placeholder='"+placeholder+"' oninput=\"this.value=this.value.replace(/[^0-9]/g,''); onFgLineSplitInput("+index+");\" />"+(help?"<small style='color:var(--text-muted);'>"+help+"</small>":"")+"</div>";
+        const inputMode=kind==="Box"?"numeric":"text";
+        const sanitize=kind==="Box"?"this.value=this.value.replace(/[^0-9]/g,'');":"this.value=this.value.replace(/[^0-9+]/g,'');";
+        return "<div style='min-width:0;'><label for='"+id+"'>"+label+"</label><input type='text' inputmode='"+inputMode+"' id='"+id+"' placeholder='"+placeholder+"' oninput=\""+sanitize+" onFgLineSplitInput("+index+");\" />"+(help?"<small style='color:var(--text-muted);'>"+help+"</small>":"")+"</div>";
       };
       const line=(lot,name)=>"<div style='border:1px solid #dbe2ed;border-radius:8px;padding:8px;background:#fff;'><b style='display:block;font-size:.72rem;color:var(--navy);margin-bottom:6px;'>"+name+"</b><div class='fg-second-jo-grid'>"+field(lot,"Box",name,name+" — Jumlah Box","Contoh: 5")+field(lot,"Receh",name,name+" — Receh (PCS)","Contoh: 352+500","Setiap angka = 1 box receh.")+"</div></div>";
       const lot=key=>"<div style='margin-top:9px;'><div style='font-size:.76rem;font-weight:900;color:var(--navy);margin-bottom:6px;'>LOT "+key+"</div><div class='fg-second-jo-grid'>"+line(key,"L01")+line(key,"L02")+"</div></div>";
@@ -3866,9 +3868,34 @@
       const suffix=suffixPembagianLineFg(index);[["A","Box","BoxA"],["B","Box","BoxB"],["A","Receh","RecehAQty"],["B","Receh","RecehBQty"]].forEach(([lot,kind,legacy])=>{const from=document.getElementById("fg"+legacy+suffix),to=document.getElementById(idPembagianLineFg(index,lot,kind,"L01"));if(from&&to)to.value=from.value||"";});
     }
     function sinkronkanPembagianLineKeInputLamaFg(index){
-      const split=dataPembagianLineFgDariInput(index);if(!split.enabled||split.errors.length)return false;const suffix=suffixPembagianLineFg(index),map={BoxA:String(split.boxA),BoxB:String(split.boxB),RecehAQty:split.recehA.join("+"),RecehBQty:split.recehB.join("+")};Object.entries(map).forEach(([key,value])=>{const input=document.getElementById("fg"+key+suffix);if(input)input.value=value;});return true;
+      const split=dataPembagianLineFgDariInput(index);if(!split.enabled||split.errors.length)return false;const suffix=suffixPembagianLineFg(index),map={BoxA:String(split.boxA),BoxB:String(split.boxB),RecehAQty:split.recehA.join("+"),RecehBQty:split.recehB.join("+")};Object.entries(map).forEach(([key,value])=>{const input=document.getElementById("fg"+key+suffix);if(input)input.value=(value==="0"&&(key==="BoxA"||key==="BoxB"))?"":value;});return true;
     }
-    function togglePembagianLineFg(index){const enabled=!!document.getElementById("fgLineSplitEnabled"+suffixPembagianLineFg(index))?.checked;if(enabled)salinInputLamaKePembagianLineFg(index);else sinkronkanPembagianLineKeInputLamaFg(index);terapkanTampilanPembagianLineFg(index);hitungPreviewFg();simpanDraftLokal();}
+    function togglePembagianLineFg(index){
+      const check=document.getElementById("fgLineSplitEnabled"+suffixPembagianLineFg(index));
+      const enabled=!!check?.checked;
+      if(enabled){
+        salinInputLamaKePembagianLineFg(index);
+      }else{
+        if(check)check.checked=true;
+        const synced=sinkronkanPembagianLineKeInputLamaFg(index);
+        if(check)check.checked=false;
+        if(!synced){
+          if(check)check.checked=true;
+          terapkanTampilanPembagianLineFg(index);
+          alert("Pembagian line belum valid. Periksa jumlah box dan format receh sebelum menonaktifkan mode ini.");
+          return;
+        }
+        ["A","B"].forEach(lot=>["L01","L02"].forEach(line=>{
+          const box=document.getElementById(idPembagianLineFg(index,lot,"Box",line));
+          const receh=document.getElementById(idPembagianLineFg(index,lot,"Receh",line));
+          if(box)box.value="";
+          if(receh)receh.value="";
+        }));
+      }
+      terapkanTampilanPembagianLineFg(index);
+      hitungPreviewFg();
+      simpanDraftLokal();
+    }
     function onFgLineSplitInput(index){hitungPreviewFg();simpanDraftLokal();}
     function setPembagianLineFgKeForm(index,lineSplit){
       const check=document.getElementById("fgLineSplitEnabled"+suffixPembagianLineFg(index)),enabled=!!(lineSplit&&lineSplit.enabled);if(check)check.checked=enabled;
