@@ -3855,15 +3855,15 @@
     function dataPembagianLineFgDariInput(index){
       const enabled=!!document.getElementById("fgLineSplitEnabled"+suffixPembagianLineFg(index))?.checked;
       if(!enabled)return {enabled:false,data:null,boxA:0,boxB:0,recehA:[],recehB:[],errors:[]};
-      const lineNames=ambilNamaLinePembagianFg(index),data={enabled:true,lineNames,lotA:{},lotB:{}},result={boxA:0,boxB:0,recehA:[],recehB:[],errors:[]};
+      const lineNames=ambilNamaLinePembagianFg(index),data={enabled:true,lineNames,lotA:{},lotB:{}},result={boxA:0,boxB:0,recehA:[],recehB:[],errors:[],missingLineNames:new Set()};
       ["A","B"].forEach(lot=>["L01","L02"].forEach(line=>{
         const boxRaw=String(document.getElementById(idPembagianLineFg(index,lot,"Box",line))?.value||"").trim(),recehRaw=String(document.getElementById(idPembagianLineFg(index,lot,"Receh",line))?.value||"").trim(),box=boxRaw===""?0:Number(boxRaw);
         if(boxRaw!==""&&(!Number.isSafeInteger(box)||box<0))result.errors.push("Lot "+lot+" "+line+": jumlah box harus bilangan bulat 0 atau lebih.");
         let recehBoxes=[];if(recehRaw!==""){if(!/^[0-9]+(?:\+[0-9]+)*$/.test(recehRaw))result.errors.push("Lot "+lot+" "+line+": format receh tidak valid. Gunakan contoh 352+500.");else{recehBoxes=recehRaw.split("+").map(Number);if(recehBoxes.some(v=>!Number.isSafeInteger(v)||v<=0))result.errors.push("Lot "+lot+" "+line+": setiap qty receh harus lebih besar dari 0.");}}
-        const safeBox=Number.isSafeInteger(box)&&box>=0?box:0;if((safeBox>0||recehBoxes.length)&&!lineNames[line])result.errors.push("Nama "+(line==="L01"?"Line 1":"Line 2")+" wajib diisi jika ada hasil produksi.");data["lot"+lot][line]={name:lineNames[line],box:Number.isSafeInteger(box)&&box>=0?box:0,recehBoxes,recehPcs:recehBoxes.reduce((sum,v)=>sum+v,0)};
+        const safeBox=Number.isSafeInteger(box)&&box>=0?box:0;if((safeBox>0||recehBoxes.length)&&!lineNames[line])result.missingLineNames.add(line);data["lot"+lot][line]={name:lineNames[line],box:Number.isSafeInteger(box)&&box>=0?box:0,recehBoxes,recehPcs:recehBoxes.reduce((sum,v)=>sum+v,0)};
         if(lot==="A"){result.boxA+=Number.isSafeInteger(box)&&box>=0?box:0;result.recehA.push(...recehBoxes);}else{result.boxB+=Number.isSafeInteger(box)&&box>=0?box:0;result.recehB.push(...recehBoxes);}
       }));
-      const usedNames=["L01","L02"].filter(line=>lineNames[line]&&["A","B"].some(lot=>{const it=data["lot"+lot][line];return it.box>0||it.recehBoxes.length;})).map(line=>lineNames[line].toUpperCase());if(usedNames.length===2&&usedNames[0]===usedNames[1])result.errors.push("Nama Line 1 dan Line 2 tidak boleh sama.");return {enabled:true,data,boxA:result.boxA,boxB:result.boxB,recehA:result.recehA,recehB:result.recehB,errors:result.errors};
+       result.missingLineNames.forEach(line=>result.errors.push("Nama "+(line==="L01"?"Line 1":"Line 2")+" wajib diisi jika ada hasil produksi."));      const usedNames=["L01","L02"].filter(line=>lineNames[line]&&["A","B"].some(lot=>{const it=data["lot"+lot][line];return it.box>0||it.recehBoxes.length;})).map(line=>lineNames[line].toUpperCase());if(usedNames.length===2&&usedNames[0]===usedNames[1])result.errors.push("Nama Line 1 dan Line 2 tidak boleh sama.");return {enabled:true,data,boxA:result.boxA,boxB:result.boxB,recehA:result.recehA,recehB:result.recehB,errors:result.errors};
     }
     function terapkanTampilanPembagianLineFg(index){
       const enabled=!!document.getElementById("fgLineSplitEnabled"+suffixPembagianLineFg(index))?.checked,fields=document.getElementById("fgLineSplitFields"+suffixPembagianLineFg(index)),hint=document.getElementById("fgLineSplitHint"+suffixPembagianLineFg(index));
