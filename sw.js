@@ -1,4 +1,4 @@
-const CACHE_NAME = "smart-wip-assy-v25-fg-wa-no-duplicate-lot-total";
+const CACHE_NAME = "smart-wip-assy-v26-fg-line-names-checkbox-tick";
 const ASSETS_TO_CACHE = [
   "./",
   "./index.html",
