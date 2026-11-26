@@ -4894,10 +4894,10 @@
             jobs.forEach((jo,jobIndex)=>{
               wa+="*"+jo.jobOrder+"*\n";
               const hasilRows=[];
-              if(jo.lineSplit?.enabled)hasilRows.push({label:"A",value:""});
+              if(jo.lineSplit?.enabled)hasilRows.push({label:"A",value:"",headerOnly:true});
               else if(jo.boxA>0)hasilRows.push({label:"A",value:formatNum(jo.boxA)+" BOX @"+formatNum(it.pcsPerBox)+" = "+formatNum(jo.pcsA)+" PCS"});
               if(jo.lineSplit?.enabled)hasilRows.push(...buatBarisPembagianLineWaFg(jo,"A",it.pcsPerBox));
-              if(jo.lineSplit?.enabled&&(jo.boxB>0||jo.recehBBoxes.length))hasilRows.push({label:"B",value:""});
+              if(jo.lineSplit?.enabled&&(jo.boxB>0||jo.recehBBoxes.length))hasilRows.push({label:"B",value:"",headerOnly:true});
               else if(jo.boxB>0)hasilRows.push({label:"B",value:formatNum(jo.boxB)+" BOX @"+formatNum(it.pcsPerBox)+" = "+formatNum(jo.pcsB)+" PCS"});
               if(jo.lineSplit?.enabled&&(jo.boxB>0||jo.recehBBoxes.length))hasilRows.push(...buatBarisPembagianLineWaFg(jo,"B",it.pcsPerBox));
               if(!jo.lineSplit?.enabled&&jo.recehABoxes.length)hasilRows.push({label:"RECEH A",value:jo.recehABoxes.length+" BOX ("+jo.recehABoxes.map(formatNum).join(" + ")+") = "+formatNum(jo.pcsRecehA)+" PCS"});
@@ -4918,9 +4918,9 @@
               ?formatNum(jo.totalBox)+" BOX ("+formatNum(normalBox)+" BOX + "+formatNum(recehCount)+" RECEH)"
               :formatNum(jo.totalBox)+" BOX @"+formatNum(it.pcsPerBox);
             const pct=Number(it.target)>0?(Number(it.totalPcs||0)/Number(it.target)*100):0;
-            const rows=jo.lineSplit?.enabled?[{label:"A",value:""}]:[{label:"A",value:formatNum(jo.boxA)+" BOX @"+formatNum(it.pcsPerBox)+" = "+formatNum(jo.pcsA)+" PCS"}];
+            const rows=jo.lineSplit?.enabled?[{label:"A",value:"",headerOnly:true}]:[{label:"A",value:formatNum(jo.boxA)+" BOX @"+formatNum(it.pcsPerBox)+" = "+formatNum(jo.pcsA)+" PCS"}];
             if(jo.lineSplit?.enabled)rows.push(...buatBarisPembagianLineWaFg(jo,"A",it.pcsPerBox));
-            if(jo.lineSplit?.enabled&&(jo.boxB>0||recehB.length))rows.push({label:"B",value:""});
+            if(jo.lineSplit?.enabled&&(jo.boxB>0||recehB.length))rows.push({label:"B",value:"",headerOnly:true});
             else if(jo.boxB>0||recehB.length)rows.push({label:"B",value:formatNum(jo.boxB)+" BOX @"+formatNum(it.pcsPerBox)+" = "+formatNum(jo.pcsB)+" PCS"});
             if(jo.lineSplit?.enabled&&(jo.boxB>0||recehB.length))rows.push(...buatBarisPembagianLineWaFg(jo,"B",it.pcsPerBox));
             if(!jo.lineSplit?.enabled&&recehA.length)rows.push({label:"RECEH A",value:recehA.length+" BOX ("+recehA.map(formatNum).join(" + ")+") = "+formatNum(jo.pcsRecehA)+" PCS"});
@@ -5681,6 +5681,8 @@
         }
         const left = label.length <= width ? label.padEnd(width, " ") : label;
         const line = left + " : " + value;
+        // Header Lot A/B hanya berupa huruf, tanpa titik dua atau backtick.
+        if (row.headerOnly) return label;
         // Baris NOTE dibuat tebal tanpa pembungkus backtick.
         if (row.noCode) return row.bold ? "*" + line + "*" : line;
         const code = "`" + line + "`";
