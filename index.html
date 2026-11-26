@@ -3831,6 +3831,7 @@
 
     function suffixPembagianLineFg(index){return index===1?"":String(index);}
     function idPembagianLineFg(index,lot,kind,line){return "fgLine"+lot+kind+line+suffixPembagianLineFg(index);}
+    function idNamaLineFg(index,line){return "fgLineName"+line+suffixPembagianLineFg(index);}
     function ambilNamaLinePembagianFg(index){return {L01:String(document.getElementById(idNamaLineFg(index,"L01"))?.value||"").trim(),L02:String(document.getElementById(idNamaLineFg(index,"L02"))?.value||"").trim()};}
     function buatHtmlPembagianLineFg(index){
       const field=(lot,kind,line,label,placeholder,help="")=>{
@@ -3898,6 +3899,7 @@
           if(box)box.value="";
           if(receh)receh.value="";
         }));
+        ["L01","L02"].forEach(line=>{const el=document.getElementById(idNamaLineFg(index,line));if(el)el.value="";});
       }
       terapkanTampilanPembagianLineFg(index);
       hitungPreviewFg();
@@ -3906,11 +3908,13 @@
     function onFgLineSplitInput(index){hitungPreviewFg();simpanDraftLokal();}
     function setPembagianLineFgKeForm(index,lineSplit){
       const check=document.getElementById("fgLineSplitEnabled"+suffixPembagianLineFg(index)),enabled=!!(lineSplit&&lineSplit.enabled);if(check)check.checked=enabled;
+      ["L01","L02"].forEach(line=>{const el=document.getElementById(idNamaLineFg(index,line));if(el)el.value=lineSplit?.lineNames?.[line]??"";});
       ["A","B"].forEach(lot=>["L01","L02"].forEach(line=>{const value=lineSplit?.["lot"+lot]?.[line]||{},box=document.getElementById(idPembagianLineFg(index,lot,"Box",line)),receh=document.getElementById(idPembagianLineFg(index,lot,"Receh",line));if(box)box.value=value.box?String(value.box):"";if(receh)receh.value=(value.recehBoxes||[]).join("+");}));
       if(enabled)sinkronkanPembagianLineKeInputLamaFg(index);terapkanTampilanPembagianLineFg(index);
     }
     function resetFormPembagianLineFg(index){
       const check=document.getElementById("fgLineSplitEnabled"+suffixPembagianLineFg(index));if(check)check.checked=false;
+      ["L01","L02"].forEach(line=>{const el=document.getElementById(idNamaLineFg(index,line));if(el)el.value="";});
       ["A","B"].forEach(lot=>["L01","L02"].forEach(line=>{const box=document.getElementById(idPembagianLineFg(index,lot,"Box",line)),receh=document.getElementById(idPembagianLineFg(index,lot,"Receh",line));if(box)box.value="";if(receh)receh.value="";}));terapkanTampilanPembagianLineFg(index);
     }
     function resetSemuaFormPembagianLineFg(){[1,2,3,4].forEach(resetFormPembagianLineFg);}
