@@ -4883,12 +4883,14 @@
             jobs.forEach((jo,jobIndex)=>{
               wa+="*"+jo.jobOrder+"*\n";
               const hasilRows=[];
-              if(jo.boxA>0)hasilRows.push({label:"A",value:formatNum(jo.boxA)+" BOX @"+formatNum(it.pcsPerBox)+" = "+formatNum(jo.pcsA)+" PCS"});
+              if(jo.lineSplit?.enabled)hasilRows.push({label:"A",value:""});
+              else if(jo.boxA>0)hasilRows.push({label:"A",value:formatNum(jo.boxA)+" BOX @"+formatNum(it.pcsPerBox)+" = "+formatNum(jo.pcsA)+" PCS"});
               if(jo.lineSplit?.enabled)hasilRows.push(...buatBarisPembagianLineWaFg(jo,"A",it.pcsPerBox));
-              if(jo.boxB>0)hasilRows.push({label:"B",value:formatNum(jo.boxB)+" BOX @"+formatNum(it.pcsPerBox)+" = "+formatNum(jo.pcsB)+" PCS"});
+              if(jo.lineSplit?.enabled&&(jo.boxB>0||jo.recehBBoxes.length))hasilRows.push({label:"B",value:""});
+              else if(jo.boxB>0)hasilRows.push({label:"B",value:formatNum(jo.boxB)+" BOX @"+formatNum(it.pcsPerBox)+" = "+formatNum(jo.pcsB)+" PCS"});
               if(jo.lineSplit?.enabled&&(jo.boxB>0||jo.recehBBoxes.length))hasilRows.push(...buatBarisPembagianLineWaFg(jo,"B",it.pcsPerBox));
-              if(jo.recehABoxes.length)hasilRows.push({label:"RECEH A",value:jo.recehABoxes.length+" BOX ("+jo.recehABoxes.map(formatNum).join(" + ")+") = "+formatNum(jo.pcsRecehA)+" PCS"});
-              if(jo.recehBBoxes.length)hasilRows.push({label:"RECEH B",value:jo.recehBBoxes.length+" BOX ("+jo.recehBBoxes.map(formatNum).join(" + ")+") = "+formatNum(jo.pcsRecehB)+" PCS"});
+              if(!jo.lineSplit?.enabled&&jo.recehABoxes.length)hasilRows.push({label:"RECEH A",value:jo.recehABoxes.length+" BOX ("+jo.recehABoxes.map(formatNum).join(" + ")+") = "+formatNum(jo.pcsRecehA)+" PCS"});
+              if(!jo.lineSplit?.enabled&&jo.recehBBoxes.length)hasilRows.push({label:"RECEH B",value:jo.recehBBoxes.length+" BOX ("+jo.recehBBoxes.map(formatNum).join(" + ")+") = "+formatNum(jo.pcsRecehB)+" PCS"});
               const totalSuffix=multipleProducts&&jobIndex===jobs.length-1?" | "+pct.toFixed(2)+"%":"";
               hasilRows.push({label:"TOTAL",value:formatTotalBoxJoFg(jo)+" = "+formatNum(jo.totalPcs)+" PCS"+totalSuffix,bold:true});
               wa+=formatWhatsAppQtyRows(hasilRows)+"\n\n";
@@ -4905,12 +4907,13 @@
               ?formatNum(jo.totalBox)+" BOX ("+formatNum(normalBox)+" BOX + "+formatNum(recehCount)+" RECEH)"
               :formatNum(jo.totalBox)+" BOX @"+formatNum(it.pcsPerBox);
             const pct=Number(it.target)>0?(Number(it.totalPcs||0)/Number(it.target)*100):0;
-            const rows=[{label:"A",value:formatNum(jo.boxA)+" BOX @"+formatNum(it.pcsPerBox)+" = "+formatNum(jo.pcsA)+" PCS"}];
+            const rows=jo.lineSplit?.enabled?[{label:"A",value:""}]:[{label:"A",value:formatNum(jo.boxA)+" BOX @"+formatNum(it.pcsPerBox)+" = "+formatNum(jo.pcsA)+" PCS"}];
             if(jo.lineSplit?.enabled)rows.push(...buatBarisPembagianLineWaFg(jo,"A",it.pcsPerBox));
-            if(jo.boxB>0||recehB.length)rows.push({label:"B",value:formatNum(jo.boxB)+" BOX @"+formatNum(it.pcsPerBox)+" = "+formatNum(jo.pcsB)+" PCS"});
+            if(jo.lineSplit?.enabled&&(jo.boxB>0||recehB.length))rows.push({label:"B",value:""});
+            else if(jo.boxB>0||recehB.length)rows.push({label:"B",value:formatNum(jo.boxB)+" BOX @"+formatNum(it.pcsPerBox)+" = "+formatNum(jo.pcsB)+" PCS"});
             if(jo.lineSplit?.enabled&&(jo.boxB>0||recehB.length))rows.push(...buatBarisPembagianLineWaFg(jo,"B",it.pcsPerBox));
-            if(recehA.length)rows.push({label:"RECEH A",value:recehA.length+" BOX ("+recehA.map(formatNum).join(" + ")+") = "+formatNum(jo.pcsRecehA)+" PCS"});
-            if(recehB.length)rows.push({label:"RECEH B",value:recehB.length+" BOX ("+recehB.map(formatNum).join(" + ")+") = "+formatNum(jo.pcsRecehB)+" PCS"});
+            if(!jo.lineSplit?.enabled&&recehA.length)rows.push({label:"RECEH A",value:recehA.length+" BOX ("+recehA.map(formatNum).join(" + ")+") = "+formatNum(jo.pcsRecehA)+" PCS"});
+            if(!jo.lineSplit?.enabled&&recehB.length)rows.push({label:"RECEH B",value:recehB.length+" BOX ("+recehB.map(formatNum).join(" + ")+") = "+formatNum(jo.pcsRecehB)+" PCS"});
             rows.push({label:"TOTAL",value:totalBoxLabel+" = "+formatNum(jo.totalPcs)+" PCS | "+pct.toFixed(2)+"%",bold:true});
             if(it.gapNote)rows.push({label:"NOTE",value:it.gapNote,bold:true,noCode:true});
             wa+=formatWhatsAppQtyRows(rows)+"\n";
