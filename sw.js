@@ -1,4 +1,4 @@
-const CACHE_NAME = "smart-wip-assy-v23-fg-manpower-live-fix";
+const CACHE_NAME = "smart-wip-assy-v24-fg-line-split-receh";
 const ASSETS_TO_CACHE = [
   "./",
   "./index.html",
