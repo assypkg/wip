@@ -1470,26 +1470,27 @@
               <label>Qty per Box (PCS)</label>
               <input type="text" inputmode="numeric" id="fgPcsPerBox" value="550" placeholder="550" oninput="this.value=this.value.replace(/[^0-9]/g,''); fgPcsPerBoxAutoFilled=false; hitungPreviewFg(); simpanDraftLokal();" />
             </div>
-            <div>
+            <div id="fgLegacyBoxAField">
               <label>Lot A — Jumlah Box JO 1</label>
               <input type="text" inputmode="numeric" id="fgBoxA" placeholder="Misal: 20" oninput="this.value=this.value.replace(/[^0-9]/g,''); hitungPreviewFg(); simpanDraftLokal();" />
             </div>
-            <div>
+            <div id="fgLegacyBoxBField">
               <label>Lot B — Jumlah Box JO 1</label>
               <input type="text" inputmode="numeric" id="fgBoxB" placeholder="Misal: 16" oninput="this.value=this.value.replace(/[^0-9]/g,''); hitungPreviewFg(); simpanDraftLokal();" />
             </div>
-            <div>
+            <div id="fgLegacyRecehAField">
               <label>Receh Lot A JO 1 (PCS)</label>
               <input type="text" inputmode="text" id="fgRecehAQty" placeholder="Contoh: 352+500" oninput="this.value=this.value.replace(/[^0-9+]/g,'').replace(/\+{2,}/g,'+'); hitungPreviewFg(); simpanDraftLokal();" />
               <small style="color:var(--text-muted);">Setiap angka = 1 box receh A.</small>
             </div>
-            <div>
+            <div id="fgLegacyRecehBField">
               <label>Receh Lot B JO 1 (PCS)</label>
               <input type="text" inputmode="text" id="fgRecehBQty" placeholder="Contoh: 352+500" oninput="this.value=this.value.replace(/[^0-9+]/g,'').replace(/\+{2,}/g,'+'); hitungPreviewFg(); simpanDraftLokal();" />
               <small style="color:var(--text-muted);">Setiap angka = 1 box receh B.</small>
             </div>
           </div>
 
+          <div id="fgLineSplitMount1"></div>
           <div id="fgBreakdownPreview" style="margin-top:8px; font-size:0.74rem; color:var(--emerald); font-weight:700; background:#fff; padding:8px 10px; border-radius:8px; border:1px solid #a5d6a7;">
             A : 0 BOX @550 = 0 &nbsp;|&nbsp; B : 0 BOX @550 = 0
           </div>
@@ -1504,7 +1505,7 @@
               <input type="text" id="fgJobOrder2" placeholder="Pilih atau ketik nomor JO kedua..." autocomplete="off" oninput="onFgJobOrderType2(); hitungPreviewFg(); simpanDraftLokal();" onfocus="onFgJobOrderType2()" onkeydown="onFgJobOrderKey2(event)" aria-controls="fgJobOrderSuggestions2" aria-expanded="false" />
               <div class="quick-results" id="fgJobOrderSuggestions2" role="listbox" aria-label="Saran nomor Job Order kedua"></div>
             </div>
-            <div class="fg-second-jo-grid">
+            <div class="fg-second-jo-grid" id="fgLegacyGrid2">
               <div>
                 <label>Lot A JO 2 — Jumlah Box</label>
                 <input type="text" inputmode="numeric" id="fgBoxA2" placeholder="Misal: 2" oninput="this.value=this.value.replace(/[^0-9]/g,''); hitungPreviewFg(); simpanDraftLokal();" />
@@ -1524,6 +1525,7 @@
                 <small>Setiap angka = 1 box receh.</small>
               </div>
             </div>
+            <div id="fgLineSplitMount2"></div>
             <div id="fgJo2BreakdownPreview" class="fg-second-jo-preview">Hasil JO 2 akan tampil di sini setelah diisi.</div>
             <details class="fg-second-jo fg-extra-jo" id="fgThirdJoPanel">
               <summary>＋ Tambah Job Order ke-3</summary>
@@ -1533,12 +1535,13 @@
                   <input type="text" id="fgJobOrder3" placeholder="Pilih atau ketik nomor JO ketiga..." autocomplete="off" oninput="onFgJobOrderType3(); hitungPreviewFg(); simpanDraftLokal();" onfocus="onFgJobOrderType3()" onkeydown="onFgJobOrderKey3(event)" aria-controls="fgJobOrderSuggestions3" aria-expanded="false" />
                   <div class="quick-results" id="fgJobOrderSuggestions3" role="listbox" aria-label="Saran nomor Job Order ketiga"></div>
                 </div>
-                <div class="fg-second-jo-grid">
+                <div class="fg-second-jo-grid" id="fgLegacyGrid3">
                   <div><label>Lot A JO 3 — Jumlah Box</label><input type="text" inputmode="numeric" id="fgBoxA3" placeholder="Misal: 2" oninput="this.value=this.value.replace(/[^0-9]/g,''); hitungPreviewFg(); simpanDraftLokal();" /></div>
                   <div><label>Lot B JO 3 — Jumlah Box</label><input type="text" inputmode="numeric" id="fgBoxB3" placeholder="Misal: 3" oninput="this.value=this.value.replace(/[^0-9]/g,''); hitungPreviewFg(); simpanDraftLokal();" /></div>
                   <div><label>Receh Lot A JO 3 (PCS)</label><input type="text" inputmode="text" id="fgRecehAQty3" placeholder="Misal: 100+250" oninput="this.value=this.value.replace(/[^0-9+]/g,'').replace(/\+{2,}/g,'+'); hitungPreviewFg(); simpanDraftLokal();" /><small>Setiap angka = 1 box receh.</small></div>
                   <div><label>Receh Lot B JO 3 (PCS)</label><input type="text" inputmode="text" id="fgRecehBQty3" placeholder="Misal: 100+250" oninput="this.value=this.value.replace(/[^0-9+]/g,'').replace(/\+{2,}/g,'+'); hitungPreviewFg(); simpanDraftLokal();" /><small>Setiap angka = 1 box receh.</small></div>
                 </div>
+                <div id="fgLineSplitMount3"></div>
                 <div id="fgJo3BreakdownPreview" class="fg-second-jo-preview">Hasil JO 3 akan tampil di sini setelah diisi.</div>
               </div>
             </details>
@@ -1550,12 +1553,13 @@
                   <input type="text" id="fgJobOrder4" placeholder="Pilih atau ketik nomor JO keempat..." autocomplete="off" oninput="onFgJobOrderType4(); hitungPreviewFg(); simpanDraftLokal();" onfocus="onFgJobOrderType4()" onkeydown="onFgJobOrderKey4(event)" aria-controls="fgJobOrderSuggestions4" aria-expanded="false" />
                   <div class="quick-results" id="fgJobOrderSuggestions4" role="listbox" aria-label="Saran nomor Job Order keempat"></div>
                 </div>
-                <div class="fg-second-jo-grid">
+                <div class="fg-second-jo-grid" id="fgLegacyGrid4">
                   <div><label>Lot A JO 4 — Jumlah Box</label><input type="text" inputmode="numeric" id="fgBoxA4" placeholder="Misal: 2" oninput="this.value=this.value.replace(/[^0-9]/g,''); hitungPreviewFg(); simpanDraftLokal();" /></div>
                   <div><label>Lot B JO 4 — Jumlah Box</label><input type="text" inputmode="numeric" id="fgBoxB4" placeholder="Misal: 3" oninput="this.value=this.value.replace(/[^0-9]/g,''); hitungPreviewFg(); simpanDraftLokal();" /></div>
                   <div><label>Receh Lot A JO 4 (PCS)</label><input type="text" inputmode="text" id="fgRecehAQty4" placeholder="Misal: 100+250" oninput="this.value=this.value.replace(/[^0-9+]/g,'').replace(/\+{2,}/g,'+'); hitungPreviewFg(); simpanDraftLokal();" /><small>Setiap angka = 1 box receh.</small></div>
                   <div><label>Receh Lot B JO 4 (PCS)</label><input type="text" inputmode="text" id="fgRecehBQty4" placeholder="Misal: 100+250" oninput="this.value=this.value.replace(/[^0-9+]/g,'').replace(/\+{2,}/g,'+'); hitungPreviewFg(); simpanDraftLokal();" /><small>Setiap angka = 1 box receh.</small></div>
                 </div>
+                <div id="fgLineSplitMount4"></div>
                 <div id="fgJo4BreakdownPreview" class="fg-second-jo-preview">Hasil JO 4 akan tampil di sini setelah diisi.</div>
               </div>
             </details>
@@ -2699,6 +2703,7 @@
             fgManpowerEnabled: !!document.getElementById("fgManpowerEnabled")?.checked,
             fgManpowerStandard: document.getElementById("fgManpowerStandard")?.value || "",
             fgManpowerActual: document.getElementById("fgManpowerActual")?.value || "",
+            fgLineSplitDraft: ambilDraftPembagianLineFg(),
             fgProductName: document.getElementById("fgProductName")?.value || "",
             fgLastSelectedProductName: fgLastSelectedProductName || "",
             fgJobOrder: document.getElementById("fgJobOrder")?.value || "",
@@ -2819,6 +2824,7 @@
         if (f.fgManpowerEnabled !== undefined) document.getElementById("fgManpowerEnabled").checked = !!f.fgManpowerEnabled;
         if (f.fgManpowerStandard !== undefined) document.getElementById("fgManpowerStandard").value = f.fgManpowerStandard;
         if (f.fgManpowerActual !== undefined) document.getElementById("fgManpowerActual").value = f.fgManpowerActual;
+        if (f.fgLineSplitDraft) pulihkanDraftPembagianLineFg(f.fgLineSplitDraft);
         if (f.fgProductName !== undefined || f.fgJobOrder !== undefined) {
           document.getElementById("fgProductName").value = f.fgProductName || "";
           fgLastSelectedProductName = f.fgProductName || "";
@@ -3817,6 +3823,64 @@
       simpanDraftLokal();
     }
 
+    function suffixPembagianLineFg(index){return index===1?"":String(index);}
+    function idPembagianLineFg(index,lot,kind,line){return "fgLine"+lot+kind+line+suffixPembagianLineFg(index);}
+    function buatHtmlPembagianLineFg(index){
+      const field=(lot,kind,line,label,placeholder,help="")=>{
+        const id=idPembagianLineFg(index,lot,kind,line);
+        return "<div style='min-width:0;'><label for='"+id+"'>"+label+"</label><input type='text' inputmode='numeric' id='"+id+"' placeholder='"+placeholder+"' oninput=\"this.value=this.value.replace(/[^0-9]/g,''); onFgLineSplitInput("+index+");\" />"+(help?"<small style='color:var(--text-muted);'>"+help+"</small>":"")+"</div>";
+      };
+      const line=(lot,name)=>"<div style='border:1px solid #dbe2ed;border-radius:8px;padding:8px;background:#fff;'><b style='display:block;font-size:.72rem;color:var(--navy);margin-bottom:6px;'>"+name+"</b><div class='fg-second-jo-grid'>"+field(lot,"Box",name,name+" — Jumlah Box","Contoh: 5")+field(lot,"Receh",name,name+" — Receh (PCS)","Contoh: 352+500","Setiap angka = 1 box receh.")+"</div></div>";
+      const lot=key=>"<div style='margin-top:9px;'><div style='font-size:.76rem;font-weight:900;color:var(--navy);margin-bottom:6px;'>LOT "+key+"</div><div class='fg-second-jo-grid'>"+line(key,"L01")+line(key,"L02")+"</div></div>";
+      const suffix=suffixPembagianLineFg(index);
+      return "<div style='grid-column:1/-1;border:1px solid #cbd5e1;border-radius:9px;padding:10px;margin-top:8px;background:#f8fafc;'><label style='display:flex;align-items:center;gap:8px;margin:0;font-weight:800;color:var(--navy);'><input type='checkbox' id='fgLineSplitEnabled"+suffix+"' onchange='togglePembagianLineFg("+index+")' style='width:18px;min-height:18px;margin:0;flex:0 0 auto;' /><span>PEMBAGIAN HASIL PRODUKSI PER LINE (OPSIONAL)</span></label><div id='fgLineSplitFields"+suffix+"' style='display:none;margin-top:8px;'>"+lot("A")+lot("B")+"<div style='font-size:.67rem;color:var(--text-muted);margin-top:7px;'>Qty per Box mengikuti kalkulator utama. Receh diisi per line; pisahkan beberapa box dengan tanda +.</div></div><div id='fgLineSplitHint"+suffix+"' style='font-size:.67rem;color:var(--text-muted);margin-top:6px;'>Kondisi normal: biarkan tidak dicentang. Input Lot A/B dan receh menggunakan form biasa.</div></div>";
+    }
+    function inisialisasiFormPembagianLineFg(){[1,2,3,4].forEach(index=>{const mount=document.getElementById("fgLineSplitMount"+index);if(mount)mount.innerHTML=buatHtmlPembagianLineFg(index);terapkanTampilanPembagianLineFg(index);});}
+    function ambilDraftPembagianLineFg(){
+      const draft={};[1,2,3,4].forEach(index=>{const item={enabled:!!document.getElementById("fgLineSplitEnabled"+suffixPembagianLineFg(index))?.checked,values:{}};["A","B"].forEach(lot=>{item.values[lot]={};["L01","L02"].forEach(line=>{item.values[lot][line]={box:document.getElementById(idPembagianLineFg(index,lot,"Box",line))?.value||"",receh:document.getElementById(idPembagianLineFg(index,lot,"Receh",line))?.value||""};});});draft[index]=item;});return draft;
+    }
+    function pulihkanDraftPembagianLineFg(draft){
+      [1,2,3,4].forEach(index=>{const item=draft?.[index];if(!item)return;const check=document.getElementById("fgLineSplitEnabled"+suffixPembagianLineFg(index));if(check)check.checked=!!item.enabled;["A","B"].forEach(lot=>["L01","L02"].forEach(line=>{const value=item.values?.[lot]?.[line]||{};const box=document.getElementById(idPembagianLineFg(index,lot,"Box",line));const receh=document.getElementById(idPembagianLineFg(index,lot,"Receh",line));if(box)box.value=value.box??"";if(receh)receh.value=value.receh??"";}));terapkanTampilanPembagianLineFg(index);});
+    }
+    function dataPembagianLineFgDariInput(index){
+      const enabled=!!document.getElementById("fgLineSplitEnabled"+suffixPembagianLineFg(index))?.checked;
+      if(!enabled)return {enabled:false,data:null,boxA:0,boxB:0,recehA:[],recehB:[],errors:[]};
+      const data={enabled:true,lotA:{},lotB:{}},result={boxA:0,boxB:0,recehA:[],recehB:[],errors:[]};
+      ["A","B"].forEach(lot=>["L01","L02"].forEach(line=>{
+        const boxRaw=String(document.getElementById(idPembagianLineFg(index,lot,"Box",line))?.value||"").trim(),recehRaw=String(document.getElementById(idPembagianLineFg(index,lot,"Receh",line))?.value||"").trim(),box=boxRaw===""?0:Number(boxRaw);
+        if(boxRaw!==""&&(!Number.isSafeInteger(box)||box<0))result.errors.push("Lot "+lot+" "+line+": jumlah box harus bilangan bulat 0 atau lebih.");
+        let recehBoxes=[];if(recehRaw!==""){if(!/^[0-9]+(?:\\+[0-9]+)*$/.test(recehRaw))result.errors.push("Lot "+lot+" "+line+": format receh tidak valid. Gunakan contoh 352+500.");else{recehBoxes=recehRaw.split("+").map(Number);if(recehBoxes.some(v=>!Number.isSafeInteger(v)||v<=0))result.errors.push("Lot "+lot+" "+line+": setiap qty receh harus lebih besar dari 0.");}}
+        data["lot"+lot][line]={box:Number.isSafeInteger(box)&&box>=0?box:0,recehBoxes,recehPcs:recehBoxes.reduce((sum,v)=>sum+v,0)};
+        if(lot==="A"){result.boxA+=Number.isSafeInteger(box)&&box>=0?box:0;result.recehA.push(...recehBoxes);}else{result.boxB+=Number.isSafeInteger(box)&&box>=0?box:0;result.recehB.push(...recehBoxes);}
+      }));
+      return {enabled:true,data,boxA:result.boxA,boxB:result.boxB,recehA:result.recehA,recehB:result.recehB,errors:result.errors};
+    }
+    function terapkanTampilanPembagianLineFg(index){
+      const enabled=!!document.getElementById("fgLineSplitEnabled"+suffixPembagianLineFg(index))?.checked,fields=document.getElementById("fgLineSplitFields"+suffixPembagianLineFg(index)),hint=document.getElementById("fgLineSplitHint"+suffixPembagianLineFg(index));
+      if(fields)fields.style.display=enabled?"block":"none";if(hint)hint.style.display=enabled?"none":"block";
+      if(index===1)["fgLegacyBoxAField","fgLegacyBoxBField","fgLegacyRecehAField","fgLegacyRecehBField"].forEach(id=>{const el=document.getElementById(id);if(el)el.style.display=enabled?"none":"block";});
+      else{const grid=document.getElementById("fgLegacyGrid"+index);if(grid)grid.style.display=enabled?"none":"grid";}
+    }
+    function salinInputLamaKePembagianLineFg(index){
+      const hasValues=["A","B"].some(lot=>["L01","L02"].some(line=>String(document.getElementById(idPembagianLineFg(index,lot,"Box",line))?.value||"").trim()||String(document.getElementById(idPembagianLineFg(index,lot,"Receh",line))?.value||"").trim()));if(hasValues)return;
+      const suffix=suffixPembagianLineFg(index);[["A","Box","BoxA"],["B","Box","BoxB"],["A","Receh","RecehAQty"],["B","Receh","RecehBQty"]].forEach(([lot,kind,legacy])=>{const from=document.getElementById("fg"+legacy+suffix),to=document.getElementById(idPembagianLineFg(index,lot,kind,"L01"));if(from&&to)to.value=from.value||"";});
+    }
+    function sinkronkanPembagianLineKeInputLamaFg(index){
+      const split=dataPembagianLineFgDariInput(index);if(!split.enabled||split.errors.length)return false;const suffix=suffixPembagianLineFg(index),map={BoxA:String(split.boxA),BoxB:String(split.boxB),RecehAQty:split.recehA.join("+"),RecehBQty:split.recehB.join("+")};Object.entries(map).forEach(([key,value])=>{const input=document.getElementById("fg"+key+suffix);if(input)input.value=value;});return true;
+    }
+    function togglePembagianLineFg(index){const enabled=!!document.getElementById("fgLineSplitEnabled"+suffixPembagianLineFg(index))?.checked;if(enabled)salinInputLamaKePembagianLineFg(index);else sinkronkanPembagianLineKeInputLamaFg(index);terapkanTampilanPembagianLineFg(index);hitungPreviewFg();simpanDraftLokal();}
+    function onFgLineSplitInput(index){hitungPreviewFg();simpanDraftLokal();}
+    function setPembagianLineFgKeForm(index,lineSplit){
+      const check=document.getElementById("fgLineSplitEnabled"+suffixPembagianLineFg(index)),enabled=!!(lineSplit&&lineSplit.enabled);if(check)check.checked=enabled;
+      ["A","B"].forEach(lot=>["L01","L02"].forEach(line=>{const value=lineSplit?.["lot"+lot]?.[line]||{},box=document.getElementById(idPembagianLineFg(index,lot,"Box",line)),receh=document.getElementById(idPembagianLineFg(index,lot,"Receh",line));if(box)box.value=value.box?String(value.box):"";if(receh)receh.value=(value.recehBoxes||[]).join("+");}));
+      if(enabled)sinkronkanPembagianLineKeInputLamaFg(index);terapkanTampilanPembagianLineFg(index);
+    }
+    function resetFormPembagianLineFg(index){
+      const check=document.getElementById("fgLineSplitEnabled"+suffixPembagianLineFg(index));if(check)check.checked=false;
+      ["A","B"].forEach(lot=>["L01","L02"].forEach(line=>{const box=document.getElementById(idPembagianLineFg(index,lot,"Box",line)),receh=document.getElementById(idPembagianLineFg(index,lot,"Receh",line));if(box)box.value="";if(receh)receh.value="";}));terapkanTampilanPembagianLineFg(index);
+    }
+    function resetSemuaFormPembagianLineFg(){[1,2,3,4].forEach(resetFormPembagianLineFg);}
+
     function parseRecehFg(value) {
       return String(value || "").split("+").map(v => Number(v.trim())).filter(v => Number.isFinite(v) && v > 0);
     }
@@ -3844,9 +3908,7 @@
     function ambilRincianJobOrderFg(item) {
       const perBox = Number(item?.pcsPerBox) || 0;
       if (Array.isArray(item?.jobOrders) && item.jobOrders.length) {
-        return item.jobOrders.map(jo => hitungDataHasilJoFg(
-          jo.jobOrder,jo.boxA,jo.boxB,jo.recehABoxes || [],jo.recehBBoxes || [],perBox
-        ));
+        return item.jobOrders.map(jo=>{const result=hitungDataHasilJoFg(jo.jobOrder,jo.boxA,jo.boxB,jo.recehABoxes||[],jo.recehBBoxes||[],perBox);if(jo.lineSplit&&jo.lineSplit.enabled)result.lineSplit=JSON.parse(JSON.stringify(jo.lineSplit));return result;});
       }
       const legacyJob = item?.jobOrder || pisahProdukDanJo(item?.productJo).jobOrder;
       return [hitungDataHasilJoFg(
@@ -3868,12 +3930,11 @@
     function ambilInputJobOrdersFg() {
       const perBox=Number(document.getElementById("fgPcsPerBox").value)||0;
       return [1,2,3,4].map(index=>{
-        const suffix=index===1?"":String(index);
-        const byId=id=>document.getElementById("fg"+id+suffix)?.value ?? "";
-        return hitungDataHasilJoFg(
-          byId("JobOrder"),byId("BoxA"),byId("BoxB"),
-          byId("RecehAQty"),byId("RecehBQty"),perBox
-        );
+        const suffix=index===1?"":String(index),byId=id=>document.getElementById("fg"+id+suffix)?.value ?? "",split=dataPembagianLineFgDariInput(index);
+        const job=hitungDataHasilJoFg(byId("JobOrder"),split.enabled?split.boxA:byId("BoxA"),split.enabled?split.boxB:byId("BoxB"),split.enabled?split.recehA:byId("RecehAQty"),split.enabled?split.recehB:byId("RecehBQty"),perBox);
+        if(split.enabled)job.lineSplit=split.data;
+        job.lineSplitEnabled=split.enabled;job.lineSplitErrors=split.errors;
+        return job;
       });
     }
 
@@ -3913,6 +3974,7 @@
       document.getElementById("fgPcsPerBox").value=last.pcsPerBox||"550";
       fgPcsPerBoxAutoFilled=false;
       const jobs=ambilRincianJobOrderFg(last);
+      resetSemuaFormPembagianLineFg();
       [1,2,3,4].forEach(index=>{
         const jo=jobs[index-1];
         const suffix=index===1?"":String(index);
@@ -3963,11 +4025,17 @@
         ?Math.round(targetBeforeManpower*manpower.actualOperators/manpower.standardOperators):null;
       const pcsPerBox=Number(document.getElementById("fgPcsPerBox").value)||0;
       const jobs=ambilInputJobOrdersFg();
-      const rawReceh=[1,2,3,4].flatMap(index=>{
+      const rawReceh=[1,2,3,4].map((index,jobIndex)=>{
         const suffix=index===1?"":String(index);
+        if(jobs[jobIndex]?.lineSplitEnabled)return [];
         return ["RecehAQty","RecehBQty"].map(kind=>String(document.getElementById("fg"+kind+suffix)?.value||"").trim());
-      });
-      const recehInvalid=rawReceh.some(value=>value&&(value.split("+").some(part=>!/^\d+$/.test(part.trim()))||parseRecehFg(value).length===0));
+      }).flat();
+      const splitErrors=jobs.flatMap((job,index)=>(job.lineSplitErrors||[]).map(error=>"JO "+(index+1)+": "+error));
+      const recehInvalid=rawReceh.some(value=>value&&(value.split("+").some(part=>!/^[0-9]+$/.test(part.trim()))||parseRecehFg(value).length===0));
+      if(splitErrors.length){
+        alert("Periksa pembagian hasil per line:\\n"+splitErrors.join("\\n"));
+        return;
+      }
       if(!leader||!productName||!jobs[0].jobOrder){
         alert("Mohon isi Nama Leader/Operator, Nama Produk, dan Nomor JO pertama.");
         return;
@@ -4053,6 +4121,7 @@
       fgTargetTouched=false;
       resetPenyesuaianManpowerFg();
       document.getElementById("fgGapNote").value="";
+      resetSemuaFormPembagianLineFg();
       [2,3,4].forEach(index=>{
         const suffix=String(index);
         ["JobOrder","BoxA","BoxB","RecehAQty","RecehBQty"].forEach(kind=>{
@@ -4107,6 +4176,7 @@
         val("BoxB",jo?.boxB||"");
         val("RecehAQty",(jo?.recehABoxes||[]).join("+"));
         val("RecehBQty",(jo?.recehBBoxes||[]).join("+"));
+        setPembagianLineFgKeForm(index,jo?.lineSplit||null);
       });
       document.getElementById("fgSecondJoPanel").open=jobs.length>1;
       document.getElementById("fgThirdJoPanel").open=jobs.length>2;
@@ -4132,6 +4202,7 @@
         });
       });
       ["fgBoxA","fgBoxB","fgRecehAQty","fgRecehBQty"].forEach(id=>{const el=document.getElementById(id);if(el)el.value="";});
+      [2,3,4].forEach(resetFormPembagianLineFg);resetFormPembagianLineFg(1);
       document.getElementById("fgSecondJoPanel").open=false;
       document.getElementById("fgThirdJoPanel").open=false;
       document.getElementById("fgFourthJoPanel").open=false;
@@ -4682,6 +4753,17 @@
       filterDaftarFg();
     }
 
+    function buatBarisPembagianLineWaFg(jo,lot,pcsPerBox){
+      if(!jo?.lineSplit?.enabled)return [];
+      const split=jo.lineSplit["lot"+lot]||{},rows=[];
+      ["L01","L02"].forEach(line=>{
+        const item=split[line]||{},boxes=Number(item.box)||0,receh=Array.isArray(item.recehBoxes)?item.recehBoxes:[];
+        rows.push({label:line,value:formatNum(boxes)+" BOX @"+formatNum(pcsPerBox)+" = "+formatNum(boxes*(Number(pcsPerBox)||0))+" PCS"});
+        if(receh.length){const total=receh.reduce((sum,v)=>sum+(Number(v)||0),0);rows.push({label:line+" RECEH",value:receh.length+" BOX ("+receh.map(formatNum).join(" + ")+") = "+formatNum(total)+" PCS"});}
+      });
+      return rows;
+    }
+
     function renderFgAll() {
       perbaruiPresetJamLaporanFg();
       const container=document.getElementById("fgListContainer");
@@ -4775,7 +4857,9 @@
               wa+="*"+jo.jobOrder+"*\n";
               const hasilRows=[];
               if(jo.boxA>0)hasilRows.push({label:"A",value:formatNum(jo.boxA)+" BOX @"+formatNum(it.pcsPerBox)+" = "+formatNum(jo.pcsA)+" PCS"});
+              if(jo.lineSplit?.enabled)hasilRows.push(...buatBarisPembagianLineWaFg(jo,"A",it.pcsPerBox));
               if(jo.boxB>0)hasilRows.push({label:"B",value:formatNum(jo.boxB)+" BOX @"+formatNum(it.pcsPerBox)+" = "+formatNum(jo.pcsB)+" PCS"});
+              if(jo.lineSplit?.enabled&&(jo.boxB>0||jo.recehBBoxes.length))hasilRows.push(...buatBarisPembagianLineWaFg(jo,"B",it.pcsPerBox));
               if(jo.recehABoxes.length)hasilRows.push({label:"RECEH A",value:jo.recehABoxes.length+" BOX ("+jo.recehABoxes.map(formatNum).join(" + ")+") = "+formatNum(jo.pcsRecehA)+" PCS"});
               if(jo.recehBBoxes.length)hasilRows.push({label:"RECEH B",value:jo.recehBBoxes.length+" BOX ("+jo.recehBBoxes.map(formatNum).join(" + ")+") = "+formatNum(jo.pcsRecehB)+" PCS"});
               const totalSuffix=multipleProducts&&jobIndex===jobs.length-1?" | "+pct.toFixed(2)+"%":"";
@@ -4795,7 +4879,9 @@
               :formatNum(jo.totalBox)+" BOX @"+formatNum(it.pcsPerBox);
             const pct=Number(it.target)>0?(Number(it.totalPcs||0)/Number(it.target)*100):0;
             const rows=[{label:"A",value:formatNum(jo.boxA)+" BOX @"+formatNum(it.pcsPerBox)+" = "+formatNum(jo.pcsA)+" PCS"}];
+            if(jo.lineSplit?.enabled)rows.push(...buatBarisPembagianLineWaFg(jo,"A",it.pcsPerBox));
             if(jo.boxB>0||recehB.length)rows.push({label:"B",value:formatNum(jo.boxB)+" BOX @"+formatNum(it.pcsPerBox)+" = "+formatNum(jo.pcsB)+" PCS"});
+            if(jo.lineSplit?.enabled&&(jo.boxB>0||recehB.length))rows.push(...buatBarisPembagianLineWaFg(jo,"B",it.pcsPerBox));
             if(recehA.length)rows.push({label:"RECEH A",value:recehA.length+" BOX ("+recehA.map(formatNum).join(" + ")+") = "+formatNum(jo.pcsRecehA)+" PCS"});
             if(recehB.length)rows.push({label:"RECEH B",value:recehB.length+" BOX ("+recehB.map(formatNum).join(" + ")+") = "+formatNum(jo.pcsRecehB)+" PCS"});
             rows.push({label:"TOTAL",value:totalBoxLabel+" = "+formatNum(jo.totalPcs)+" PCS | "+pct.toFixed(2)+"%",bold:true});
@@ -10021,6 +10107,7 @@
       simpanMasterLeaderLokal();
       updateCloudCounterUI();
 
+      inisialisasiFormPembagianLineFg();
       pulihkanDraftLokalJikaHariSama();
       const targetLegacyUpdated=migrasikanTargetFgLamaKeMaster();
       if(targetLegacyUpdated>0){
