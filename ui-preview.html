@@ -1766,6 +1766,48 @@
     }
     #sectionWip #wipInputSection,#sectionSpa #spaInputSection,
     #sectionFg #fgInputCard { scroll-margin-top:18px; }
+
+    /* Desktop: berikan ruang di bawah header sticky agar judul bagian tetap tampak
+       saat navigasi F1/F2/F3 menggulir ke Input, Daftar, atau WhatsApp. */
+    @media (min-width:901px) {
+      #sectionWip #wipInputSection,#sectionSpa #spaInputSection,#sectionFg #fgInputCard,
+      #sectionWip #wipListCard,#sectionFg #fgListCard,#sectionSpa #spaListCard,
+      #sectionWip #wipWaCard,#sectionFg #fgWaCard,#sectionSpa #spaWaCard {
+        scroll-margin-top:92px;
+      }
+    }
+
+    /* Kartu daftar: tiga kolom pada desktop lebar, turun ke dua lalu satu
+       kolom pada layar yang lebih sempit agar isi kartu tetap terbaca. */
+    #wipGroupedContainer,#fgListContainer,#spaGroupedContainer {
+      display:grid;
+      grid-template-columns:minmax(0,1fr);
+      align-items:start;
+      gap:12px;
+    }
+    #wipGroupedContainer > .group-card,
+    #fgListContainer > .group-card,
+    #spaGroupedContainer > .group-card {
+      min-width:0;
+      margin:0 !important;
+      height:100%;
+    }
+    #wipGroupedContainer > :only-child:not(.group-card),
+    #fgListContainer > :only-child:not(.group-card),
+    #spaGroupedContainer > :only-child:not(.group-card) {
+      grid-column:1 / -1;
+    }
+    @media (min-width:880px) {
+      #wipGroupedContainer,#fgListContainer,#spaGroupedContainer {
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:14px;
+      }
+    }
+    @media (min-width:1200px) {
+      #wipGroupedContainer,#fgListContainer,#spaGroupedContainer {
+        grid-template-columns:repeat(3,minmax(0,1fr));
+      }
+    }
     #wipMetaControls { margin-top:0; }
 
     @media (max-width:600px) {
@@ -2040,7 +2082,7 @@
 
         <div id="cloudStatusBanner" style="display:none; margin-bottom:10px; padding:9px 11px; border-radius:8px; font-size:0.75rem; font-weight:700; line-height:1.45;"></div>
         <details class="wa-import-collapse"><summary>📥 Import laporan WhatsApp <span class="wa-import-hint">Buka untuk tempel laporan WIP</span></summary><div class="wa-import-body"><p style="font-size:.73rem;color:var(--text-muted);">Tempel laporan Sisa Barang Bagus, periksa hasilnya sebelum disimpan.</p><textarea id="waImportWipText" class="wa-preview" style="min-height:125px;" placeholder="Tempel laporan SISA BARANG BAGUS di sini..."></textarea><button class="btn btn-sky">🔎 Proses & Preview</button> <button class="btn btn-outline">Bersihkan</button><div id="waImportWipPreview" style="margin-top:8px;font-size:.78rem;"></div></div></details>
-        <div id="wipGroupedContainer"><div class="preview-empty-state"><b>Area Daftar WIP</b><span>Rincian produk, box, dan jumlah akan tampil di bagian ini.</span></div></div>
+        <div id="wipGroupedContainer"><div class="preview-empty-state"><b>Area Daftar WIP</b><span>Rincian produk, box, dan jumlah akan tampil di sini. Setiap kelompok produk akan menjadi satu kartu.</span></div></div>
       </div>
 
       <div class="card sheet-section-target" id="wipWaCard">
@@ -2413,7 +2455,7 @@
           <div id="fgListSearchStatus" style="margin-top:6px;color:var(--text-muted);font-size:.67rem;">Cari kepala line, produk, atau JO untuk menemukan data yang akan diperbarui.</div>
         </div>
 
-        <div id="fgListContainer"><div class="preview-empty-state"><b>Area Daftar Finish Good</b><span>Rekap hasil per produk dan Job Order akan tampil di bagian ini.</span></div></div>
+        <div id="fgListContainer"><div class="preview-empty-state"><b>Area Daftar Finish Good</b><span>Setiap kepala line akan ditampilkan sebagai satu kartu berisi hasil dan rincian JO.</span></div></div>
       </div>
 
       <div class="card sheet-section-target" id="fgWaCard">
@@ -2574,7 +2616,7 @@
           <span class="card-title">2. Rincian SPA (Assy + Gudang & Edit)</span>
           <button class="btn btn-danger">🗑️ Reset SPA</button>
         </div>
-        <details class="wa-import-collapse"><summary>📥 Import laporan WhatsApp SPA <span class="wa-import-hint">Buka untuk tempel laporan SPA</span></summary><div class="wa-import-body"><p style="font-size:.73rem;color:var(--text-muted);">Tempel laporan SPA. Stok Assy, Gudang, stok khusus, NG Hold, dan barang menunggu dari Plant Beta dipisahkan.</p><textarea id="waImportSpaText" class="wa-preview" style="min-height:150px;" placeholder="Tempel laporan SPA dari WhatsApp di sini..."></textarea><button class="btn btn-sky">🔎 Proses & Preview</button> <button class="btn btn-outline">Bersihkan</button><div id="waImportSpaPreview" style="margin-top:8px;font-size:.78rem;"></div></div></details><div id="spaGroupedContainer"><div class="preview-empty-state"><b>Area Rincian SPA</b><span>Rincian stok Assy, Gudang, dan komponen akan tampil di bagian ini.</span></div></div>
+        <details class="wa-import-collapse"><summary>📥 Import laporan WhatsApp SPA <span class="wa-import-hint">Buka untuk tempel laporan SPA</span></summary><div class="wa-import-body"><p style="font-size:.73rem;color:var(--text-muted);">Tempel laporan SPA. Stok Assy, Gudang, stok khusus, NG Hold, dan barang menunggu dari Plant Beta dipisahkan.</p><textarea id="waImportSpaText" class="wa-preview" style="min-height:150px;" placeholder="Tempel laporan SPA dari WhatsApp di sini..."></textarea><button class="btn btn-sky">🔎 Proses & Preview</button> <button class="btn btn-outline">Bersihkan</button><div id="waImportSpaPreview" style="margin-top:8px;font-size:.78rem;"></div></div></details><div id="spaGroupedContainer"><div class="preview-empty-state"><b>Area Rincian SPA</b><span>Setiap kelompok produk akan ditampilkan sebagai satu kartu berisi stok Assy dan Gudang.</span></div></div>
       </div>
 
       <div class="card sheet-section-target" id="spaWaCard">
@@ -3046,7 +3088,9 @@
       }
       function scrollToSection(index){
         const cfg=modules[activeMode],node=cfg&&document.getElementById(cfg.panels[index]);if(!node)return;
-        setActiveNav(index);window.scrollTo({top:Math.max(0,window.scrollY+node.getBoundingClientRect().top-12),behavior:"smooth"});
+        setActiveNav(index);
+        const topOffset=mobileLayout()?12:92;
+        window.scrollTo({top:Math.max(0,window.scrollY+node.getBoundingClientRect().top-topOffset),behavior:"smooth"});
       }
       window.switchMode=mode=>{
         const cfg=modules[mode];if(!cfg)return;activeMode=mode;
