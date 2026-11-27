@@ -1701,6 +1701,84 @@
       }
     }
 
+    /* MODULE INTRO + ANCHOR NAVIGATION */
+    .module-overview {
+      display:grid;
+      grid-template-columns:minmax(0,1fr) auto;
+      align-items:center;
+      gap:16px;
+      width:100%;
+      padding:20px 22px;
+      color:#FFFFFF;
+      background:linear-gradient(125deg,#25384A 0%,#344F63 64%,#426783 100%);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:14px;
+      box-shadow:0 5px 16px rgba(37,56,74,.13);
+    }
+    .module-overview-copy { min-width:0; }
+    .module-overview-eyebrow {
+      display:flex;align-items:center;gap:8px;
+      margin-bottom:5px;color:#C7D7E1;
+      font-size:.64rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+    }
+    .module-overview h1 {
+      margin:0;color:#FFFFFF;font-size:1.22rem;line-height:1.25;
+      font-weight:800;letter-spacing:-.025em;
+    }
+    .module-overview p {
+      margin:6px 0 0;color:rgba(255,255,255,.82);
+      font-size:.76rem;line-height:1.5;max-width:680px;
+    }
+    .module-overview-tag {
+      align-self:start;padding:7px 10px;border:1px solid rgba(255,255,255,.22);
+      border-radius:8px;background:rgba(255,255,255,.09);
+      color:#E5EDF2;font-size:.62rem;font-weight:800;letter-spacing:.07em;
+      white-space:nowrap;
+    }
+    .module-overview-steps {
+      display:flex;flex-wrap:wrap;gap:7px;margin-top:13px;
+    }
+    .module-overview-steps a {
+      display:inline-flex;align-items:center;gap:6px;min-height:32px;
+      padding:6px 10px;border:1px solid rgba(255,255,255,.24);
+      border-radius:8px;background:rgba(255,255,255,.09);
+      color:#FFFFFF;text-decoration:none;font-size:.68rem;font-weight:750;
+      transition:background .15s ease,border-color .15s ease;
+    }
+    .module-overview-steps a:hover {
+      background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.42);
+    }
+    .module-overview-steps a span {
+      color:#D5E1E8;font-size:.61rem;font-weight:850;
+    }
+    #sectionWip #wipInputCard,#sectionFg #fgInputCard,#sectionSpa #spaInputCard {
+      border-top:4px solid #344F63;
+    }
+    #sectionWip #wipListCard,#sectionFg #fgListCard,#sectionSpa #spaListCard {
+      border-top:4px solid var(--emerald);
+      scroll-margin-top:18px;
+    }
+    #sectionWip #wipWaCard,#sectionFg #fgWaCard,#sectionSpa #spaWaCard {
+      border-top:4px solid var(--sky);
+      scroll-margin-top:18px;
+    }
+    #sectionWip #wipInputSection,#sectionSpa #spaInputSection,
+    #sectionFg #fgInputCard { scroll-margin-top:18px; }
+    #wipMetaControls { margin-top:0; }
+
+    @media (max-width:600px) {
+      .module-overview {
+        grid-template-columns:minmax(0,1fr);
+        gap:10px;padding:16px;border-radius:12px;
+      }
+      .module-overview h1 { font-size:1.05rem; }
+      .module-overview p { font-size:.72rem; }
+      .module-overview-tag { justify-self:start;grid-row:1; }
+      .module-overview-eyebrow { margin-bottom:4px;font-size:.59rem; }
+      .module-overview-steps { gap:6px;margin-top:11px; }
+      .module-overview-steps a { min-height:34px;padding:6px 8px;font-size:.64rem; }
+    }
+
   </style>
 </head>
 <body>
@@ -1774,6 +1852,19 @@
     <button type="button" class="sheet-nav-btn" onclick="scrollToSheetSection('wipWaCard','wipSectionNav',this)"><span class="nav-number">3</span> WHATSAPP</button>
   </nav>
   <main id="sectionWip" class="container">
+    <div class="module-overview">
+      <div class="module-overview-copy">
+        <div class="module-overview-eyebrow">ASSEMBLY WORKSPACE · MODUL 01</div>
+        <h1>Sisa Barang Bagus (WIP)</h1>
+        <p>Catat stok aktual, periksa rincian barang yang tersimpan, lalu susun laporan untuk dikirim melalui WhatsApp.</p>
+        <nav class="module-overview-steps" aria-label="Alur WIP">
+          <a href="#wipInputSection"><span>01</span> INPUT</a>
+          <a href="#wipListCard"><span>02</span> DAFTAR</a>
+          <a href="#wipWaCard"><span>03</span> WHATSAPP</a>
+        </nav>
+      </div>
+      <div class="module-overview-tag">SINGLE PAGE</div>
+    </div>
     <div class="meta-grid mobile-sheet-meta" id="wipMetaControls">
       <div><label>Pilih Tanggal</label><input type="date" id="wipDate" onchange="simpanDraftLokal(); renderWipAll(); renderFgAll();" /></div>
       <div><label>Shift</label><select id="wipShift" onchange="simpanDraftLokal(); renderWipAll();"><option value="shift 1">Shift 1</option><option value="shift 2">Shift 2</option><option value="shift 3">Shift 3</option></select></div>
@@ -1903,6 +1994,19 @@
     <button type="button" class="sheet-nav-btn" onclick="scrollToSheetSection('fgWaCard','fgSectionNav',this)"><span class="nav-number">3</span> WHATSAPP</button>
   </nav>
   <main id="sectionFg" class="container" style="display:none;">
+    <div class="module-overview">
+      <div class="module-overview-copy">
+        <div class="module-overview-eyebrow">ASSEMBLY WORKSPACE · MODUL 02</div>
+        <h1>Laporan Finish Good</h1>
+        <p>Input hasil produksi dan parameter shift, tinjau daftar Finish Good, kemudian periksa laporan gabungan sebelum dikirim.</p>
+        <nav class="module-overview-steps" aria-label="Alur Finish Good">
+          <a href="#fgInputCard"><span>01</span> INPUT</a>
+          <a href="#fgListCard"><span>02</span> DAFTAR</a>
+          <a href="#fgWaCard"><span>03</span> WHATSAPP</a>
+        </nav>
+      </div>
+      <div class="module-overview-tag">SINGLE PAGE</div>
+    </div>
     <!-- KOLOM KIRI: INPUT HASIL PRODUKSI FINISH GOOD -->
     <section>
       <div class="card" id="fgInputCard">
@@ -2264,6 +2368,19 @@
     <button type="button" class="sheet-nav-btn" onclick="scrollToSheetSection('spaWaCard','spaSectionNav',this)"><span class="nav-number">3</span> WHATSAPP</button>
   </nav>
   <main id="sectionSpa" class="container" style="display:none;">
+    <div class="module-overview">
+      <div class="module-overview-copy">
+        <div class="module-overview-eyebrow">ASSEMBLY WORKSPACE · MODUL 03</div>
+        <h1>SPA Awal Shift</h1>
+        <p>Masukkan ketersediaan stok Assy dan Gudang, periksa rincian komponen, lalu siapkan laporan SPA awal shift.</p>
+        <nav class="module-overview-steps" aria-label="Alur SPA">
+          <a href="#spaInputSection"><span>01</span> INPUT</a>
+          <a href="#spaListCard"><span>02</span> DAFTAR</a>
+          <a href="#spaWaCard"><span>03</span> WHATSAPP</a>
+        </nav>
+      </div>
+      <div class="module-overview-tag">SINGLE PAGE</div>
+    </div>
     <div class="meta-grid two-cols mobile-sheet-meta" id="spaMetaControls">
       <div><label>Pilih Tanggal SPA</label><input type="date" id="spaDate" onchange="simpanDraftLokal(); renderSpaAll();" /></div>
       <div><label>Plant</label><select id="spaPlant" onchange="simpanDraftLokal(); renderSpaAll();"><option value="plant alpha">Plant Alpha</option><option value="plant beta">Plant Beta</option></select></div>
