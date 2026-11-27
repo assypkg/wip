@@ -959,13 +959,28 @@
       border-top:1px solid var(--border);
     }
     @media (max-width:520px) {
-      #masterEditDialog { align-items:flex-end; padding:10px; }
+      /* Dialog selalu dimulai dari atas area layar yang terlihat.
+         Tinggi aktual diselaraskan lagi melalui VisualViewport saat keyboard terbuka. */
+      #masterEditDialog {
+        align-items:flex-start;
+        justify-content:center;
+        padding:8px 10px;
+      }
       #masterEditDialog .master-edit-dialog-card {
         width:100%;
-        max-height:84vh;
-        max-height:84dvh;
+        max-height:calc(100dvh - 16px);
+        margin-top:0;
         padding:15px;
-        border-radius:15px 15px 12px 12px;
+        border-radius:14px;
+        overflow-y:auto;
+        overscroll-behavior:contain;
+        -webkit-overflow-scrolling:touch;
+      }
+      #masterEditDialog .master-edit-actions {
+        position:sticky;
+        bottom:-15px;
+        padding:12px 0 15px;
+        background:var(--card-bg,#fff);
       }
       #masterEditDialog .master-edit-actions .btn { flex:1; }
     }
@@ -11247,6 +11262,55 @@
       });
     }
 
+    function sinkronkanViewportDialogMaster() {
+      const dialog=document.getElementById("masterEditDialog");
+      if(!dialog||dialog.style.display==="none")return;
+      const card=dialog.querySelector(".master-edit-dialog-card");
+      if(!card)return;
+
+      const isMobile=window.matchMedia("(max-width:520px)").matches;
+      if(!isMobile) {
+        ["top","left","width","height","padding"].forEach(key=>dialog.style[key]="");
+        ["maxHeight","marginTop"].forEach(key=>card.style[key]="");
+        dialog.style.alignItems="";
+        dialog.style.justifyContent="";
+        return;
+      }
+
+      const viewport=window.visualViewport;
+      const viewportTop=viewport?Math.max(0,Number(viewport.offsetTop)||0):0;
+      const viewportLeft=viewport?Math.max(0,Number(viewport.offsetLeft)||0):0;
+      const viewportHeight=viewport?Number(viewport.height)||window.innerHeight:window.innerHeight;
+      const viewportWidth=viewport?Number(viewport.width)||window.innerWidth:window.innerWidth;
+      const availableHeight=Math.max(180,viewportHeight-16);
+
+      // Posisikan backdrop dan dialog di dalam visual viewport, bukan layout viewport.
+      // Pada Android, visualViewport mengecil ketika keyboard virtual tampil.
+      dialog.style.inset="auto";
+      dialog.style.top=viewportTop+"px";
+      dialog.style.left=viewportLeft+"px";
+      dialog.style.width=viewportWidth+"px";
+      dialog.style.height=viewportHeight+"px";
+      dialog.style.padding="8px 10px";
+      dialog.style.alignItems="flex-start";
+      dialog.style.justifyContent="center";
+      card.style.maxHeight=availableHeight+"px";
+      card.style.marginTop="0";
+      card.style.overflowY="auto";
+    }
+
+    function pasangPemantauViewportDialogMaster() {
+      if(window.__masterEditViewportBound)return;
+      window.__masterEditViewportBound=true;
+      const viewport=window.visualViewport;
+      if(viewport) {
+        viewport.addEventListener("resize",sinkronkanViewportDialogMaster,{passive:true});
+        viewport.addEventListener("scroll",sinkronkanViewportDialogMaster,{passive:true});
+      }
+      window.addEventListener("resize",sinkronkanViewportDialogMaster,{passive:true});
+      window.addEventListener("orientationchange",sinkronkanViewportDialogMaster,{passive:true});
+    }
+
     function bukaDialogEditMaster(type,index,title,fieldsHtml) {
       const dialog=document.getElementById("masterEditDialog");
       const titleEl=document.getElementById("masterEditDialogTitle");
@@ -11259,13 +11323,28 @@
       fields.innerHTML=fieldsHtml;
       dialog.style.display="flex";
       document.body.classList.add("master-edit-dialog-open");
+      pasangPemantauViewportDialogMaster();
+      sinkronkanViewportDialogMaster();
       const first=fields.querySelector("input,select,textarea");
-      if(first)requestAnimationFrame(()=>first.focus({preventScroll:true}));
+      if(first)requestAnimationFrame(()=>{
+        first.focus({preventScroll:true});
+        // Jalankan kembali setelah keyboard mulai mengubah tinggi visual viewport.
+        sinkronkanViewportDialogMaster();
+      });
     }
 
     function tutupDialogEditMaster() {
       const dialog=document.getElementById("masterEditDialog");
-      if(dialog)dialog.style.display="none";
+      if(dialog) {
+        dialog.style.display="none";
+        ["top","left","width","height","padding","inset","alignItems","justifyContent"].forEach(key=>dialog.style[key]="");
+      }
+      const card=dialog?.querySelector(".master-edit-dialog-card");
+      if(card) {
+        card.style.maxHeight="";
+        card.style.marginTop="";
+        card.style.overflowY="";
+      }
       const fields=document.getElementById("masterEditDialogFields");
       if(fields)fields.innerHTML="";
       document.body.classList.remove("master-edit-dialog-open");
