@@ -1524,9 +1524,31 @@
        Drawer starts hidden. Existing WIP/FG/SPA controls are reused.
        Mobile layout and production form flow are not changed.
        ========================================================= */
-    .desktop-mode-toggle { display:none; }
-    .desktop-mode-toggle svg { width:16px;height:16px; }
+    .desktop-mode-toggle {
+      display:inline-flex;align-items:center;justify-content:center;flex:0 0 40px;
+      width:40px;height:40px;padding:0;border-radius:10px;
+      background:#F5F8F6;border:1px solid #DCE5E0;color:#526A60;
+    }
+    .desktop-mode-toggle svg { width:18px;height:18px; }
+    .desktop-mode-toggle:hover { background:#EAF1EC;border-color:#CEDDD2; }
     .desktop-mode-backdrop { display:none; }
+    .drawer-utility-label { margin-top:17px; }
+    .drawer-action-btn {
+      display:flex;align-items:center;gap:10px;width:100%;min-height:44px;
+      padding:10px 12px;border:1px solid #E2EAE5;border-radius:9px;
+      background:#F8FAF9;color:#526A60;text-align:left;
+      font-family:inherit;font-size:.74rem;font-weight:750;cursor:pointer;
+    }
+    .drawer-action-btn:hover { background:#EDF4EF;border-color:#D6E3DA; }
+    .drawer-action-icon { display:grid;place-items:center;width:20px;flex:0 0 20px;color:#5C806D;font-size:1rem;font-weight:900; }
+    .drawer-action-btn > span:nth-child(2) { flex:1; }
+    .drawer-action-arrow { color:#98A69E;font-size:.82rem; }
+    .drawer-cloud-action { background:#F2F6F8;border-color:#DEE8ED;color:#5D7485; }
+    .drawer-cloud-action .drawer-action-icon { color:#66889C; }
+    .drawer-action-count {
+      min-width:24px;padding:3px 7px;border:1px solid #D7E3E9;border-radius:12px;
+      background:#FFFFFF;color:#5D7485;text-align:center;font-size:.65rem;font-weight:850;
+    }
     @media (min-width:901px) {
       body {
         min-height:100vh;
@@ -2024,6 +2046,11 @@
     .sidebar-footer span:first-child { color:#708079;font-weight:800;letter-spacing:.06em; }
 
     @media (max-width:900px) {
+      .app-header { padding:10px 13px; }
+      .header-inner { flex-wrap:nowrap;gap:10px; }
+      .app-title { font-size:.83rem; }
+      .app-subtitle { font-size:.62rem; }
+      .desktop-mode-toggle { width:38px;height:38px;flex-basis:38px; }
       .home-page { margin:15px auto;padding:0 13px 25px; }
       .home-hero { padding:19px 17px;border-radius:13px; }
       .home-hero h1 { font-size:1.28rem; }
@@ -2066,21 +2093,9 @@
           <div class="app-subtitle">Aplikasi assembly untuk rekapitulasi WIP &amp; FG antar shift</div>
         </div>
       </div>
-      <div class="header-actions">
-        <button type="button" class="btn-header desktop-mode-toggle" id="desktopModeToggle" aria-label="Buka menu workspace" aria-expanded="false" aria-controls="modeTabs" onclick="toggleDesktopModeMenu()">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-          Menu
-        </button>
-        <button class="btn-header install-btn" id="btnInstallHeader" onclick="triggerInstallApp()">
-          📲 Download Aplikasi
-        </button>
-        <button class="btn-header cloud-btn" onclick="bukaModalCloud()">
-          ☁️ Cloud (<span id="cloudCountHeader">0</span>)
-        </button>
-        <button class="btn-header" onclick="switchMode('master')">
-          📂 Master
-        </button>
-      </div>
+      <button type="button" class="btn-header desktop-mode-toggle" id="desktopModeToggle" aria-label="Buka menu workspace" aria-expanded="false" aria-controls="modeTabs" title="Buka menu workspace" onclick="toggleDesktopModeMenu()">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </button>
     </div>
   </header>
 
@@ -2124,6 +2139,13 @@
     <div class="drawer-section-label drawer-master-label">DATA MASTER</div>
     <button id="tabBtnMaster" class="tab-btn" onclick="switchMode('master')">
       <span class="drawer-icon">▣</span><span>Master</span><span class="drawer-chevron">⌄</span>
+    </button>
+    <div class="drawer-section-label drawer-utility-label">AKSES CEPAT</div>
+    <button type="button" class="drawer-action-btn" id="btnInstallHeader" onclick="triggerInstallApp()">
+      <span class="drawer-action-icon">⇩</span><span>Download Aplikasi</span><span class="drawer-action-arrow">↗</span>
+    </button>
+    <button type="button" class="drawer-action-btn drawer-cloud-action" onclick="bukaModalCloud()">
+      <span class="drawer-action-icon">☁</span><span>Cloud</span><span class="drawer-action-count" id="cloudCountHeader">0</span>
     </button>
     <div class="sidebar-footer">
       <span>ASSEMBLY OPERATIONS</span>
@@ -2217,10 +2239,10 @@
             <div><span>HP · TOUCH NAVIGATION</span><h3>Navigasi dengan sentuhan</h3></div>
           </div>
           <div class="home-guide-list">
-            <div class="home-guide-row"><span class="home-guide-step">01</span><span class="home-guide-detail"><strong>Buka sidebar</strong><small>Usap layar dari tepi paling kiri ke arah kanan.</small></span></div>
+            <div class="home-guide-row"><span class="home-guide-step">01</span><span class="home-guide-detail"><strong>Buka sidebar</strong><small>Mulai usap dari area kiri-tengah layar (sedikit di kiri titik tengah), lalu geser ke kanan.</small></span></div>
             <div class="home-guide-row"><span class="home-guide-step">02</span><span class="home-guide-detail"><strong>Pilih aplikasi</strong><small>Ketuk Home, Aplikasi WIP, Finish Good, Laporan Awal Shift, atau Master.</small></span></div>
             <div class="home-guide-row"><span class="home-guide-step">03</span><span class="home-guide-detail"><strong>Pindah bagian produksi</strong><small>Gunakan menu bawah: Input, Daftar, dan WhatsApp. Menu ini tampil di halaman modul produksi.</small></span></div>
-            <div class="home-guide-row"><span class="home-guide-step">04</span><span class="home-guide-detail"><strong>Tutup sidebar</strong><small>Usap dari dalam sidebar ke arah kiri, atau ketuk area di luar panel.</small></span></div>
+            <div class="home-guide-row"><span class="home-guide-step">04</span><span class="home-guide-detail"><strong>Tutup sidebar</strong><small>Mulai dari area sedikit di kanan tengah sidebar, lalu geser ke kiri. Bisa juga ketuk area di luar panel.</small></span></div>
           </div>
           <p class="home-guide-note">Di HP tidak diperlukan shortcut keyboard. Gunakan gesture sidebar dan menu bawah agar navigasi tetap mudah dijangkau dengan satu tangan.</p>
         </article>
@@ -4211,17 +4233,35 @@
       updateModeMenuA11y(false);
     }
 
-    // Gesture sidebar ala X/Twitter: swipe ke kanan dari tepi kiri untuk membuka,
-    // lalu swipe ke kiri dari area drawer untuk menutupnya.
+    // Gesture sidebar HP:
+    // - Buka: mulai dari sisi kiri hingga area sedikit di kiri tengah, lalu geser ke kanan.
+    // - Tutup: mulai dari area sedikit di kanan tengah panel, lalu geser ke kiri.
+    // Zona sentuh diperlebar agar pengguna tidak harus memulai dari tepi layar.
     let mobileModeTouchStart = null;
     document.addEventListener("touchstart", event => {
       if (!isMobileModeMenuLayout() || !event.touches || event.touches.length !== 1) return;
+      const target = event.target;
+      if (target && typeof target.closest === "function" &&
+          target.closest("input, textarea, select, button, a, [contenteditable='true'], [role='button'], .no-sidebar-swipe")) {
+        mobileModeTouchStart = null;
+        return;
+      }
+
       const touch = event.touches[0];
+      const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 360;
       const isOpen = document.body.classList.contains("mobile-mode-menu-open");
-      const drawerWidth = Math.min(300, window.innerWidth * 0.86);
-      const startsAtLeftEdge = !isOpen && touch.clientX <= 28;
-      const startsInsideDrawer = isOpen && touch.clientX <= drawerWidth + 20;
-      mobileModeTouchStart = (startsAtLeftEdge || startsInsideDrawer)
+      const drawerWidth = Math.min(300, viewportWidth * 0.86);
+      const openZoneMax = viewportWidth * 0.52;
+      const closeZoneMin = Math.min(viewportWidth * 0.56, drawerWidth * 0.66);
+      const closeZoneMax = drawerWidth - 8;
+      const startsInOpenZone = !isOpen && (
+        touch.clientX <= 24 ||
+        (touch.clientX >= viewportWidth * 0.16 && touch.clientX <= openZoneMax)
+      );
+      const startsInCloseZone = isOpen &&
+        touch.clientX >= closeZoneMin && touch.clientX <= closeZoneMax;
+
+      mobileModeTouchStart = (startsInOpenZone || startsInCloseZone)
         ? { x: touch.clientX, y: touch.clientY, wasOpen: isOpen }
         : null;
     }, { passive: true });
@@ -4233,10 +4273,11 @@
       const touch = event.changedTouches[0];
       const deltaX = touch.clientX - start.x;
       const deltaY = touch.clientY - start.y;
-      if (Math.abs(deltaY) > 80) return;
 
-      if (!start.wasOpen && deltaX >= 58) openMobileModeMenu();
-      else if (start.wasOpen && deltaX <= -58) closeDesktopModeMenu();
+      // Gerakan harus dominan horizontal agar scroll vertikal biasa tidak membuka sidebar.
+      if (Math.abs(deltaX) < 58 || Math.abs(deltaX) < Math.abs(deltaY) * 1.2) return;
+      if (!start.wasOpen && deltaX > 0) openMobileModeMenu();
+      else if (start.wasOpen && deltaX < 0) closeDesktopModeMenu();
     }, { passive: true });
 
     document.addEventListener("touchcancel", () => {
