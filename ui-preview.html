@@ -1,0 +1,3042 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#1a237e" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="WIP & FG Assy" />
+  <title>SMART WIP, FINISH GOOD & SPA ASSY - Cloud System</title>
+
+  <!-- PWA Manifest & Icons -->
+  
+  
+  
+
+  <!-- Google Fonts: Montserrat & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- SheetJS dimuat hanya saat fitur Excel digunakan agar startup HP lebih ringan. -->
+
+  <style>
+    :root {
+      /* Industrial Professional — preview palette */
+      --navy: #25384A;
+      --navy-light: #344F63;
+      --emerald: #39816C;
+      --emerald-bg: #EAF2EE;
+      --wa-green: #25d366;
+      --wa-dark: #197D71;
+      --purple: #68798A;
+      --purple-bg: #EEF2F5;
+      --sky: #426783;
+      --sky-bg: #EAF1F5;
+      --orange: #B77932;
+      --orange-bg: #FBF2E7;
+      --red: #B94A48;
+      --red-bg: #FBEDEE;
+      --bg-main: #F2F5F6;
+      --card-bg: #FFFFFF;
+      --text-main: #25313B;
+      --text-muted: #6B7883;
+      --border: #D5DEE4;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--bg-main);
+      color: var(--text-main);
+      padding-bottom: 48px;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    h1, h2, h3, .font-title {
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    /* HEADER RESPONSIF */
+    .app-header {
+      background: linear-gradient(135deg, var(--navy) 0%, var(--navy-light) 100%);
+      color: #fff;
+      padding: 12px 16px;
+      position: relative;
+      top: auto;
+      z-index: 1;
+      box-shadow: 0 4px 12px rgba(26, 35, 126, 0.22);
+    }
+
+    .header-inner {
+      max-width: 1140px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .app-title {
+      font-size: 0.98rem;
+      font-weight: 800;
+      letter-spacing: 0.4px;
+    }
+
+    .app-subtitle {
+      font-size: 0.7rem;
+      opacity: 0.9;
+      margin-top: 2px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .btn-header {
+      background: rgba(255, 255, 255, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      color: #fff;
+      padding: 7px 10px;
+      border-radius: 8px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.71rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .btn-header.install-btn {
+      background: var(--emerald);
+      border-color: #81c784;
+      box-shadow: 0 2px 8px rgba(46, 125, 50, 0.4);
+    }
+
+    .btn-header.cloud-btn {
+      background: rgba(2, 119, 189, 0.9);
+      border-color: #81d4fa;
+    }
+
+    /* BANNER INSTALL PWA */
+    .pwa-install-banner {
+      display: none;
+      max-width: 1140px;
+      margin: 10px auto 0;
+      padding: 0 12px;
+    }
+
+    .pwa-install-box {
+      background: linear-gradient(135deg, #1b5e20 0%, #2e7d32 100%);
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      box-shadow: 0 4px 12px rgba(46, 125, 50, 0.25);
+    }
+
+    /* 3 MODE TABS (SISA WIP, FINISH GOOD, SPA) */
+    .mode-tabs {
+      max-width: 1140px;
+      margin: 12px auto 0;
+      padding: 0 12px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+
+    @media (max-width: 500px) {
+      .mode-tabs {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .tab-btn {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 800;
+      padding: 11px 8px;
+      border-radius: 10px;
+      border: 2px solid var(--border);
+      background: #fff;
+      color: var(--text-muted);
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+    }
+
+    .tab-btn.active-wip {
+      background: var(--navy);
+      color: #fff;
+      border-color: var(--navy);
+      box-shadow: 0 4px 10px rgba(26, 35, 126, 0.2);
+    }
+
+    .tab-btn.active-fg {
+      background: var(--emerald);
+      color: #fff;
+      border-color: var(--emerald);
+      box-shadow: 0 4px 10px rgba(46, 125, 50, 0.2);
+    }
+
+    .tab-btn.active-spa {
+      background: var(--purple);
+      color: #fff;
+      border-color: var(--purple);
+      box-shadow: 0 4px 10px rgba(106, 27, 154, 0.2);
+    }
+
+    /* MAIN GRID CONTAINER (ADAPTIF HP & DESKTOP) */
+    .container {
+      max-width: 1140px;
+      margin: 12px auto;
+      padding: 0 12px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    @media (min-width: 880px) {
+      .container {
+        grid-template-columns: 1.08fr 1fr;
+        align-items: start;
+      }
+      .app-title {
+        font-size: 1.1rem;
+      }
+      .tab-btn {
+        font-size: 0.82rem;
+      }
+    }
+
+    /* CARD */
+    .card {
+      background: var(--card-bg);
+      border-radius: 14px;
+      padding: 15px;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+      border: 1px solid #e2e8f0;
+      margin-bottom: 14px;
+    }
+
+    .card.editing-mode {
+      border: 2.5px solid var(--orange);
+      box-shadow: 0 4px 16px rgba(239, 108, 0, 0.18);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #f1f5f9;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .fg-time-preset {
+      white-space: nowrap;
+      min-width: 62px;
+    }
+    .fg-time-preset.active {
+      background: var(--navy);
+      color: #fff;
+      border-color: var(--navy);
+      box-shadow: 0 2px 6px rgba(26,35,126,.16);
+    }
+
+    .card-title {
+      font-size: 0.86rem;
+      font-weight: 800;
+      color: var(--navy);
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+
+    /* EDIT BANNER */
+    .edit-banner {
+      display: none;
+      background: var(--orange-bg);
+      border: 1.5px solid var(--orange);
+      color: #b45309;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 0.78rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* META BAR */
+    .meta-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      margin-bottom: 14px;
+      background: #f8fafc;
+      padding: 10px;
+      border-radius: 10px;
+      border: 1px solid #e2e8f0;
+    }
+
+    @media (min-width: 520px) {
+      .meta-grid {
+        grid-template-columns: 1.2fr 0.9fr 0.9fr;
+      }
+      .meta-grid.two-cols {
+        grid-template-columns: 1fr 1fr;
+      }
+      .meta-grid.four-cols {
+        grid-template-columns: 1.1fr 0.8fr 0.9fr 0.9fr;
+      }
+    }
+
+    .form-row-responsive {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    @media (min-width: 520px) {
+      .form-row-responsive {
+        grid-template-columns: 1fr 1fr;
+      }
+      .form-row-responsive.three-cols {
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+    }
+
+    label {
+      display: block;
+      font-size: 0.71rem;
+      font-weight: 700;
+      color: var(--navy);
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .fg-option-toggle {position:absolute!important;width:1px!important;height:1px!important;min-height:1px!important;padding:0!important;margin:-1px!important;border:0!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;clip-path:inset(50%)!important;}
+    .fg-option-toggle-ui {width:19px;height:19px;flex:0 0 19px;box-sizing:border-box;display:inline-grid;place-items:center;border:2px solid #64748b;border-radius:4px;background:#fff;vertical-align:middle;}
+    .fg-option-toggle:checked + .fg-option-toggle-ui {background:var(--navy);border-color:var(--navy);}
+    .fg-option-toggle:checked + .fg-option-toggle-ui::after {content:"";width:8px;height:4px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg);margin-top:-2px;}
+    .fg-option-toggle:focus-visible + .fg-option-toggle-ui {outline:3px solid rgba(26,35,126,.22);outline-offset:2px;}
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 11px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-main);
+      background: #fff;
+      font-family: 'Inter', sans-serif;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--navy);
+      box-shadow: 0 0 0 3px rgba(26, 35, 126, 0.12);
+    }
+
+    /* SMART SEARCH BOX */
+    .search-box-wrapper {
+      position: relative;
+      margin-bottom: 10px;
+    }
+
+    .search-input-container {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .search-input {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      padding: 11px 36px 11px 12px;
+      border: 2px solid var(--navy);
+      background: #fff;
+      border-radius: 10px;
+    }
+
+    .btn-clear-search {
+      position: absolute;
+      right: 10px;
+      background: #e2e8f0;
+      border: none;
+      color: var(--text-main);
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      font-size: 0.75rem;
+      font-weight: 800;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .quick-results {
+      display: none;
+      position: absolute;
+      top: calc(100% + 4px);
+      left: 0;
+      right: 0;
+      z-index: 60;
+      max-height: 230px;
+      overflow-y: auto;
+      border: 2px solid var(--navy);
+      border-radius: 10px;
+      background: #fff;
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.18);
+    }
+
+    .quick-item {
+      padding: 10px 12px;
+      border-bottom: 1px solid #f1f5f9;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background 0.12s;
+    }
+
+    .quick-item:hover, .quick-item:active {
+      background: var(--emerald-bg);
+    }
+
+    .quick-item-left {
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: var(--navy);
+    }
+
+    .quick-item-sub {
+      font-size: 0.73rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .quick-item-badge {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.7rem;
+      font-weight: 800;
+      background: var(--purple-bg);
+      color: var(--purple);
+      padding: 4px 8px;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+
+    /* AUTO CALCULATOR PANEL */
+    .calc-panel {
+      background: var(--emerald-bg);
+      border: 2px solid var(--emerald);
+      border-radius: 12px;
+      padding: 12px;
+      margin-top: 12px;
+    }
+
+    .calc-panel.purple-calc {
+      background: var(--purple-bg);
+      border-color: var(--purple);
+    }
+
+    .calc-input-row {
+      display: flex;
+      gap: 6px;
+      margin-top: 6px;
+      flex-wrap: wrap;
+    }
+
+    .input-calc {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--navy);
+      flex: 1;
+      min-width: 150px;
+      letter-spacing: 0.5px;
+    }
+
+    /* PAPAN KETIK KALKULATOR BUILT-IN (+ - × ÷ ENTER) */
+    .calc-keypad-wrapper {
+      margin-top: 10px;
+      background: #1e293b;
+      padding: 10px;
+      border-radius: 12px;
+      box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.35);
+    }
+
+    .calc-keypad-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      color: #cbd5e1;
+      font-size: 0.72rem;
+      font-weight: 700;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .calc-live-result {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: #4ade80;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+
+    .calc-keypad-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 7px;
+    }
+
+    .key-btn {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 1.12rem;
+      font-weight: 800;
+      padding: 12px 6px;
+      border-radius: 9px;
+      border: none;
+      background: #334155;
+      color: #ffffff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 3px 0 #0f172a;
+      transition: transform 0.08s, background 0.1s;
+      user-select: none;
+    }
+
+    .key-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 #0f172a;
+      background: #475569;
+    }
+
+    .key-btn.key-op {
+      background: #3949ab;
+      color: #e8eaf6;
+      font-size: 1.25rem;
+    }
+
+    .key-btn.key-op:active {
+      background: #5c6bc0;
+    }
+
+    .key-btn.key-clear {
+      background: #c62828;
+      color: #fff;
+      font-size: 0.95rem;
+    }
+
+    .key-btn.key-back {
+      background: #d97706;
+      color: #fff;
+      font-size: 1rem;
+    }
+
+    .key-btn.key-enter {
+      grid-column: span 1;
+      background: #2e7d32;
+      color: #ffffff;
+      font-size: 0.88rem;
+      letter-spacing: 0.3px;
+      box-shadow: 0 3px 0 #1b5e20;
+    }
+
+    .key-btn.key-enter:active {
+      background: #388e3c;
+    }
+
+    /* RINCIAN BOX KALKULATOR: TAMPILKAN 3 BARIS, SISANYA SCROLL */
+    .box-chips-container {
+      display: flex;
+      flex-wrap: wrap;
+      align-content: flex-start;
+      gap: 6px;
+      margin-top: 10px;
+      max-height: 118px;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 2px 5px 5px 1px;
+      overscroll-behavior: contain;
+      scrollbar-width: thin;
+      scrollbar-color: #94a3b8 #edf2f7;
+      -webkit-overflow-scrolling: touch;
+    }
+    .box-chips-container::-webkit-scrollbar { width: 6px; }
+    .box-chips-container::-webkit-scrollbar-track { background: #edf2f7; border-radius: 8px; }
+    .box-chips-container::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 8px; }
+    .box-chips-container .box-chip { flex: 0 0 auto; }
+    @media (max-width: 420px) {
+      .box-chips-container { max-height: 118px; gap: 5px; }
+    }
+
+    .box-chip {
+      background: #fff;
+      border: 1px solid #a5d6a7;
+      color: var(--emerald);
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 5px 9px;
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .box-chip.minus-chip {
+      background: var(--red-bg);
+      border-color: #ffcdd2;
+      color: var(--red);
+    }
+
+    .box-chip button {
+      background: none;
+      border: none;
+      color: var(--red);
+      font-weight: 800;
+      cursor: pointer;
+      font-size: 0.88rem;
+    }
+
+    /* BUTTONS */
+    .btn {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 0.75rem;
+      padding: 9px 12px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: all 0.15s;
+    }
+
+    .btn:active { transform: scale(0.98); }
+    .btn-primary { background: var(--navy); color: #fff; }
+    .btn-emerald { background: var(--emerald); color: #fff; width: 100%; padding: 13px; font-size: 0.88rem; }
+    .btn-sky { background: var(--sky); color: #fff; }
+    .btn-sky-outline { background: var(--sky-bg); color: var(--sky); border: 1px solid #81d4fa; }
+    .btn-wa {
+      background: var(--wa-dark);
+      color: #fff;
+      padding: 10px 14px;
+      font-size: 0.8rem;
+      box-shadow: 0 3px 8px rgba(18, 140, 126, 0.25);
+    }
+    .btn-purple { background: var(--purple); color: #fff; }
+    .btn-outline { background: #fff; color: var(--navy); border: 1.5px solid var(--navy); }
+    .btn-edit {
+      background: var(--orange-bg);
+      color: var(--orange);
+      border: 1px solid #ffcc80;
+      padding: 5px 9px;
+      font-size: 0.72rem;
+    }
+    .btn-danger {
+      background: var(--red-bg);
+      color: var(--red);
+      border: 1px solid #ffcdd2;
+      padding: 5px 9px;
+      font-size: 0.72rem;
+    }
+
+    /* TOOLBAR WIP: GRID RAPI DAN KONSISTEN */
+    .wip-action-toolbar {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+      margin-bottom: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid #e8edf3;
+    }
+    .wip-action-toolbar .btn {
+      width: 100%; min-height: 46px; padding: 10px 8px;
+      line-height: 1.25; white-space: normal; text-align: center; font-size: 0.76rem;
+    }
+    .sheet-reset-btn {
+      flex: 0 0 auto; min-height: 36px; padding: 8px 11px;
+      border: 1px solid #ffc4c9; border-radius: 8px;
+      background: #fff0f1; color: #b42332; font-size: 0.72rem;
+      font-weight: 800; white-space: nowrap;
+    }
+    .sheet-reset-btn:active { transform: scale(0.98); }
+    @media (max-width: 420px) {
+      .wip-action-toolbar { gap: 7px; }
+      .wip-action-toolbar .btn { min-height: 48px; font-size: 0.70rem; padding: 8px 5px; }
+      .sheet-reset-btn { font-size: 0.66rem; padding: 7px 8px; }
+    }
+
+    /* GROUPED REPORT DISPLAY & RINCIAN BOX */
+    .group-card {
+      border: 1px solid var(--border);
+      border-left: 5px solid var(--navy);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 10px;
+      background: #fff;
+    }
+
+    .group-card.fg-mode {
+      border-left-color: var(--emerald);
+    }
+
+    .group-card.spa-mode {
+      border-left-color: var(--purple);
+    }
+
+    .group-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px dashed var(--border);
+      padding-bottom: 6px;
+      margin-bottom: 8px;
+    }
+
+    .group-name {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 800;
+      color: var(--navy);
+      text-transform: uppercase;
+    }
+
+    .part-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 8px 0;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 0.82rem;
+      gap: 8px;
+    }
+
+    .part-label {
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    .part-note {
+      font-size: 0.7rem;
+      color: var(--purple);
+      background: var(--purple-bg);
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-left: 4px;
+      font-weight: 600;
+      display: inline-block;
+    }
+
+    .box-breakdown-info {
+      margin-top: 4px;
+      font-size: 0.72rem;
+      color: #334155;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 4px 8px;
+      border-radius: 6px;
+      line-height: 1.4;
+    }
+
+    .part-qty {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      color: var(--emerald);
+      font-size: 0.95rem;
+      white-space: nowrap;
+    }
+
+    /* WHATSAPP PREVIEW BOX */
+    .wa-preview {
+      width: 100%;
+      min-height: 270px;
+      font-family: monospace;
+      font-size: 0.78rem;
+      background: #dcf8c6;
+      border: 1.5px solid #25d366;
+      border-radius: 10px;
+      padding: 12px;
+      color: #111b21;
+      white-space: pre-wrap;
+      line-height: 1.45;
+    }
+
+    .wa-action-bar {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      width: 100%;
+      margin-bottom: 10px;
+    }
+
+    /* MODAL */
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.65);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
+      padding: 12px;
+    }
+
+    .modal-card {
+      background: #fff;
+      max-width: 680px;
+      width: 100%;
+      border-radius: 14px;
+      padding: 18px;
+      max-height: 92vh;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+    #wipEditModal .modal-card { max-width: 760px; max-height: 94vh; }
+    #wipEditModalContent #wipInputCard { margin-bottom: 0; box-shadow: none; }
+    #spaAddItemModal .modal-card { max-width: 560px; }
+    .spa-add-item-btn { white-space:nowrap; padding:6px 9px; font-size:.68rem; }
+
+    /* Cloud Archive: tampilan halaman penuh, bukan pop-up/modal mengambang. */
+    #cloudModal {
+      position:fixed;
+      inset:0;
+      display:none;
+      align-items:stretch;
+      justify-content:stretch;
+      width:100%;
+      height:100%;
+      padding:0;
+      border:0;
+      border-radius:0;
+      background:var(--bg-main);
+      z-index:1000;
+    }
+    #cloudModal .modal-card.cloud-modal-card {
+      display:flex;
+      flex-direction:column;
+      width:100%;
+      max-width:none;
+      height:100vh;
+      height:100dvh;
+      min-height:0;
+      max-height:100vh;
+      max-height:100dvh;
+      margin:0;
+      padding:calc(14px + env(safe-area-inset-top, 0px)) 14px calc(14px + env(safe-area-inset-bottom, 0px));
+      border:0;
+      border-radius:0;
+      box-shadow:none;
+      overflow:hidden;
+      overscroll-behavior:contain;
+    }
+    #cloudModal .cloud-page-toolbar {
+      display:flex;
+      justify-content:flex-end;
+      gap:8px;
+      flex-wrap:wrap;
+      margin:0 0 12px;
+      padding-bottom:10px;
+      border-bottom:1px solid var(--border);
+      flex:0 0 auto;
+    }
+    #cloudModal .cloud-page-title {
+      min-width:0;
+      overflow-wrap:anywhere;
+      font-size:.92rem;
+      font-weight:800;
+      color:var(--navy);
+      font-family:'Montserrat',sans-serif;
+      text-transform:uppercase;
+    }
+    #cloudModal #cloudArchiveContainer {
+      flex:1 1 auto;
+      min-height:0;
+      max-height:none !important;
+      overflow-y:auto;
+      overscroll-behavior:contain;
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:thin;
+      padding:0 3px 8px 0;
+    }
+    body.cloud-page-open { overflow:hidden; }
+    .cloud-item-detail {
+      margin-top:8px;
+      padding:7px 8px;
+      border:1px solid #e2e8f0;
+      border-radius:8px;
+      background:#f8fafc;
+    }
+    .cloud-item-heading {
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:8px;
+      font-size:.78rem;
+      font-weight:800;
+      line-height:1.35;
+    }
+    .cloud-box-list {
+      display:grid;
+      gap:0;
+      margin-top:5px;
+      max-height:150px;
+      overflow-y:auto;
+      overscroll-behavior:contain;
+      -webkit-overflow-scrolling:touch;
+      scrollbar-width:thin;
+      border-top:1px solid #e2e8f0;
+    }
+    .cloud-box-row {
+      display:flex;
+      justify-content:space-between;
+      gap:8px;
+      padding:5px 2px;
+      border-bottom:1px solid #e8edf3;
+      font-size:.72rem;
+      line-height:1.25;
+    }
+    .cloud-box-row span:first-child { color:var(--text-muted); font-weight:700; }
+    .cloud-box-row span:last-child { color:var(--text-main); font-weight:800; font-variant-numeric:tabular-nums; }
+
+    .cloud-record-card {
+      border: 1.5px solid var(--border);
+      border-left: 5px solid var(--sky);
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 10px;
+      background: #fff;
+    }
+
+    .cloud-record-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 8px;
+      flex-wrap: wrap;
+      padding-bottom: 8px;
+      border-bottom: 1px dashed var(--border);
+    }
+
+    .cloud-badge {
+      display: inline-block;
+      font-size: 0.68rem;
+      font-weight: 700;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: var(--emerald-bg);
+      color: var(--emerald);
+      border: 1px solid #a5d6a7;
+    }
+
+    /* MOBILE SHEET NAVIGATION + GROUPED QTY INPUT */
+    .mobile-sheet-meta { grid-column:1 / -1; margin:10px 0 8px; }
+    .sheet-section-nav { display:none; grid-column:1 / -1; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; padding:7px; background:#fff; border:1px solid #dbe2ed; border-radius:12px; box-shadow:0 4px 12px rgba(15,23,42,.10); z-index:90; }
+    .sheet-nav-btn { min-width:0; border:1px solid #dbe2ed; background:#f8fafc; color:var(--navy); border-radius:9px; min-height:42px; padding:6px 3px; display:flex; align-items:center; justify-content:center; gap:5px; font-family:'Montserrat',sans-serif; font-size:.68rem; font-weight:800; line-height:1.15; cursor:pointer; }
+    .sheet-nav-btn .nav-number { display:inline-flex; width:20px; height:20px; align-items:center; justify-content:center; border-radius:50%; background:#e2e8f0; font-size:.66rem; flex:0 0 auto; }
+    .sheet-nav-btn.active { background:var(--navy); border-color:var(--navy); color:#fff; }
+    .sheet-nav-btn.active .nav-number { background:rgba(255,255,255,.2); color:#fff; }
+    .sheet-section-target { scroll-margin-top:76px; }
+    .group-suggest-wrap { position:relative; min-width:0; }
+    .group-suggest-input { border:2px solid var(--navy); font-weight:800; }
+    .group-qty-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:10px; }
+    .group-qty-grid input { min-height:48px; font-size:1.12rem; font-weight:800; text-align:center; }
+    .group-qty-actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:9px; }
+    .group-qty-actions .btn { min-height:44px; white-space:normal; line-height:1.2; }
+    .box-detail-disclosure,.saved-box-details { margin-top:10px; border:1px solid #d9e2ec; border-radius:9px; background:#fff; overflow:hidden; }
+    .box-detail-disclosure>summary,.saved-box-details>summary { list-style:none; padding:10px 11px; cursor:pointer; font-size:.76rem; font-weight:800; color:var(--navy); display:flex; justify-content:space-between; align-items:center; gap:8px; }
+    .box-detail-disclosure>summary::-webkit-details-marker,.saved-box-details>summary::-webkit-details-marker { display:none; }
+    .box-detail-disclosure>summary::after,.saved-box-details>summary::after { content:"＋"; color:var(--emerald); font-size:1rem; }
+    .box-detail-disclosure[open]>summary::after,.saved-box-details[open]>summary::after { content:"−"; }
+    .box-detail-list { display:grid; gap:0; padding:0 10px 9px; max-height:260px; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; scrollbar-width:thin; }
+    .saved-box-detail-list { display:grid; gap:0; padding:0 10px 9px; max-height:150px; overflow-y:auto; overscroll-behavior:contain; -webkit-overflow-scrolling:touch; scrollbar-width:thin; }
+    .box-detail-row { display:flex; align-items:center; justify-content:space-between; gap:8px; padding:8px 2px; border-top:1px solid #edf1f5; font-size:.78rem; }
+    .box-detail-row .box-detail-label { color:var(--text-muted); font-weight:700; }
+    .box-detail-row .box-detail-value { color:var(--text-main); font-weight:800; font-variant-numeric:tabular-nums; }
+    .box-detail-row.negative .box-detail-value { color:var(--red); }
+    .box-detail-row button { border:0; background:#fff0f1; color:var(--red); border-radius:6px; padding:3px 8px; font-weight:800; }
+    .saved-box-details { margin-top:7px; background:#f8fafc; }
+    .saved-box-details>summary { font-size:.70rem; padding:8px 9px; }
+    .saved-box-details .box-detail-row { font-size:.72rem; padding:6px 2px; }
+.wa-import-collapse { border:1px solid var(--border); border-radius:10px; margin:10px 0; background:#fff; overflow:hidden; }
+    .wa-import-collapse > summary { list-style:none; display:flex; align-items:center; justify-content:space-between; gap:10px; padding:12px; cursor:pointer; font-size:.88rem; font-weight:800; color:var(--navy); }
+    .wa-import-collapse > summary::-webkit-details-marker { display:none; }
+    .wa-import-collapse > summary::after { content:"＋"; color:var(--emerald); font-size:1.1rem; flex:0 0 auto; }
+    .wa-import-collapse[open] > summary::after { content:"−"; }
+    .wa-import-hint { margin-left:auto; color:var(--text-muted); font-size:.67rem; font-weight:600; text-align:right; }
+    .wa-import-body { border-top:1px solid var(--border); padding:12px; }
+    .wa-import-body > p { margin:0 0 8px; }
+    .wa-import-body textarea { display:block; width:100%; margin-bottom:8px; }
+    .fg-break-presets { display:flex; flex-wrap:wrap; gap:6px; margin-top:7px; }
+    .fg-break-preset { min-height:34px; padding:6px 10px; font-size:.7rem; }
+    .fg-break-preset.selected { background:var(--navy); color:#fff; border-color:var(--navy); }
+    .fg-main-calc-grid {
+      display:grid;
+      grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:10px;
+      margin-top:0;
+      align-items:start;
+    }
+    .fg-main-calc-grid > div { min-width:0; }
+    .fg-main-calc-grid input { width:100%; min-width:0; }
+    .fg-main-calc-grid small { display:block; line-height:1.35; }
+    .fg-leader-footer {
+      display:grid;
+      grid-template-columns:minmax(0,1fr);
+      gap:9px;
+      align-items:stretch;
+      margin-top:10px;
+      padding-top:9px;
+      border-top:1px solid #e2e8f0;
+    }
+    .fg-leader-total {
+      width:100%;
+      min-width:0;
+      font-size:.78rem;
+      line-height:1.45;
+      font-weight:800;
+      color:var(--navy);
+      overflow-wrap:anywhere;
+    }
+    .fg-add-spa-btn {
+      width:100%;
+      min-width:0;
+      white-space:normal;
+      line-height:1.25;
+      padding:10px 12px;
+    }
+    .fg-wa-preview-modal .modal-card {
+      display:flex;
+      flex-direction:column;
+      width:96vw;
+      max-width:1400px;
+      height:94vh;
+      height:94dvh;
+      max-height:94vh;
+      max-height:94dvh;
+      overflow:hidden;
+      padding:14px;
+    }
+    #fgWaPreviewModalContent {
+      display:flex;
+      flex:1 1 auto;
+      min-height:0;
+    }
+    #fgWaPreviewModalContent .wa-preview {
+      flex:1 1 auto;
+      min-height:0;
+      height:100%;
+      max-height:none;
+      resize:none;
+      font-size:.88rem;
+      line-height:1.55;
+    }
+    @media (min-width:880px) {
+      .fg-break-presets {
+        display:grid;
+        grid-template-columns:repeat(3,minmax(0,1fr));
+        gap:6px;
+        width:100%;
+        max-width:100%;
+      }
+      .fg-break-preset {
+        width:100%;
+        min-width:0;
+        white-space:nowrap;
+        padding:6px 5px;
+        font-size:.66rem;
+      }
+    }
+    @media (max-width:520px) {
+      .fg-main-calc-grid { gap:8px; }
+      .fg-main-calc-grid label { font-size:.68rem; }
+      .fg-main-calc-grid input { padding:9px 8px; font-size:.85rem; }
+    }
+    .fg-second-jo { margin-top:10px; border:1px solid #cbd5e1; border-radius:10px; background:#f8fafc; overflow:hidden; }
+    .fg-second-jo > summary { list-style:none; padding:12px; cursor:pointer; display:flex; align-items:center; justify-content:space-between; gap:8px; color:var(--navy); font-size:.82rem; font-weight:800; }
+    .fg-second-jo > summary::-webkit-details-marker { display:none; }
+    .fg-second-jo > summary::after { content:"＋"; color:var(--emerald); font-size:1.1rem; }
+    .fg-second-jo[open] > summary::after { content:"−"; }
+    .fg-second-jo-body { border-top:1px solid #dbe2ed; padding:12px; background:#fff; }
+    .fg-second-jo-help { margin:0 0 10px; color:var(--text-muted); font-size:.72rem; line-height:1.4; }
+    .fg-second-jo-grid { display:grid; grid-template-columns:1fr 1fr; gap:9px; margin-top:10px; }
+    .fg-second-jo-grid input { min-width:0; }
+    .fg-second-jo-grid small { display:block; margin-top:3px; color:var(--text-muted); font-size:.65rem; }
+    .fg-second-jo-preview { margin-top:10px; padding:9px; border:1px solid #cbd5e1; border-radius:8px; background:#f8fafc; color:var(--navy); font-size:.72rem; font-weight:700; line-height:1.5; }
+    .mobile-legacy-hidden { display:none !important; }
+    @media (max-width:879px) {
+      .mobile-tab-hidden { display:none !important; }
+      /* Navigasi panel aktif menetap di bawah layar pada semua sheet mobile. */
+      .sheet-section-nav {
+        display:none;
+        position:fixed;
+        top:auto;
+        bottom:0;
+        left:50%;
+        right:auto;
+        transform:translateX(-50%);
+        align-self:stretch;
+        width:100%;
+        max-width:1140px;
+        margin:0;
+        padding:8px 8px calc(8px + env(safe-area-inset-bottom, 0px));
+        border:1px solid #dbe2ed;
+        border-bottom:0;
+        border-radius:14px 14px 0 0;
+        z-index:100;
+        background:#fff;
+        box-shadow:0 -5px 18px rgba(15,23,42,.14);
+        scroll-margin-top:0;
+      }
+      body { overflow-anchor:none; padding-bottom:calc(108px + env(safe-area-inset-bottom, 0px)); }
+      .sheet-section-nav.is-active { display:grid; }
+      .sheet-section-nav.modal-nav-hidden { display:none !important; }
+      .mobile-sheet-meta { grid-template-columns:1fr 1fr; gap:6px; padding:8px; }
+      #wipMetaControls > div:first-child { grid-column:1 / -1; }
+      .mobile-sheet-meta label { font-size:.63rem; margin-bottom:3px; }
+      .mobile-sheet-meta input,.mobile-sheet-meta select { padding:8px 7px; font-size:.78rem; min-width:0; }
+      .group-qty-grid input { min-width:0; padding:10px 6px; }
+      .calc-panel { padding:10px; }
+    }
+    @media (min-width:880px) { .sheet-section-nav { display:none !important; } }
+
+
+    /* =========================================================
+       UI REFRESH PREVIEW — INDUSTRIAL PROFESSIONAL / BALANCED
+       Visual-only layer. No DOM, workflow, or calculation changes.
+       ========================================================= */
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-main);
+      color: var(--text-main);
+      line-height: 1.45;
+    }
+    h1, h2, h3, .font-title, .app-title, .card-title, .tab-btn, .btn {
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      letter-spacing: -0.01em;
+    }
+    .app-header {
+      background: var(--navy);
+      box-shadow: 0 2px 10px rgba(31, 49, 63, .14);
+      border-bottom: 3px solid #6B8798;
+    }
+    .app-title { font-size: 1rem; font-weight: 750; letter-spacing: 0; }
+    .app-subtitle { color: rgba(255,255,255,.82); letter-spacing: .01em; }
+    .btn-header {
+      border-radius: 8px;
+      background: rgba(255,255,255,.10);
+      border-color: rgba(255,255,255,.28);
+      font-family: inherit;
+      letter-spacing: 0;
+    }
+    .mode-tabs {
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .tab-btn {
+      min-height: 48px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #FFFFFF;
+      color: #526474;
+      box-shadow: none;
+      font-weight: 700;
+      line-height: 1.25;
+      transition: background .15s ease, border-color .15s ease, color .15s ease;
+    }
+    .tab-btn.active-wip,
+    .tab-btn.active-fg,
+    .tab-btn.active-spa {
+      background: var(--navy);
+      border-color: var(--navy);
+      color: #FFFFFF;
+      box-shadow: 0 2px 5px rgba(37,56,74,.14);
+    }
+    .container { gap: 14px; }
+    .card {
+      border: 1px solid #DCE4E8;
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 2px 8px rgba(35,53,68,.045);
+      background: var(--card-bg);
+    }
+    .card-header {
+      border-bottom: 1px solid #E8EDF0;
+      padding-bottom: 11px;
+      margin-bottom: 14px;
+    }
+    .card-title {
+      color: var(--navy);
+      font-size: .88rem;
+      font-weight: 750;
+      letter-spacing: .005em;
+    }
+    .meta-grid {
+      background: #F7F9FA;
+      border: 1px solid #E1E7EA;
+      border-radius: 10px;
+      gap: 10px;
+      padding: 11px;
+    }
+    label {
+      color: #40576A;
+      font-size: .70rem;
+      font-weight: 750;
+      letter-spacing: .015em;
+      margin-bottom: 5px;
+    }
+    input, select, textarea {
+      border: 1px solid #C9D4DB;
+      border-radius: 9px;
+      background: #FFFFFF;
+      color: #25313B;
+      font-family: inherit;
+      font-size: .88rem;
+      font-weight: 550;
+      min-height: 43px;
+      transition: border-color .15s ease, box-shadow .15s ease;
+    }
+    input::placeholder, textarea::placeholder { color: #8996A0; font-weight: 450; }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--sky);
+      box-shadow: 0 0 0 3px rgba(66,103,131,.13);
+    }
+    .btn {
+      border-radius: 9px;
+      font-family: inherit;
+      font-weight: 700;
+      letter-spacing: 0;
+      box-shadow: none;
+      transition: background .15s ease, border-color .15s ease, transform .12s ease;
+    }
+    .btn-primary, .btn-sky, .btn-purple {
+      background: var(--sky);
+      color: #FFFFFF;
+    }
+    .btn-outline {
+      color: var(--navy);
+      border: 1px solid #AEBEC8;
+      background: #FFFFFF;
+    }
+    .btn-emerald {
+      background: var(--emerald);
+      color: #FFFFFF;
+      border-radius: 9px;
+      box-shadow: none;
+    }
+    .btn-danger, .sheet-reset-btn {
+      color: #A94442;
+      background: #FBEDEE;
+      border: 1px solid #E9C7C8;
+      border-radius: 9px;
+    }
+    .btn-edit {
+      color: #946126;
+      background: #FBF2E7;
+      border: 1px solid #EAD7B8;
+      border-radius: 8px;
+    }
+    .calc-panel {
+      background: #EFF5F1;
+      border: 1px solid #C9DDD2;
+      border-radius: 11px;
+      padding: 13px;
+    }
+    .calc-panel.purple-calc {
+      background: #F0F3F5;
+      border-color: #D6DEE4;
+    }
+    .input-calc {
+      color: var(--navy);
+      font-family: inherit;
+      letter-spacing: 0;
+    }
+    .group-card {
+      border: 1px solid #DCE4E8;
+      border-left: 4px solid var(--navy);
+      border-radius: 10px;
+      box-shadow: 0 1px 4px rgba(35,53,68,.035);
+    }
+    .group-card.fg-mode { border-left-color: var(--emerald); }
+    .group-card.spa-mode { border-left-color: var(--purple); }
+    .quick-results {
+      border: 1px solid #AEBEC8;
+      border-radius: 10px;
+      box-shadow: 0 8px 22px rgba(35,53,68,.14);
+    }
+    .quick-item:hover, .quick-item:active { background: #EEF4F6; }
+    .quick-item-left { color: var(--navy); }
+    .quick-item-badge {
+      color: #526B7D;
+      background: #EEF2F5;
+      font-family: inherit;
+    }
+    .edit-banner {
+      border: 1px solid #EAD7B8;
+      background: var(--orange-bg);
+      color: #865B26;
+      border-radius: 9px;
+    }
+    .fg-time-preset.active, .fg-break-preset.selected {
+      background: var(--navy);
+      border-color: var(--navy);
+      box-shadow: none;
+    }
+    .fg-leader-footer { border-top-color: #E5EBEE; }
+    .fg-second-jo {
+      border-color: #D7E0E5;
+      border-radius: 10px;
+      background: #F7F9FA;
+    }
+    .fg-second-jo-body { border-top-color: #E2E8EC; }
+    .fg-second-jo-preview {
+      border-color: #D7E0E5;
+      border-radius: 8px;
+      background: #F5F8F9;
+      color: var(--navy);
+    }
+    .fg-second-jo > summary::after,
+    .box-detail-disclosure>summary::after,
+    .saved-box-details>summary::after,
+    .wa-import-collapse > summary::after { color: var(--emerald); }
+    .sheet-section-nav {
+      border-color: #DCE4E8;
+      box-shadow: 0 2px 8px rgba(35,53,68,.055);
+    }
+    .sheet-nav-btn {
+      border-color: #D7E0E5;
+      background: #F6F8F9;
+      color: var(--navy);
+      border-radius: 9px;
+      font-family: inherit;
+      letter-spacing: 0;
+    }
+    .sheet-nav-btn.active {
+      background: var(--navy);
+      border-color: var(--navy);
+      color: #FFFFFF;
+    }
+    .sheet-nav-btn .nav-number {
+      background: #E5EBEF;
+      color: #526474;
+    }
+    .sheet-nav-btn.active .nav-number { background: rgba(255,255,255,.2); color: #FFFFFF; }
+    .fg-option-toggle-ui { border-color: #83939E; }
+    .fg-option-toggle:checked + .fg-option-toggle-ui {
+      background: var(--sky);
+      border-color: var(--sky);
+    }
+    #sectionFg .card { background: #FFFFFF; }
+    #sectionFg .mobile-sheet-meta { background: #F7F9FA; }
+    #sectionFg .fg-break-preset { border-radius: 8px; }
+    #sectionFg .fg-main-calc-grid input,
+    #sectionFg .fg-second-jo-grid input { min-height: 42px; }
+    #sectionFg .fg-second-jo-preview { line-height: 1.5; }
+    #sectionFg .fg-wa-preview-modal .modal-card { border-radius: 14px; }
+    :focus-visible { outline-color: var(--sky); }
+    @media (max-width: 520px) {
+      .card { padding: 14px; border-radius: 12px; }
+      .mode-tabs { gap: 6px; }
+      .tab-btn { padding: 10px 7px; min-height: 44px; }
+      #sectionFg .meta-grid { padding: 9px; }
+      #sectionFg input, #sectionFg select, #sectionFg textarea { min-height: 42px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+    }
+
+
+    /* =========================================================
+       FINISH GOOD PILOT — COMPONENT RHYTHM & VISUAL HIERARCHY
+       Scoped to Sheet 2. Field order and workflow remain intact.
+       ========================================================= */
+    #sectionFg { align-items:start; }
+    #sectionFg > section { min-width:0; }
+    #sectionFg .card { overflow:visible; margin-bottom:14px; }
+    #sectionFg .card-header { align-items:center; gap:10px; }
+    #sectionFg .card-header > .card-title { line-height:1.35; }
+    #fgInputCard .card-header > div { gap:7px; }
+    #fgInputCard .card-header .btn,
+    #fgInputCard .card-header .sheet-reset-btn {
+      min-height:36px; padding:8px 10px!important; font-size:.70rem!important; border-radius:8px;
+    }
+    #fgInputCard .edit-banner { border-radius:9px; line-height:1.45; }
+    #fgInputCard .meta-grid {
+      grid-template-columns:minmax(0,1fr); padding:12px; gap:11px; margin-bottom:16px;
+    }
+    #fgInputCard .meta-grid > div,
+    #fgInputCard .form-row-responsive > div { min-width:0; }
+    #fgInputCard .form-row-responsive { gap:13px 12px; margin-top:0; }
+    #fgInputCard .form-row-responsive > div:nth-child(1),
+    #fgInputCard .form-row-responsive > div:nth-child(2),
+    #fgInputCard .form-row-responsive > div:nth-child(3) { align-self:start; }
+    #fgInputCard .form-row-responsive > div:nth-child(5),
+    #fgInputCard .form-row-responsive > div:nth-child(6) { padding-top:2px; }
+    #fgInputCard .form-row-responsive > div:nth-child(7),
+    #fgInputCard .form-row-responsive > div:nth-child(8) { padding-top:1px; }
+    #fgInputCard .form-row-responsive input,
+    #fgInputCard .form-row-responsive select { min-width:0; }
+    #fgInputCard .form-row-responsive small,
+    #fgInputCard .form-row-responsive > div > div[style*="font-size"] { line-height:1.45; }
+    #fgInputCard #fgOvertimeBreakInfo {
+      padding:7px 9px; background:#F5F7F8; border:1px solid #E3E9EC; border-radius:7px; line-height:1.45!important;
+    }
+    #fgInputCard .fg-break-presets { gap:7px; margin-top:8px; }
+    #fgInputCard .fg-break-preset { min-height:36px; padding:7px 11px; font-size:.72rem; border-radius:8px; }
+    #fgInputCard .fg-break-preset.selected,
+    #fgInputCard .fg-break-preset.active { background:var(--navy); border-color:var(--navy); color:#fff; }
+    #fgInputCard > div[style*="grid-column:1/-1"][style*="border:1px solid"] {
+      margin-top:15px; padding:13px!important; background:#F7F9FA!important;
+      border:1px solid #D9E2E7!important; border-radius:10px!important;
+    }
+    #fgInputCard #fgManpowerFields { padding-top:2px; }
+    #fgInputCard #fgManpowerInfo,
+    #fgInputCard #fgManpowerDefaultInfo { line-height:1.5!important; }
+    #fgInputCard .calc-panel {
+      margin-top:14px; padding:14px; border-radius:11px; background:#EEF4F0; border:1px solid #C9DCD1;
+    }
+    #fgInputCard .calc-panel > div:first-child {
+      align-items:flex-start!important; padding-bottom:9px; border-bottom:1px solid #DCE8E0;
+    }
+    #fgInputCard .calc-panel > div:first-child label {
+      color:#376D5B!important; font-size:.76rem; line-height:1.35;
+    }
+    #fgInputCard #fgLiveTotalPreview {
+      color:#314D42!important; font-size:.76rem!important; text-align:right; line-height:1.4;
+    }
+    #fgInputCard .fg-main-calc-grid { gap:12px; }
+    #fgInputCard .fg-main-calc-grid label { min-height:2.1em; line-height:1.35; }
+    #fgInputCard .fg-main-calc-grid input { min-height:45px; border-radius:8px; }
+    #fgInputCard .fg-main-calc-grid #fgTarget {
+      border-color:#9AB5A5; background:#FBFDFC; color:#254D3C; font-weight:750;
+    }
+    #fgInputCard #fgBreakdownPreview {
+      border-color:#D2E1D7!important; background:#FFFFFF!important; color:#426B57!important;
+      border-radius:8px!important; line-height:1.5;
+    }
+    #fgInputCard [id^="fgLineSplitMount"] > div {
+      background:#F7F9FA!important; border-color:#D6E0E5!important; border-radius:10px!important; padding:12px!important;
+    }
+    #fgInputCard [id^="fgLineSplitFields"] [style*="border:1px solid #dbe2ed"] {
+      border-color:#D9E2E7!important; border-radius:9px!important; box-shadow:0 1px 2px rgba(35,53,68,.025);
+    }
+    #fgInputCard #fgSecondJoPanel { margin-top:13px; border-color:#D6E0E5; border-radius:10px; background:#F7F9FA; }
+    #fgInputCard #fgSecondJoPanel > summary { min-height:46px; padding:12px 13px; font-size:.78rem; letter-spacing:0; }
+    #fgInputCard .fg-second-jo-body { padding:13px; background:#FFFFFF; }
+    #fgInputCard .fg-second-jo-help { line-height:1.5; }
+    #fgInputCard .fg-second-jo-grid { gap:10px; }
+    #fgInputCard .fg-second-jo-preview { background:#F5F8F9; border-color:#D9E2E7; border-radius:8px; }
+    #fgInputCard #btnSubmitFg {
+      min-height:49px; margin-top:14px!important; padding:13px 15px; font-size:.84rem; letter-spacing:.005em;
+    }
+    #fgListCard .card-header,
+    #fgWaCard .card-header { border-bottom:1px solid #E7ECEF; }
+    #fgListCard .fg-report-time-toolbar,
+    #fgListCard .fg-list-search {
+      background:#F7F9FA!important; border-color:#DCE4E8!important; border-radius:9px!important;
+    }
+    #fgListCard .fg-report-time-toolbar #fgTimeDisplay { font-variant-numeric:tabular-nums; letter-spacing:.02em; }
+    #fgListCard .fg-wa-import-collapse { border-color:#DCE4E8; border-radius:9px; }
+    #fgListCard .fg-wa-import-collapse > summary { min-height:44px; font-size:.78rem; }
+    #fgListCard > div[style*="background:var(--emerald-bg)"] {
+      background:#EEF4F0!important; border:1px solid #D1E0D6!important; border-radius:9px!important;
+    }
+    #fgListCard .fg-list-search { padding:12px!important; }
+    #fgListCard #fgListContainer { min-width:0; }
+    #fgWaCard .wa-action-bar { gap:8px; }
+    #fgWaCard .wa-action-bar .btn { min-height:42px; padding:9px 11px; line-height:1.3; font-size:.72rem; }
+    #fgWaCard .wa-preview {
+      background:#F4F8F5; border:1px solid #C9D9CF; border-radius:10px; color:#26372E;
+      font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.76rem; line-height:1.55;
+    }
+    #fgWaCard > p { line-height:1.5; }
+    #fgSectionNav { background:rgba(255,255,255,.98); backdrop-filter:blur(10px); }
+    @media (min-width:520px) {
+      #fgInputCard .meta-grid { grid-template-columns:1.15fr 1fr 1fr; }
+      #fgInputCard .form-row-responsive { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      #fgInputCard .form-row-responsive > div:nth-child(1),
+      #fgInputCard .form-row-responsive > div:nth-child(2),
+      #fgInputCard .form-row-responsive > div:nth-child(3) { grid-column:auto; }
+      #fgInputCard .form-row-responsive > div:nth-child(5),
+      #fgInputCard .form-row-responsive > div:nth-child(6) { grid-column:1/-1; }
+      #fgInputCard .form-row-responsive > div:nth-child(7),
+      #fgInputCard .form-row-responsive > div:nth-child(8) { grid-column:auto; }
+    }
+    @media (min-width:880px) {
+      #fgInputCard .meta-grid { grid-template-columns:1.15fr 1fr 1fr; }
+      #fgInputCard .form-row-responsive { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      #fgInputCard .card-header { flex-wrap:nowrap; }
+      #fgListCard, #fgWaCard { position:relative; }
+    }
+    @media (max-width:519px) {
+      #fgInputCard .card-header { align-items:flex-start; }
+      #fgInputCard .card-header > div { width:100%; justify-content:flex-start!important; }
+      #fgInputCard .meta-grid { grid-template-columns:1fr; }
+      #fgInputCard .form-row-responsive { grid-template-columns:1fr; gap:12px; }
+      #fgInputCard .form-row-responsive > div:nth-child(5),
+      #fgInputCard .form-row-responsive > div:nth-child(6),
+      #fgInputCard .form-row-responsive > div:nth-child(7),
+      #fgInputCard .form-row-responsive > div:nth-child(8) { grid-column:1/-1; }
+      #fgInputCard .fg-main-calc-grid { gap:9px; }
+      #fgInputCard .fg-main-calc-grid label { min-height:0; font-size:.68rem; }
+      #fgInputCard .fg-main-calc-grid input { padding:9px 8px; font-size:.84rem; }
+      #fgInputCard #btnSubmitFg { width:100%; }
+      #fgWaCard .wa-action-bar { display:grid; grid-template-columns:1fr 1fr; }
+      #fgWaCard .wa-action-bar .btn:first-child { grid-column:1/-1; }
+    }
+
+
+    /* =========================================================
+       DESKTOP WORKSPACE — WEEKLY REPORT-INSPIRED NAVIGATION
+       Drawer starts hidden. Existing WIP/FG/SPA controls are reused.
+       Mobile layout and production form flow are not changed.
+       ========================================================= */
+    .desktop-mode-toggle { display:none; }
+    .desktop-mode-toggle svg { width:16px;height:16px; }
+    .desktop-mode-backdrop { display:none; }
+    @media (min-width:901px) {
+      body {
+        min-height:100vh;
+        padding-bottom:0;
+        background:#F4F6F4;
+      }
+      .app-header {
+        position:sticky;
+        top:0;
+        z-index:45;
+        padding:10px 26px;
+        background:rgba(255,255,255,.96);
+        color:#263544;
+        border-bottom:1px solid #E4E9E6;
+        box-shadow:0 2px 8px rgba(37,55,48,.035);
+        backdrop-filter:blur(10px);
+      }
+      .header-inner {
+        width:100%;
+        max-width:1660px;
+        min-height:46px;
+        flex-wrap:nowrap;
+      }
+      .app-header .header-inner > div:first-child { min-width:0; }
+      .app-header img { border:1px solid #E5EBE7;box-shadow:none; }
+      .app-title { color:#34495E;font-size:.96rem;letter-spacing:.015em; }
+      .app-subtitle { color:#82908E;opacity:1;font-size:.68rem; }
+      .header-actions { flex:0 0 auto;align-items:center;gap:8px;flex-wrap:nowrap; }
+      .btn-header {
+        min-height:36px;padding:7px 11px;border:1px solid #E1E8E4;border-radius:8px;
+        background:#F8FAF9;color:#536A60;box-shadow:none;font-family:inherit;font-size:.70rem;font-weight:700;
+      }
+      .btn-header:hover { background:#EEF3F0;border-color:#D2DED7; }
+      .btn-header.install-btn {
+        background:#E8F0EC;border-color:#D7E4DC;color:#557C6E;box-shadow:none;
+      }
+      .btn-header.cloud-btn {
+        background:#EDF2F5;border-color:#DCE5EA;color:#627B8D;
+      }
+      .desktop-mode-toggle { display:inline-flex; }
+      .mode-tabs {
+        position:fixed;z-index:61;top:0;bottom:0;left:0;
+        width:min(285px,84vw);max-width:none;height:100dvh;margin:0;
+        padding:96px 14px 22px;display:flex;flex-direction:column;
+        align-items:stretch;justify-content:flex-start;gap:7px;
+        overflow-y:auto;overscroll-behavior:contain;
+        background:#FFFFFF;border-right:1px solid #E4E9E6;
+        box-shadow:12px 0 30px rgba(30,45,39,.12);
+        transform:translateX(-105%);transition:transform .22s ease;
+      }
+      .mode-tabs::before {
+        content:"WORKSPACE";display:block;padding:0 11px 12px;margin-bottom:4px;
+        border-bottom:1px solid #E8EDE9;color:#9AA5A1;
+        font-size:9px;font-weight:800;letter-spacing:.13em;
+      }
+      .mode-tabs .tab-btn {
+        display:flex;width:100%;min-height:46px;align-items:center;justify-content:flex-start;
+        padding:11px 12px;border:1px solid transparent;border-radius:9px;
+        background:transparent;color:#667582;text-align:left;font-family:inherit;
+        font-size:.75rem;font-weight:650;line-height:1.35;box-shadow:none;
+      }
+      .mode-tabs .tab-btn:hover { background:#F5F8F6;color:#34495E; }
+      .mode-tabs .tab-btn.active-wip,
+      .mode-tabs .tab-btn.active-fg,
+      .mode-tabs .tab-btn.active-spa {
+        background:#E8F0EC;border-color:#E0EAE4;color:#557C6E;
+        font-weight:750;box-shadow:none;
+      }
+      body.desktop-mode-menu-open .mode-tabs { transform:translateX(0); }
+      .desktop-mode-backdrop {
+        display:block;position:fixed;z-index:60;inset:0;width:100%;height:100%;
+        padding:0;border:0;background:rgba(38,53,68,.22);
+        opacity:0;visibility:hidden;pointer-events:none;cursor:default;
+        transition:opacity .22s ease,visibility .22s ease;
+      }
+      body.desktop-mode-menu-open .desktop-mode-backdrop {
+        opacity:1;visibility:visible;pointer-events:auto;
+      }
+      .mode-tabs,.mode-tabs * { -webkit-tap-highlight-color:transparent; }
+      .pwa-install-banner { max-width:1660px; }
+      .container {
+        width:100%;max-width:1660px;margin:18px auto;padding:0 26px;gap:18px;
+      }
+      .sheet-section-nav { display:none!important; }
+    }
+    /* MOBILE DRAWER: sidebar tersembunyi dan dibuka dengan swipe dari tepi kiri. */
+    @media (max-width:900px) {
+      .mode-tabs {
+        position:fixed;z-index:201;top:0;bottom:0;left:0;
+        width:min(300px,86vw);max-width:none;height:100vh;height:100dvh;
+        margin:0;padding:calc(22px + env(safe-area-inset-top, 0px)) 14px calc(20px + env(safe-area-inset-bottom, 0px));
+        display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:7px;
+        overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+        background:#FFFFFF;border-right:1px solid #E1E8E4;
+        box-shadow:12px 0 30px rgba(30,45,39,.16);
+        transform:translateX(-105%);transition:transform .22s ease;
+      }
+      .mode-tabs::before {
+        content:"MENU UTAMA";display:block;padding:0 11px 12px;margin-bottom:4px;
+        border-bottom:1px solid #E8EDE9;color:#82908E;
+        font-size:9px;font-weight:800;letter-spacing:.13em;
+      }
+      .mode-tabs .tab-btn {
+        display:flex;width:100%;min-height:48px;align-items:center;justify-content:flex-start;
+        padding:11px 12px;border:1px solid transparent;border-radius:9px;
+        background:transparent;color:#526474;text-align:left;font-family:inherit;
+        font-size:.76rem;font-weight:700;line-height:1.35;box-shadow:none;
+      }
+      .mode-tabs .tab-btn.active-wip,
+      .mode-tabs .tab-btn.active-fg,
+      .mode-tabs .tab-btn.active-spa {
+        background:#E8F0EC;border-color:#D7E4DC;color:#426B5C;
+        font-weight:800;box-shadow:none;
+      }
+      body.mobile-mode-menu-open .mode-tabs { transform:translateX(0); }
+      .desktop-mode-backdrop {
+        display:block;position:fixed;z-index:200;inset:0;width:100%;height:100%;
+        padding:0;border:0;background:rgba(25,39,51,.38);
+        opacity:0;visibility:hidden;pointer-events:none;cursor:default;
+        transition:opacity .22s ease,visibility .22s ease;
+      }
+      body.mobile-mode-menu-open .desktop-mode-backdrop {
+        opacity:1;visibility:visible;pointer-events:auto;
+      }
+      .mode-tabs,.mode-tabs * { -webkit-tap-highlight-color:transparent; }
+    }
+
+    @media (prefers-reduced-motion:reduce) and (min-width:901px) {
+      .mode-tabs,.desktop-mode-backdrop { transition-duration:.01ms; }
+    }
+    @media (prefers-reduced-motion:reduce) and (max-width:900px) {
+      .mode-tabs,.desktop-mode-backdrop { transition-duration:.01ms; }
+    }
+
+    /* SINGLE-PAGE WORKSPACE: Input -> Daftar -> Laporan WhatsApp. */
+    .sheet-section-nav { display:none !important; }
+    #sectionWip.container,
+    #sectionFg.container,
+    #sectionSpa.container {
+      grid-template-columns:minmax(0,1fr);
+      align-items:stretch;
+      width:100%;
+      max-width:1280px;
+      margin:18px auto;
+      padding:0 22px;
+      gap:16px;
+    }
+    #sectionWip > section,
+    #sectionFg > section,
+    #sectionSpa > section {
+      display:flex;
+      flex-direction:column;
+      min-width:0;
+      width:100%;
+      gap:14px;
+    }
+    #sectionWip > section .card,
+    #sectionFg > section .card,
+    #sectionSpa > section .card {
+      width:100%;
+      margin-bottom:0;
+    }
+    #sectionFg { align-items:stretch; }
+    @media (max-width:879px) {
+      body { padding-bottom:24px; }
+      #sectionWip.container,
+      #sectionFg.container,
+      #sectionSpa.container {
+        margin:12px auto;
+        padding:0 12px;
+        gap:12px;
+      }
+    }
+
+    /* MODULE INTRO + ANCHOR NAVIGATION */
+    .module-overview {
+      display:grid;
+      grid-template-columns:minmax(0,1fr) auto;
+      align-items:center;
+      gap:16px;
+      width:100%;
+      padding:20px 22px;
+      color:#FFFFFF;
+      background:linear-gradient(125deg,#25384A 0%,#344F63 64%,#426783 100%);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:14px;
+      box-shadow:0 5px 16px rgba(37,56,74,.13);
+    }
+    .module-overview-copy { min-width:0; }
+    .module-overview-eyebrow {
+      display:flex;align-items:center;gap:8px;
+      margin-bottom:5px;color:#C7D7E1;
+      font-size:.64rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+    }
+    .module-overview h1 {
+      margin:0;color:#FFFFFF;font-size:1.22rem;line-height:1.25;
+      font-weight:800;letter-spacing:-.025em;
+    }
+    .module-overview p {
+      margin:6px 0 0;color:rgba(255,255,255,.82);
+      font-size:.76rem;line-height:1.5;max-width:680px;
+    }
+    .module-overview-tag {
+      align-self:start;padding:7px 10px;border:1px solid rgba(255,255,255,.22);
+      border-radius:8px;background:rgba(255,255,255,.09);
+      color:#E5EDF2;font-size:.62rem;font-weight:800;letter-spacing:.07em;
+      white-space:nowrap;
+    }
+    .module-overview-steps {
+      display:flex;flex-wrap:wrap;gap:7px;margin-top:13px;
+    }
+    .module-overview-steps a {
+      display:inline-flex;align-items:center;gap:6px;min-height:32px;
+      padding:6px 10px;border:1px solid rgba(255,255,255,.24);
+      border-radius:8px;background:rgba(255,255,255,.09);
+      color:#FFFFFF;text-decoration:none;font-size:.68rem;font-weight:750;
+      transition:background .15s ease,border-color .15s ease;
+    }
+    .module-overview-steps a:hover {
+      background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.42);
+    }
+    .module-overview-steps a span {
+      color:#D5E1E8;font-size:.61rem;font-weight:850;
+    }
+    #sectionWip #wipInputCard,#sectionFg #fgInputCard,#sectionSpa #spaInputCard {
+      border-top:4px solid #344F63;
+    }
+    #sectionWip #wipListCard,#sectionFg #fgListCard,#sectionSpa #spaListCard {
+      border-top:4px solid var(--emerald);
+      scroll-margin-top:18px;
+    }
+    #sectionWip #wipWaCard,#sectionFg #fgWaCard,#sectionSpa #spaWaCard {
+      border-top:4px solid var(--sky);
+      scroll-margin-top:18px;
+    }
+    #sectionWip #wipInputSection,#sectionSpa #spaInputSection,
+    #sectionFg #fgInputCard { scroll-margin-top:18px; }
+    #wipMetaControls { margin-top:0; }
+
+    @media (max-width:600px) {
+      .module-overview {
+        grid-template-columns:minmax(0,1fr);
+        gap:10px;padding:16px;border-radius:12px;
+      }
+      .module-overview h1 { font-size:1.05rem; }
+      .module-overview p { font-size:.72rem; }
+      .module-overview-tag { justify-self:start;grid-row:1; }
+      .module-overview-eyebrow { margin-bottom:4px;font-size:.59rem; }
+      .module-overview-steps { gap:6px;margin-top:11px; }
+      .module-overview-steps a { min-height:34px;padding:6px 8px;font-size:.64rem; }
+    }
+
+    .preview-notice {
+      width:100%;padding:9px 18px;display:flex;justify-content:center;align-items:center;
+      flex-wrap:wrap;gap:6px 12px;background:#FFF4D8;border-bottom:1px solid #E8D19A;
+      color:#684B13;font-size:.69rem;font-weight:650;text-align:center;
+    }
+    .preview-notice b { letter-spacing:.06em; }
+    .preview-notice-tip { color:#765A25; }
+    .preview-empty-state {
+      display:flex;flex-direction:column;gap:4px;padding:15px 14px;margin-top:10px;
+      border:1px dashed #B8C6CD;border-radius:9px;background:#F7F9FA;color:#40576A;
+      font-size:.73rem;line-height:1.45;
+    }
+    .preview-empty-state b { font-size:.77rem;color:#344F63; }
+    @media (max-width:600px) {
+      .preview-notice { padding:8px 10px;gap:4px;font-size:.64rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <img src="https://raw.githubusercontent.com/assypkg/wip/ui-refresh-preview/icon-assy-192.png" alt="Logo" style="width:36px; height:36px; border-radius:8px; object-fit:cover; background:#fff;" />
+        <div>
+          <div class="app-title">SMART WIP, FINISH GOOD & SPA</div>
+          <div class="app-subtitle">Aplikasi assembly untuk rekapitulasi WIP &amp; FG antar shift</div>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button type="button" class="btn-header desktop-mode-toggle" id="desktopModeToggle" aria-label="Buka menu workspace" aria-expanded="false" aria-controls="modeTabs">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          Menu
+        </button>
+        <button class="btn-header install-btn" id="btnInstallHeader">
+          📲 Download Aplikasi
+        </button>
+        <button class="btn-header cloud-btn">
+          ☁️ Cloud (<span id="cloudCountHeader">0</span>)
+        </button>
+        <button class="btn-header">
+          📂 Master
+        </button>
+      </div>
+    </div>
+  </header>
+<div class="preview-notice" role="note">
+  <b>PREVIEW UI — TAMPILAN SAJA</b>
+  <span>Input, simpan, edit, Cloud, dan WhatsApp tidak terhubung di halaman preview ini.</span>
+  <span class="preview-notice-tip">HP: geser dari tepi kiri ke kanan · Desktop: tekan SPACE atau klik Menu</span>
+</div>
+
+  <!-- BANNER OTOMATIS MUNCUL SAAT SIAP DI-INSTALL SEBAGAI APLIKASI -->
+  <div id="pwaInstallBanner" class="pwa-install-banner">
+    <div class="pwa-install-box">
+      <div style="font-size:0.8rem;">
+        <b>📲 Pasang Aplikasi Smart WIP Assy di HP Anda!</b><br>
+        <span style="font-size:0.72rem; opacity:0.92;">Akses lebih cepat dari layar utama HP tanpa buka browser.</span>
+      </div>
+      <div style="display:flex; gap:6px;">
+        <button class="btn" style="background:#fff; color:var(--emerald); font-weight:800;">
+          ⬇️ Install Sekarang
+        </button>
+        <button class="btn" style="background:rgba(255,255,255,0.2); color:#fff;">
+          ✕
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PILIHAN 3 MODE SHEET -->
+  <div class="mode-tabs" id="modeTabs" aria-label="Menu workspace" aria-hidden="true">
+    <button id="tabBtnWip" class="tab-btn active-wip">
+      📦 1. SISA BARANG BAGUS (WIP)
+    </button>
+    <button id="tabBtnFg" class="tab-btn">
+      🏆 2. LAPORAN FINISH GOOD (+WIP)
+    </button>
+    <button id="tabBtnSpa" class="tab-btn">
+      📋 3. LAPORAN SPA AWAL SHIFT
+    </button>
+  </div>
+  <button type="button" id="desktopModeBackdrop" class="desktop-mode-backdrop" aria-label="Tutup menu workspace" tabindex="-1"></button>
+
+  <!-- =========================================================
+       SHEET 1: SISA BARANG BAGUS ASSY (WIP)
+       ========================================================= -->
+  <nav class="sheet-section-nav is-active" id="wipSectionNav" aria-label="Navigasi Sisa Barang Bagus">
+    <button type="button" class="sheet-nav-btn active"><span class="nav-number">1</span> INPUT WIP</button>
+    <button type="button" class="sheet-nav-btn"><span class="nav-number">2</span> DAFTAR WIP</button>
+    <button type="button" class="sheet-nav-btn"><span class="nav-number">3</span> WHATSAPP</button>
+  </nav>
+  <main id="sectionWip" class="container">
+    <div class="module-overview">
+      <div class="module-overview-copy">
+        <div class="module-overview-eyebrow">ASSEMBLY WORKSPACE · MODUL 01</div>
+        <h1>Sisa Barang Bagus (WIP)</h1>
+        <p>Catat stok aktual, periksa rincian barang yang tersimpan, lalu susun laporan untuk dikirim melalui WhatsApp.</p>
+        <nav class="module-overview-steps" aria-label="Alur WIP">
+          <a href="#wipInputSection"><span>01</span> INPUT</a>
+          <a href="#wipListCard"><span>02</span> DAFTAR</a>
+          <a href="#wipWaCard"><span>03</span> WHATSAPP</a>
+        </nav>
+      </div>
+      <div class="module-overview-tag">SINGLE PAGE</div>
+    </div>
+    <div class="meta-grid mobile-sheet-meta" id="wipMetaControls">
+      <div><label>Pilih Tanggal</label><input type="date" id="wipDate" /></div>
+      <div><label>Shift</label><select id="wipShift"><option value="shift 1">Shift 1</option><option value="shift 2">Shift 2</option><option value="shift 3">Shift 3</option></select></div>
+      <div><label>Plant</label><select id="wipPlant"><option value="plant alpha">Plant Alpha</option><option value="plant beta">Plant Beta</option></select></div>
+    </div>
+    
+    <!-- KOLOM KIRI: SMART SEARCH & INPUT QTY -->
+    <section id="wipInputSection" class="sheet-section-target">
+      <div class="card" id="wipInputCard">
+        <div class="card-header">
+          <span class="card-title" id="wipFormTitle">1. Input Sisa Barang Bagus (WIP)</span>
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:0.71rem; font-weight:700; color:var(--emerald);">🔒 Auto-Save Draft Aktif</span>
+            <button type="button" class="sheet-reset-btn">🗑️ Reset All WIP</button>
+          </div>
+        </div>
+
+        <!-- BANNER SAAT MODE EDIT AKTIF -->
+        <div id="wipEditBanner" class="edit-banner">
+          <span id="wipEditBannerText">✏️ MODE EDIT: Silakan tambah/hapus box atau kurangi qty yang diambil helper.</span>
+          <button type="button" class="btn btn-danger">Batal Edit</button>
+        </div>
+
+        <!-- FORM ITEM TERPILIH -->
+        <div class="form-row-responsive">
+          <div class="group-suggest-wrap" id="wipGroupSearchWrap">
+            <label>Kelompok Produk / Cari Produk & Part</label>
+            <input type="text" id="selectedGroup" class="group-suggest-input" placeholder="Ketik kode atau nama produk..." autocomplete="off" required />
+            <div class="quick-results" id="wipGroupSuggestions"></div>
+          </div>
+          <div class="wip-part-search-wrap" style="position:relative;">
+            <label>Nama Komponen & Kode</label>
+            <input type="text" id="selectedPart" placeholder="Misal: Inbs(009)" aria-controls="wipPartSuggestions" aria-expanded="false" autocomplete="off" required />
+            <div class="quick-results" id="wipPartSuggestions" role="listbox" aria-label="Saran komponen sesuai kelompok produk"></div>
+          </div>
+          <div style="grid-column: 1 / -1;">
+            <label>Keterangan Cavity / Status / Mold (Opsional)</label>
+            <input
+              type="text"
+              id="selectedNote"
+              placeholder="Contoh: cvty 8 / cvty 12,13,16 / ss (Kosongkan jika reguler)"
+            />
+          </div>
+        </div>
+
+        <!-- INPUT KELOMPOK QTY WIP -->
+        <div class="calc-panel">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+            <label style="color:var(--emerald);margin:0;">📦 Input Jumlah Aktual Per Box</label>
+            <span style="font-size:.75rem;font-weight:800;color:var(--navy);"><b id="liveBoxCount" style="color:var(--purple);">0</b> Box | <b id="liveCalcSum" style="color:var(--emerald);">0</b> PCS</span>
+          </div>
+          <div class="group-qty-grid">
+            <div><label>Isi per box (PCS)</label><input type="text" inputmode="numeric" pattern="[0-9]*" id="wipQtyPerBox" placeholder="Contoh: 650"  /></div>
+            <div><label>Jumlah box sama</label><input type="text" inputmode="numeric" pattern="[0-9]*" id="wipQtyBoxCount" placeholder="Contoh: 4"  /></div>
+          </div>
+          <div id="wipGroupPreview" class="qty-live-total" style="margin-top:8px;"><span style="font-size:.75rem;font-weight:800;">SUBTOTAL KELOMPOK</span><b style="color:var(--emerald);">Isi PCS per box dan jumlah box</b></div>
+          <div class="group-qty-actions">
+            <button type="button" class="btn btn-emerald">＋ TAMBAH KELOMPOK QTY</button>
+            <button type="button" class="btn btn-danger">− CATAT PENGAMBILAN</button>
+          </div>
+          <details class="box-detail-disclosure" id="wipBoxDetails">
+            <summary id="wipBoxDetailsSummary">Lihat rincian box (0)</summary>
+            <div class="box-detail-list" id="boxChipsList"></div>
+          </details>
+          <input type="hidden" id="calcBoxInput" value="" /><span id="wipFormulaPreview" class="mobile-legacy-hidden">= 0 Box (0 PCS)</span>
+        </div>
+
+        <button type="button" id="btnSubmitWip" class="btn btn-emerald" style="margin-top:12px;">
+          ✅ SIMPAN KE DAFTAR WIP
+        </button>
+      </div>
+    </section>
+
+    <!-- KOLOM KANAN: REKAP, SIMPAN CLOUD & SHARE LANGSUNG WA -->
+    <section>
+      <div class="card sheet-section-target" id="wipListCard">
+        <div class="card-header" style="margin-bottom:8px; border-bottom:none; padding-bottom:0;">
+          <span class="card-title">2. Daftar Sisa Barang Bagus (Rincian Box & Edit)</span>
+        </div>
+
+        <!-- TOOLBAR: SIMPAN CLOUD, TARIK CLOUD, GABUNG KE FG, TARIK KE SPA, RESET -->
+        <div class="wip-action-toolbar">
+          <button class="btn btn-sky" id="btnSaveCloud">
+            ☁️ Simpan ke Cloud
+          </button>
+          <button class="btn btn-sky-outline">
+            📥 Tarik Cloud
+          </button>
+          <button class="btn btn-emerald">🏆 Gabung ke Finish Good</button>
+          <button class="btn btn-purple">🔄 Tarik ke SPA</button>
+        </div>
+
+        <div id="cloudStatusBanner" style="display:none; margin-bottom:10px; padding:9px 11px; border-radius:8px; font-size:0.75rem; font-weight:700; line-height:1.45;"></div>
+        <details class="wa-import-collapse"><summary>📥 Import laporan WhatsApp <span class="wa-import-hint">Buka untuk tempel laporan WIP</span></summary><div class="wa-import-body"><p style="font-size:.73rem;color:var(--text-muted);">Tempel laporan Sisa Barang Bagus, periksa hasilnya sebelum disimpan.</p><textarea id="waImportWipText" class="wa-preview" style="min-height:125px;" placeholder="Tempel laporan SISA BARANG BAGUS di sini..."></textarea><button class="btn btn-sky">🔎 Proses & Preview</button> <button class="btn btn-outline">Bersihkan</button><div id="waImportWipPreview" style="margin-top:8px;font-size:.78rem;"></div></div></details>
+        <div id="wipGroupedContainer"><div class="preview-empty-state"><b>Area Daftar WIP</b><span>Rincian produk, box, dan jumlah akan tampil di bagian ini.</span></div></div>
+      </div>
+
+      <div class="card sheet-section-target" id="wipWaCard">
+        <div class="card-header">
+          <span class="card-title">3. Laporan WhatsApp (Khusus Sisa WIP)</span>
+        </div>
+        <div class="wa-action-bar">
+          <button class="btn btn-wa" style="flex:1.5;">
+            📲 KIRIM LANGSUNG KE WHATSAPP
+          </button>
+          <button class="btn btn-outline" style="flex:1;">
+            📋 Salin Teks
+          </button>
+          <button class="btn btn-edit">↻ Format Otomatis</button>
+        </div>
+        <p style="font-size:0.73rem; color:var(--text-muted); margin:-3px 0 8px;">
+          Laporan dapat diedit langsung. Contoh: <b>Inbs(003)=&gt; 1.349 (pakai barang tanggal 9)</b>.
+          Perubahan manual dipertahankan saat daftar WIP diperbarui. Gunakan Format Otomatis untuk menyusun ulang.
+        </p>
+        <textarea id="waPreviewWip" class="wa-preview" placeholder="Laporan WIP akan tampil di sini dan dapat diedit..."></textarea>
+      </div>
+    </section>
+  </main>
+
+  <!-- =========================================================
+       SHEET 2: LAPORAN HASIL PRODUKSI FINISH GOOD (+ GABUNGAN WIP)
+       ========================================================= -->
+  <nav class="sheet-section-nav" id="fgSectionNav" aria-label="Navigasi Finish Good">
+    <button type="button" class="sheet-nav-btn active"><span class="nav-number">1</span> INPUT FG</button>
+    <button type="button" class="sheet-nav-btn"><span class="nav-number">2</span> DAFTAR FG</button>
+    <button type="button" class="sheet-nav-btn"><span class="nav-number">3</span> WHATSAPP</button>
+  </nav>
+  <main id="sectionFg" class="container" style="display:none;">
+    <div class="module-overview">
+      <div class="module-overview-copy">
+        <div class="module-overview-eyebrow">ASSEMBLY WORKSPACE · MODUL 02</div>
+        <h1>Laporan Finish Good</h1>
+        <p>Input hasil produksi dan parameter shift, tinjau daftar Finish Good, kemudian periksa laporan gabungan sebelum dikirim.</p>
+        <nav class="module-overview-steps" aria-label="Alur Finish Good">
+          <a href="#fgInputCard"><span>01</span> INPUT</a>
+          <a href="#fgListCard"><span>02</span> DAFTAR</a>
+          <a href="#fgWaCard"><span>03</span> WHATSAPP</a>
+        </nav>
+      </div>
+      <div class="module-overview-tag">SINGLE PAGE</div>
+    </div>
+    <!-- KOLOM KIRI: INPUT HASIL PRODUKSI FINISH GOOD -->
+    <section>
+      <div class="card" id="fgInputCard">
+        <div class="card-header">
+          <span class="card-title" id="fgFormTitle">1. Input Hasil Produksi (Finish Good)</span>
+          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; justify-content:flex-end;">
+            <button type="button" class="btn btn-outline" style="padding:7px 9px; font-size:0.68rem;">⚡ Samakan Spek</button>
+            <button type="button" class="sheet-reset-btn">🗑️ Reset All FG</button>
+          </div>
+        </div>
+
+        <!-- BANNER SAAT MODE EDIT FG AKTIF -->
+        <div id="fgEditBanner" class="edit-banner">
+          <span id="fgEditBannerText">✏️ MODE EDIT FINISH GOOD: Silakan ubah data operator/hasil box.</span>
+          <button type="button" class="btn btn-danger">Batal Edit</button>
+        </div>
+
+        <!-- HEADER LAPORAN FINISH GOOD: TANGGAL, SHIFT, PLANT -->
+        <div class="meta-grid">
+          <div>
+            <label>Tanggal</label>
+            <input type="date" id="fgDate" />
+          </div>
+          <div>
+            <label>Shift</label>
+            <select id="fgShift">
+              <optgroup label="5 HARI KERJA — 2 SHIFT">
+                <option value="SHIFT 1 (08.00-10.00)">SHIFT 1 — Laporan jam 10.00 (08.00-10.00)</option>
+                <option value="SHIFT 1 (08.00-12.00)">SHIFT 1 — Setengah hari (08.00-12.00)</option>
+                <option value="SHIFT 1 (08.00-17.00)">SHIFT 1 — Full (08.00-17.00)</option>
+                <option value="SHIFT 2 (21.00-06.00)">SHIFT 2 — Malam (21.00-06.00)</option>
+              </optgroup>
+              <optgroup label="6 HARI KERJA — 3 SHIFT">
+                <option value="SHIFT 1">SHIFT 1</option><option value="SHIFT 2" selected>SHIFT 2</option><option value="SHIFT 3">SHIFT 3</option>
+              </optgroup>
+            </select>
+          </div>
+          <div>
+            <label>Plant</label>
+            <select id="fgPlant">
+              <option value="PLANT ALPHA">PLANT ALPHA</option>
+              <option value="PLANT BETA">PLANT BETA</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- DATA OPERATOR, PRODUK/JO, LEM, DURASI, TARGET -->
+        <div class="form-row-responsive">
+          <div>
+            <label>Nama Leader / Operator</label>
+            <div class="fg-leader-search-wrap" style="position:relative;">
+              <input type="text" id="fgLeader" placeholder="Pilih atau ketik nama leader..." autocomplete="off" aria-controls="fgLeaderSuggestions" aria-expanded="false" />
+              <div class="quick-results" id="fgLeaderSuggestions" role="listbox" aria-label="Saran nama Leader"></div>
+            </div>
+          </div>
+          <div>
+            <label>Durasi Jam Kerja</label>
+            <input type="text" id="fgDuration" value="15.00-23.00" placeholder="Contoh: 15.00-23.00" />
+          </div>
+          <div>
+            <label>Istirahat Reguler Shift (Menit)</label>
+            <input type="number" id="fgBreakMinutes" inputmode="numeric" min="0" step="1" placeholder="Otomatis 60 menit untuk durasi 6 jam atau lebih" />
+            <div class="fg-break-presets" aria-label="Pilihan cepat durasi istirahat reguler">
+              <button type="button" class="btn btn-outline fg-break-preset" data-minutes="0">0 menit</button>
+              <button type="button" class="btn btn-outline fg-break-preset" data-minutes="30">30 menit</button>
+              <button type="button" class="btn btn-outline fg-break-preset" data-minutes="60">60 menit</button>
+            </div>
+            <div id="fgOvertimeBreakInfo" style="font-size:.66rem;color:var(--text-muted);margin-top:3px;">Istirahat reguler minimum 60 menit untuk durasi 6 jam atau lebih. Tambahan istirahat lembur 30 menit dihitung terpisah: Shift 1 setelah 17.00 dan Shift 2 malam setelah 05.00.</div>
+          </div>
+          <div id="fgProductChangeHint" style="display:none;grid-column:1/-1;padding:8px 10px;border-radius:8px;background:#eff6ff;color:#1d4ed8;font-size:.72rem;font-weight:700;"></div>
+          <div style="grid-column: 1 / -1;">
+            <label>Nama Produk</label>
+            <div class="fg-product-search-wrap" style="position:relative;">
+              <div style="position:relative;">
+                <input type="text" id="fgProductName" placeholder="Ketik kode atau nama produk FG..." autocomplete="off" aria-controls="fgProductSuggestions" aria-expanded="false" style="padding-right:48px;" />
+                <button type="button" id="btnClearFgProductName" aria-label="Kosongkan nama produk" title="Kosongkan nama produk" style="display:none;position:absolute;right:9px;top:50%;transform:translateY(-50%);width:30px;height:30px;padding:0;border:1px solid #cbd5e1;border-radius:50%;background:#f8fafc;color:#334155;font-size:21px;font-weight:700;line-height:1;align-items:center;justify-content:center;z-index:2;">×</button>
+              </div>
+              <div class="quick-results" id="fgProductSuggestions" role="listbox" aria-label="Saran nama produk Finish Good"></div>
+            </div>
+            <div style="font-size:0.68rem; color:var(--text-muted); margin-top:3px;">Pilih dari Master Produk FG atau ketik nama produk.</div>
+          </div>
+          <div style="grid-column: 1 / -1;">
+            <label>Nomor Job Order Pertama (JO 1)</label>
+            <div class="fg-job-order-search-wrap" style="position:relative;">
+              <input type="text" id="fgJobOrder" placeholder="Pilih atau ketik nomor JO..." autocomplete="off" aria-controls="fgJobOrderSuggestions" aria-expanded="false" />
+              <div class="quick-results" id="fgJobOrderSuggestions" role="listbox" aria-label="Saran nomor Job Order"></div>
+            </div>
+            <div style="font-size:.66rem;color:var(--text-muted);margin-top:3px;">Hasil Lot A/B dan receh pada kalkulator utama dicatat untuk JO 1. Tambahkan JO 2 bila produk yang sama memiliki nomor JO lanjutan.</div>
+          </div>
+          <div>
+            <label>Catatan Proses / Lem (Opsional)</label>
+            <input
+              type="text"
+              id="fgNote"
+              value="Pakai lem shadowless UV glue"
+              placeholder="Contoh: Pakai lem shadowless UV glue"
+            />
+          </div>
+          <div>
+            <label>Catatan (Opsional)</label>
+            <input type="text" id="fgGapNote" placeholder="Contoh: Operator keteter, perbaikan mesin, receh A box ke-2" />
+          </div>
+        </div>
+
+        <!-- AUTO KALKULATOR HASIL PRODUKSI (A & B @ ISI PER BOX) -->
+        <div style="grid-column:1/-1;border:1px solid #cbd5e1;border-radius:10px;padding:10px;background:#f8fafc;">
+          <label style="display:flex;align-items:center;gap:8px;margin:0;font-weight:800;color:var(--navy);">
+            <input type="checkbox" id="fgManpowerEnabled" class="fg-option-toggle" />
+            <span class="fg-option-toggle-ui" aria-hidden="true"></span>
+            <span>Penyesuaian target berdasarkan jumlah operator (opsional)</span>
+          </label>
+          <div id="fgManpowerFields" style="display:none;margin-top:10px;">
+            <div class="fg-main-calc-grid">
+              <div>
+                <label>Standar Operator (Orang)</label>
+                <input type="number" id="fgManpowerStandard" inputmode="numeric" min="1" step="1" placeholder="Contoh: 11" />
+              </div>
+              <div>
+                <label>Operator Aktual (Orang)</label>
+                <input type="number" id="fgManpowerActual" inputmode="numeric" min="1" step="1" placeholder="Contoh: 7" />
+              </div>
+            </div>
+            <div id="fgManpowerInfo" style="font-size:.7rem;color:var(--text-muted);margin-top:7px;line-height:1.45;">
+              Isi standar operator dan jumlah operator aktual. Target akan dihitung proporsional setelah memperhitungkan durasi kerja efektif.
+            </div>
+          </div>
+          <div id="fgManpowerDefaultInfo" style="font-size:.68rem;color:var(--text-muted);margin-top:5px;">
+            Kondisi normal: biarkan tidak dicentang. Target mengikuti Master Produk FG.
+          </div>
+        </div>
+
+        <div class="calc-panel">
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:4px; margin-bottom:8px;">
+            <label style="color:var(--emerald); margin:0;">🧮 HASIL JOB ORDER PERTAMA</label>
+            <span style="font-size:0.75rem; font-weight:800; color:var(--navy);" id="fgLiveTotalPreview">
+              TOTAL : 0 BOX @ 550 = 0 PCS
+            </span>
+          </div>
+
+          <div class="fg-main-calc-grid">
+            <div>
+              <label>Target Produksi (PCS)</label>
+              <input type="text" inputmode="numeric" id="fgTarget" value="" placeholder="Isi target produksi" />
+            </div>
+            <div>
+              <label>Qty per Box (PCS)</label>
+              <input type="text" inputmode="numeric" id="fgPcsPerBox" value="550" placeholder="550" />
+            </div>
+            <div id="fgLegacyBoxAField">
+              <label>Lot A — Jumlah Box JO 1</label>
+              <input type="text" inputmode="numeric" id="fgBoxA" placeholder="Misal: 20" />
+            </div>
+            <div id="fgLegacyBoxBField">
+              <label>Lot B — Jumlah Box JO 1</label>
+              <input type="text" inputmode="numeric" id="fgBoxB" placeholder="Misal: 16" />
+            </div>
+            <div id="fgLegacyRecehAField">
+              <label>Receh Lot A JO 1 (PCS)</label>
+              <input type="text" inputmode="text" id="fgRecehAQty" placeholder="Contoh: 352+500" />
+              <small style="color:var(--text-muted);">Setiap angka = 1 box receh A.</small>
+            </div>
+            <div id="fgLegacyRecehBField">
+              <label>Receh Lot B JO 1 (PCS)</label>
+              <input type="text" inputmode="text" id="fgRecehBQty" placeholder="Contoh: 352+500" />
+              <small style="color:var(--text-muted);">Setiap angka = 1 box receh B.</small>
+            </div>
+          </div>
+
+          <div id="fgLineSplitMount1"></div>
+          <div id="fgBreakdownPreview" style="margin-top:8px; font-size:0.74rem; color:var(--emerald); font-weight:700; background:#fff; padding:8px 10px; border-radius:8px; border:1px solid #a5d6a7;">
+            A : 0 BOX @550 = 0 &nbsp;|&nbsp; B : 0 BOX @550 = 0
+          </div>
+        </div>
+
+        <details class="fg-second-jo" id="fgSecondJoPanel">
+          <summary>＋ Tambah Job Order ke-2, ke-3, atau ke-4 (Opsional)</summary>
+          <div class="fg-second-jo-body">
+            <p class="fg-second-jo-help">Gunakan bagian ini jika nama produk yang sama dikerjakan untuk dua nomor JO dalam satu laporan. Qty per box mengikuti Isi Per Box di atas.</p>
+            <label for="fgJobOrder2">Nomor Job Order ke-2</label>
+            <div class="fg-job-order-search-wrap" style="position:relative;">
+              <input type="text" id="fgJobOrder2" placeholder="Pilih atau ketik nomor JO kedua..." autocomplete="off" aria-controls="fgJobOrderSuggestions2" aria-expanded="false" />
+              <div class="quick-results" id="fgJobOrderSuggestions2" role="listbox" aria-label="Saran nomor Job Order kedua"></div>
+            </div>
+            <div class="fg-second-jo-grid" id="fgLegacyGrid2">
+              <div>
+                <label>Lot A JO 2 — Jumlah Box</label>
+                <input type="text" inputmode="numeric" id="fgBoxA2" placeholder="Misal: 2" />
+              </div>
+              <div>
+                <label>Lot B JO 2 — Jumlah Box</label>
+                <input type="text" inputmode="numeric" id="fgBoxB2" placeholder="Misal: 3" />
+              </div>
+              <div>
+                <label>Receh Lot A JO 2 (PCS)</label>
+                <input type="text" inputmode="text" id="fgRecehAQty2" placeholder="Misal: 100+250" />
+                <small>Setiap angka = 1 box receh.</small>
+              </div>
+              <div>
+                <label>Receh Lot B JO 2 (PCS)</label>
+                <input type="text" inputmode="text" id="fgRecehBQty2" placeholder="Misal: 100+250" />
+                <small>Setiap angka = 1 box receh.</small>
+              </div>
+            </div>
+            <div id="fgLineSplitMount2"></div>
+            <div id="fgJo2BreakdownPreview" class="fg-second-jo-preview">Hasil JO 2 akan tampil di sini setelah diisi.</div>
+            <details class="fg-second-jo fg-extra-jo" id="fgThirdJoPanel">
+              <summary>＋ Tambah Job Order ke-3</summary>
+              <div class="fg-second-jo-body">
+                <label for="fgJobOrder3">Nomor Job Order ke-3</label>
+                <div class="fg-job-order-search-wrap" style="position:relative;">
+                  <input type="text" id="fgJobOrder3" placeholder="Pilih atau ketik nomor JO ketiga..." autocomplete="off" aria-controls="fgJobOrderSuggestions3" aria-expanded="false" />
+                  <div class="quick-results" id="fgJobOrderSuggestions3" role="listbox" aria-label="Saran nomor Job Order ketiga"></div>
+                </div>
+                <div class="fg-second-jo-grid" id="fgLegacyGrid3">
+                  <div><label>Lot A JO 3 — Jumlah Box</label><input type="text" inputmode="numeric" id="fgBoxA3" placeholder="Misal: 2" /></div>
+                  <div><label>Lot B JO 3 — Jumlah Box</label><input type="text" inputmode="numeric" id="fgBoxB3" placeholder="Misal: 3" /></div>
+                  <div><label>Receh Lot A JO 3 (PCS)</label><input type="text" inputmode="text" id="fgRecehAQty3" placeholder="Misal: 100+250" /><small>Setiap angka = 1 box receh.</small></div>
+                  <div><label>Receh Lot B JO 3 (PCS)</label><input type="text" inputmode="text" id="fgRecehBQty3" placeholder="Misal: 100+250" /><small>Setiap angka = 1 box receh.</small></div>
+                </div>
+                <div id="fgLineSplitMount3"></div>
+                <div id="fgJo3BreakdownPreview" class="fg-second-jo-preview">Hasil JO 3 akan tampil di sini setelah diisi.</div>
+              </div>
+            </details>
+            <details class="fg-second-jo fg-extra-jo" id="fgFourthJoPanel">
+              <summary>＋ Tambah Job Order ke-4</summary>
+              <div class="fg-second-jo-body">
+                <label for="fgJobOrder4">Nomor Job Order ke-4</label>
+                <div class="fg-job-order-search-wrap" style="position:relative;">
+                  <input type="text" id="fgJobOrder4" placeholder="Pilih atau ketik nomor JO keempat..." autocomplete="off" aria-controls="fgJobOrderSuggestions4" aria-expanded="false" />
+                  <div class="quick-results" id="fgJobOrderSuggestions4" role="listbox" aria-label="Saran nomor Job Order keempat"></div>
+                </div>
+                <div class="fg-second-jo-grid" id="fgLegacyGrid4">
+                  <div><label>Lot A JO 4 — Jumlah Box</label><input type="text" inputmode="numeric" id="fgBoxA4" placeholder="Misal: 2" /></div>
+                  <div><label>Lot B JO 4 — Jumlah Box</label><input type="text" inputmode="numeric" id="fgBoxB4" placeholder="Misal: 3" /></div>
+                  <div><label>Receh Lot A JO 4 (PCS)</label><input type="text" inputmode="text" id="fgRecehAQty4" placeholder="Misal: 100+250" /><small>Setiap angka = 1 box receh.</small></div>
+                  <div><label>Receh Lot B JO 4 (PCS)</label><input type="text" inputmode="text" id="fgRecehBQty4" placeholder="Misal: 100+250" /><small>Setiap angka = 1 box receh.</small></div>
+                </div>
+                <div id="fgLineSplitMount4"></div>
+                <div id="fgJo4BreakdownPreview" class="fg-second-jo-preview">Hasil JO 4 akan tampil di sini setelah diisi.</div>
+              </div>
+            </details>
+          </div>
+        </details>
+
+        <button type="button" id="btnSubmitFg" class="btn btn-emerald" style="margin-top:12px;">
+          ✅ TAMBAHKAN KE LAPORAN FINISH GOOD
+        </button>
+      </div>
+    </section>
+
+    <!-- KOLOM KANAN: DAFTAR FINISH GOOD & LAPORAN WA GABUNGAN -->
+    <section>
+      <div class="card sheet-section-target" id="fgListCard">
+        <div class="card-header">
+          <span class="card-title">2. Daftar Hasil Produksi (Finish Good)</span>
+          <div style="display:flex; gap:6px;">
+            <button class="btn btn-outline" style="padding:5px 9px; font-size:0.7rem;">⚡ Contoh FG</button>
+            <button class="btn btn-danger">🗑️ Reset FG</button>
+          </div>
+        </div>
+        <div class="fg-report-time-toolbar" style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:9px 11px;margin:-2px 0 12px;background:#f8fafc;border:1px solid var(--border);border-radius:9px;">
+          <div style="min-width:0;">
+            <div style="font-size:.66rem;font-weight:800;color:var(--navy);">🕒 JAM LAPORAN</div>
+            <div id="fgTimeDisplay" style="font-size:1.05rem;font-weight:900;color:var(--navy);margin-top:2px;">23.00</div>
+          </div>
+          <button type="button" class="btn btn-outline" style="min-height:40px;padding:8px 12px;white-space:nowrap;">🕒 Pilih Jam Laporan</button>
+          <input type="hidden" id="fgTime" value="23.00" />
+        </div>
+
+        <div id="fgTimePickerModal" class="modal-backdrop">
+          <div class="modal-card" style="max-width:420px;">
+            <div class="card-header">
+              <span class="card-title">🕒 Pilihan Jam Laporan</span>
+              <button type="button" class="btn btn-danger">✕ Tutup</button>
+            </div>
+            <p style="font-size:.73rem;color:var(--text-muted);margin:0 0 10px;">Jam laporan otomatis mengikuti waktu selesai paling akhir pada Durasi FG. Pilihan manual tetap tersedia untuk kondisi khusus.</p>
+            <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;">
+              <button type="button" class="btn btn-outline fg-time-preset" data-time="10.00">10.00</button>
+              <button type="button" class="btn btn-outline fg-time-preset" data-time="12.00">12.00</button>
+              <button type="button" class="btn btn-outline fg-time-preset" data-time="15.00">15.00</button>
+              <button type="button" class="btn btn-outline fg-time-preset" data-time="17.00">17.00</button>
+              <button type="button" class="btn btn-outline fg-time-preset" data-time="19.30">19.30</button>
+              <button type="button" class="btn btn-outline fg-time-preset" data-time="21.00">21.00</button>
+              <button type="button" class="btn btn-outline fg-time-preset" data-time="23.00">23.00</button>
+              <button type="button" class="btn btn-outline fg-time-preset" data-time="06.00">06.00</button>
+              <button type="button" class="btn btn-outline fg-time-preset" data-time="07.00">07.00</button>
+            </div>
+            <div style="border-top:1px solid var(--border);margin-top:14px;padding-top:12px;">
+              <label for="fgTimeCustomInput">Atau masukkan jam sendiri</label>
+              <div style="display:flex;gap:8px;align-items:center;">
+                <input type="text" id="fgTimeCustomInput" inputmode="numeric" maxlength="5" placeholder="Contoh: 14.30" style="text-align:center;font-weight:800;" />
+                <button type="button" class="btn btn-primary" style="white-space:nowrap;">Terapkan</button>
+              </div>
+              <div style="font-size:.67rem;color:var(--text-muted);margin-top:6px;">Gunakan format HH.MM, misalnya 14.30 atau 18.45.</div>
+            </div>
+          </div>
+        </div>
+
+        <details class="wa-import-collapse fg-wa-import-collapse">
+          <summary>📥 Import laporan WhatsApp <span class="wa-import-hint">Buka untuk tempel laporan FG</span></summary>
+          <div class="wa-import-body">
+            <p style="font-size:.73rem;color:var(--text-muted);">Tempel laporan hasil produksi Finish Good dari WhatsApp. Sistem akan membaca leader, produk, JO, durasi, target, hasil Lot A/B, dan qty receh. Periksa preview sebelum data dimasukkan ke Daftar FG.</p>
+            <textarea id="waImportFgText" class="wa-preview" style="min-height:150px;" placeholder="Tempel laporan HASIL PRODUKSI FINISH GOOD di sini..."></textarea>
+            <button type="button" class="btn btn-sky">🔎 Proses & Preview</button>
+            <button type="button" class="btn btn-outline">Bersihkan</button>
+            <div id="waImportFgPreview" style="margin-top:8px;font-size:.78rem;"></div>
+          </div>
+        </details>
+
+        <!-- OPSI GABUNG DENGAN SISA BARANG BAGUS WIP -->
+        <div style="background:var(--emerald-bg); border:1.5px solid #81c784; padding:9px 12px; border-radius:8px; margin-bottom:12px; display:flex; align-items:center; justify-content:space-between; gap:8px;">
+          <label style="margin:0; display:flex; align-items:center; gap:8px; cursor:pointer; color:var(--emerald); font-size:0.76rem;">
+            <input type="checkbox" id="mergeWipToggle" checked style="width:18px; height:18px;" />
+            <span><b>Gabungkan Otomatis dengan Sisa Barang Bagus WIP</b> di bagian bawah Laporan WA</span>
+          </label>
+        </div>
+
+        <div class="fg-list-search" style="padding:10px 11px;margin:-2px 0 12px;background:#f8fafc;border:1px solid var(--border);border-radius:9px;">
+          <label for="fgListSearch" style="display:block;margin:0 0 6px;color:var(--navy);font-size:.72rem;font-weight:800;">🔎 CARI DATA FINISH GOOD UNTUK UPDATE</label>
+          <div style="display:flex;gap:7px;align-items:center;">
+            <input type="search" id="fgListSearch" placeholder="Nama kepala line, nama produk, atau nomor JO..." autocomplete="off" style="flex:1;min-width:0;margin:0;background:#fff;" />
+            <button type="button" class="btn btn-outline" style="white-space:nowrap;min-height:42px;">Reset</button>
+          </div>
+          <div id="fgListSearchStatus" style="margin-top:6px;color:var(--text-muted);font-size:.67rem;">Cari kepala line, produk, atau JO untuk menemukan data yang akan diperbarui.</div>
+        </div>
+
+        <div id="fgListContainer"><div class="preview-empty-state"><b>Area Daftar Finish Good</b><span>Rekap hasil per produk dan Job Order akan tampil di bagian ini.</span></div></div>
+      </div>
+
+      <div class="card sheet-section-target" id="fgWaCard">
+        <div class="card-header">
+          <span class="card-title">3. Laporan WA (Finish Good + Sisa WIP)</span>
+        </div>
+        <div class="wa-action-bar">
+          <button class="btn btn-wa" style="flex:1.5;">
+            📲 KIRIM LANGSUNG KE WHATSAPP
+          </button>
+          <button class="btn btn-outline" style="flex:1;">
+            📋 Salin Teks
+          </button>
+          <button class="btn btn-outline" type="button">⛶ Perbesar Preview</button>
+          <button class="btn btn-edit">↻ Format Otomatis</button>
+        </div>
+        <p style="font-size:0.73rem; color:var(--text-muted); margin:-3px 0 8px;">
+          Laporan WhatsApp disusun dari Daftar FG. Saat data FG diperbarui, angka target, PCS, dan persentase akan disinkronkan otomatis. Untuk catatan tambahan, gunakan kolom Catatan pada data FG.
+        </p>
+        <textarea id="waPreviewFg" class="wa-preview" placeholder="Laporan Finish Good akan tampil di sini dan dapat diedit..."></textarea>
+      </div>
+    </section>
+  </main>
+
+  <!-- =========================================================
+       SHEET 3: LAPORAN SPA AWAL SHIFT (MASING-MASING KOLOM ADA PAPAN KALKULATOR)
+       ========================================================= -->
+  <nav class="sheet-section-nav" id="spaSectionNav" aria-label="Navigasi SPA Awal Shift">
+    <button type="button" class="sheet-nav-btn active"><span class="nav-number">1</span> INPUT SPA</button>
+    <button type="button" class="sheet-nav-btn"><span class="nav-number">2</span> RINCIAN SPA</button>
+    <button type="button" class="sheet-nav-btn"><span class="nav-number">3</span> WHATSAPP</button>
+  </nav>
+  <main id="sectionSpa" class="container" style="display:none;">
+    <div class="module-overview">
+      <div class="module-overview-copy">
+        <div class="module-overview-eyebrow">ASSEMBLY WORKSPACE · MODUL 03</div>
+        <h1>SPA Awal Shift</h1>
+        <p>Masukkan ketersediaan stok Assy dan Gudang, periksa rincian komponen, lalu siapkan laporan SPA awal shift.</p>
+        <nav class="module-overview-steps" aria-label="Alur SPA">
+          <a href="#spaInputSection"><span>01</span> INPUT</a>
+          <a href="#spaListCard"><span>02</span> DAFTAR</a>
+          <a href="#spaWaCard"><span>03</span> WHATSAPP</a>
+        </nav>
+      </div>
+      <div class="module-overview-tag">SINGLE PAGE</div>
+    </div>
+    <div class="meta-grid two-cols mobile-sheet-meta" id="spaMetaControls">
+      <div><label>Pilih Tanggal SPA</label><input type="date" id="spaDate" /></div>
+      <div><label>Plant</label><select id="spaPlant"><option value="plant alpha">Plant Alpha</option><option value="plant beta">Plant Beta</option></select></div>
+    </div>
+    
+    <section id="spaInputSection" class="sheet-section-target">
+      <div class="card" id="spaInputCard">
+        <div class="card-header">
+          <span class="card-title" id="spaFormTitle">1. Input SPA & Ketersediaan</span>
+          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; justify-content:flex-end;">
+            <button class="btn btn-outline" style="padding:7px 9px; font-size:0.68rem;">📥 Ambil Stok WIP</button>
+            <button type="button" class="sheet-reset-btn">🗑️ Reset All SPA</button>
+          </div>
+        </div>
+
+        <div id="spaEditBanner" class="edit-banner">
+          <span id="spaEditBannerText">✏️ MODE EDIT SPA: Silakan ubah rincian box Assy / Gudang.</span>
+          <button type="button" class="btn btn-danger">Batal Edit</button>
+        </div>
+
+        <div style="background:#f8fafc; padding:12px; border-radius:10px; border:1px solid var(--border);">
+          <div class="form-row-responsive" style="margin-top:0;">
+            <div style="grid-column: 1 / -1;">
+              <label>Nama Produk Utama (Header SPA)</label>
+              <div class="group-suggest-wrap" id="spaGroupSearchWrap">
+                <input type="text" id="spaGroup" class="group-suggest-input" placeholder="Ketik kode atau nama produk..." autocomplete="off" />
+                <div class="quick-results" id="spaGroupSuggestions"></div>
+              </div>
+            </div>
+            <div>
+              <label>Info Line & Shift (Opsional)</label>
+              <input type="text" id="spaLineInfo" placeholder="Contoh: 6 line / 3 shift" />
+            </div>
+            <div>
+              <label>Target Dasar (+Auto 5%)</label>
+              <input
+                type="text"
+                inputmode="numeric"
+                id="spaBaseTarget"
+                placeholder="Contoh: 118800"
+              />
+            </div>
+          </div>
+          <div id="spaTargetPreview" style="font-size:0.75rem; font-weight:700; color:var(--purple); margin-top:6px;">
+            Target + 5% Buffer: 0 pcs
+          </div>
+        </div>
+
+        <div class="form-row-responsive">
+          <div>
+            <label>Komponen & Kode</label>
+            <div class="spa-part-search-wrap" style="position:relative;">
+              <input type="text" id="spaPart" placeholder="Ketik kode / komponen: 9, Inbs, Base..." autocomplete="off" aria-controls="spaPartSuggestions" aria-expanded="false" />
+              <div class="quick-results" id="spaPartSuggestions" role="listbox" aria-label="Saran komponen dan kode SPA"></div>
+            </div>
+          </div>
+          <div>
+            <label>Keterangan (Mold / Hold / Beta)</label>
+            <input type="text" id="spaNote" placeholder="Contoh: mold 3 / tunggu dari Beta" />
+          </div>
+        </div>
+
+        <div class="calc-panel">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+            <label style="color:var(--emerald);margin:0;">📦 INPUT STOK ASSY</label>
+            <span style="font-size:.75rem;font-weight:800;color:var(--navy);"><b id="spaAssyBoxCount" style="color:var(--purple);">0</b> Box | <b id="spaAssySum" style="color:var(--emerald);">0</b> PCS</span>
+          </div>
+          <div class="group-qty-grid">
+            <div><label>Isi per box (PCS)</label><input type="text" inputmode="numeric" pattern="[0-9]*" id="spaAssyQtyPerBox" placeholder="Contoh: 650"  /></div>
+            <div><label>Jumlah box sama</label><input type="text" inputmode="numeric" pattern="[0-9]*" id="spaAssyQtyBoxCount" placeholder="Contoh: 4" enterkeyhint="done"  /></div>
+          </div>
+          <div id="spaAssyGroupPreview" class="qty-live-total" style="margin-top:8px;"><span style="font-size:.75rem;font-weight:800;">SUBTOTAL KELOMPOK</span><b style="color:var(--emerald);">Isi PCS per box dan jumlah box</b></div>
+          <div class="group-qty-actions">
+            <button type="button" class="btn btn-emerald">＋ TAMBAH KELOMPOK QTY</button>
+            <button type="button" class="btn btn-danger">− CATAT PENGURANGAN</button>
+          </div>
+          <details class="box-detail-disclosure" id="spaAssyDetails">
+            <summary id="spaAssyDetailsSummary">Lihat rincian box Assy (0)</summary>
+            <div class="box-detail-list" id="spaAssyChips"></div>
+          </details>
+          <input type="hidden" id="spaCalcAssyInput" value="" /><span id="spaAssyFormulaPreview" class="mobile-legacy-hidden">= 0 Box (0 PCS)</span>
+        </div>
+        <div class="calc-panel purple-calc">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+            <label style="color:var(--purple);margin:0;">📦 INPUT STOK GUDANG</label>
+            <span style="font-size:.75rem;font-weight:800;color:var(--navy);"><b id="spaGudangBoxCount" style="color:var(--purple);">0</b> Box | <b id="spaGudangSum" style="color:var(--purple);">0</b> PCS</span>
+          </div>
+          <div class="group-qty-grid">
+            <div><label>Isi per box (PCS)</label><input type="text" inputmode="numeric" pattern="[0-9]*" id="spaGudangQtyPerBox" placeholder="Contoh: 650"  /></div>
+            <div><label>Jumlah box sama</label><input type="text" inputmode="numeric" pattern="[0-9]*" id="spaGudangQtyBoxCount" placeholder="Contoh: 10" enterkeyhint="done"  /></div>
+          </div>
+          <div id="spaGudangGroupPreview" class="qty-live-total" style="margin-top:8px;"><span style="font-size:.75rem;font-weight:800;">SUBTOTAL KELOMPOK</span><b style="color:var(--purple);">Isi PCS per box dan jumlah box</b></div>
+          <div class="group-qty-actions">
+            <button type="button" class="btn btn-purple">＋ TAMBAH KELOMPOK QTY</button>
+            <button type="button" class="btn btn-danger">− CATAT PENGURANGAN</button>
+          </div>
+          <details class="box-detail-disclosure" id="spaGudangDetails">
+            <summary id="spaGudangDetailsSummary">Lihat rincian box Gudang (0)</summary>
+            <div class="box-detail-list" id="spaGudangChips"></div>
+          </details>
+          <input type="hidden" id="spaCalcGudangInput" value="" /><span id="spaGudangFormulaPreview" class="mobile-legacy-hidden">= 0 Box (0 PCS)</span>
+        </div>
+        <button type="button" id="btnSubmitSpa" class="btn btn-emerald" style="margin-top:14px; background:var(--purple);">
+          ➕ SIMPAN KE LAPORAN SPA
+        </button>
+      </div>
+    </section>
+
+    <section>
+      <div class="card sheet-section-target" id="spaListCard">
+        <div class="card-header">
+          <span class="card-title">2. Rincian SPA (Assy + Gudang & Edit)</span>
+          <button class="btn btn-danger">🗑️ Reset SPA</button>
+        </div>
+        <details class="wa-import-collapse"><summary>📥 Import laporan WhatsApp SPA <span class="wa-import-hint">Buka untuk tempel laporan SPA</span></summary><div class="wa-import-body"><p style="font-size:.73rem;color:var(--text-muted);">Tempel laporan SPA. Stok Assy, Gudang, stok khusus, NG Hold, dan barang menunggu dari Plant Beta dipisahkan.</p><textarea id="waImportSpaText" class="wa-preview" style="min-height:150px;" placeholder="Tempel laporan SPA dari WhatsApp di sini..."></textarea><button class="btn btn-sky">🔎 Proses & Preview</button> <button class="btn btn-outline">Bersihkan</button><div id="waImportSpaPreview" style="margin-top:8px;font-size:.78rem;"></div></div></details><div id="spaGroupedContainer"><div class="preview-empty-state"><b>Area Rincian SPA</b><span>Rincian stok Assy, Gudang, dan komponen akan tampil di bagian ini.</span></div></div>
+      </div>
+
+      <div class="card sheet-section-target" id="spaWaCard">
+        <div class="card-header">
+          <span class="card-title">3. Laporan WA SPA</span>
+        </div>
+        <div class="wa-action-bar">
+          <button class="btn btn-wa" style="flex:1.5;">
+            📲 KIRIM LANGSUNG KE WHATSAPP
+          </button>
+          <button class="btn btn-outline" style="flex:1;">
+            📋 Salin Teks
+          </button>
+          <button class="btn btn-edit">↻ Format Otomatis</button>
+        </div>
+        <p style="font-size:0.73rem; color:var(--text-muted); margin:-3px 0 8px;">
+          Laporan SPA dapat diedit langsung. Perubahan manual dipertahankan saat daftar SPA diperbarui. Gunakan Format Otomatis untuk menyusun ulang.
+        </p>
+        <textarea id="waPreviewSpa" class="wa-preview" placeholder="Laporan SPA akan tampil di sini dan dapat diedit..."></textarea>
+      </div>
+    </section>
+  </main>
+
+  <!-- =========================================================
+       MODAL EDIT WIP: FORM EDIT DIBUKA DI JENDELA TERPISAH
+       ========================================================= -->
+  <div id="wipEditModal" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="card-header">
+        <span class="card-title">✏️ Edit Rincian Sisa Barang Bagus (WIP)</span>
+        <button class="btn btn-danger">✕ Tutup</button>
+      </div>
+      <div id="wipEditModalContent"></div>
+    </div>
+  </div>
+
+  <!-- MODAL EDIT FINISH GOOD: FORM DIBUKA LANGSUNG DARI DAFTAR FG -->
+  <div id="fgEditModal" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="card-header">
+        <span class="card-title" id="fgEditModalTitle">✏️ Edit Hasil Produksi Finish Good</span>
+        <button type="button" class="btn btn-danger">✕ Tutup</button>
+      </div>
+      <div id="fgEditModalContent"></div>
+    </div>
+  </div>
+
+  <!-- PREVIEW WHATSAPP FINISH GOOD: TAMPILAN DIPERLUAS -->
+  <div id="fgWaPreviewModal" class="modal-backdrop fg-wa-preview-modal">
+    <div class="modal-card">
+      <div class="card-header" style="flex:0 0 auto;">
+        <span class="card-title">⛶ Preview Laporan WhatsApp Finish Good</span>
+        <button type="button" class="btn btn-danger">✕ Tutup Preview</button>
+      </div>
+      <p style="margin:0 0 8px;color:var(--text-muted);font-size:.74rem;">Teks tetap dapat diedit. Perubahan tersimpan pada draft Finish Good.</p>
+      <div id="fgWaPreviewModalContent"></div>
+    </div>
+  </div>
+
+  <!-- MODAL EDIT SPA: DAPAT DIBUKA DARI TAB RINCIAN SPA -->
+  <div id="spaEditModal" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="card-header">
+        <span class="card-title">✏️ Edit Rincian SPA</span>
+        <button type="button" class="btn btn-danger">✕ Tutup</button>
+      </div>
+      <div id="spaEditModalContent"></div>
+    </div>
+  </div>
+
+  <!-- MODAL TAMBAH ITEM LANGSUNG DARI RINCIAN SPA -->
+  <div id="spaAddItemModal" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="card-header">
+        <span class="card-title">➕ Tambah Item SPA</span>
+        <button type="button" class="btn btn-danger">✕ Tutup</button>
+      </div>
+      <div style="background:var(--purple-bg);border:1px solid #ce93d8;border-radius:9px;padding:10px;margin-bottom:12px;">
+        <div style="font-size:.68rem;color:var(--text-muted);font-weight:700;">PRODUK</div>
+        <div id="spaAddItemGroupLabel" style="font-weight:800;color:var(--purple);"></div>
+      </div>
+      <div class="form-row-responsive" style="margin-top:0;">
+        <div style="grid-column:1/-1;">
+          <label>Nama Komponen / Part</label>
+          <div class="spa-part-search-wrap" style="position:relative;">
+            <input type="text" id="spaAddItemPart" placeholder="Ketik kode / nama komponen..." autocomplete="off" aria-controls="spaAddItemPartSuggestions" aria-expanded="false" />
+            <div class="quick-results" id="spaAddItemPartSuggestions" role="listbox" aria-label="Saran komponen dari Master WIP"></div>
+          </div>
+        </div>
+        <div style="grid-column:1/-1;">
+          <label>Catatan / Keterangan (Opsional)</label>
+          <input type="text" id="spaAddItemNote" placeholder="Contoh: NG Hold gate panjang" />
+        </div>
+        <div>
+          <label>Stok Assy (PCS)</label>
+          <input type="text" inputmode="none" id="spaAddItemAssy" placeholder="0" readonly />
+          <div class="spa-add-calc" id="spaAddItemAssyCalcPanel" style="display:none;grid-column:1/-1;margin-top:-4px;">
+            <div class="calc-keypad-wrapper">
+              <div class="calc-keypad-top"><span>🧮 Kalkulator Assy</span><span class="calc-live-result" id="spaAddItemAssyCalcPreview">0 Box (0 PCS)</span></div>
+              <input type="text" id="spaAddItemAssyCalcFormula" class="input-calc" inputmode="none" placeholder="Contoh: 550×20 atau 550+550" style="width:100%;margin-bottom:8px;" />
+              <div class="calc-keypad-grid">
+                <button type="button" class="key-btn key-clear">C</button><button type="button" class="key-btn key-op">(</button><button type="button" class="key-btn key-op">)</button><button type="button" class="key-btn key-op">÷</button><button type="button" class="key-btn ">7</button><button type="button" class="key-btn ">8</button><button type="button" class="key-btn ">9</button><button type="button" class="key-btn key-op">×</button><button type="button" class="key-btn ">4</button><button type="button" class="key-btn ">5</button><button type="button" class="key-btn ">6</button><button type="button" class="key-btn key-op">−</button><button type="button" class="key-btn ">1</button><button type="button" class="key-btn ">2</button><button type="button" class="key-btn ">3</button><button type="button" class="key-btn key-op">+</button><button type="button" class="key-btn ">0</button><button type="button" class="key-btn ">00</button><button type="button" class="key-btn key-back">⌫</button><button type="button" class="key-btn key-enter">＋ BOX</button>
+              </div>
+            </div>
+            <div id="spaAddItemAssyBoxList" class="box-chips-container" style="max-height:120px;margin-top:8px;"></div>
+          </div>
+        </div>
+        <div>
+          <label>Stok Gudang (PCS)</label>
+          <input type="text" inputmode="none" id="spaAddItemGudang" placeholder="0" readonly />
+          <div class="spa-add-calc" id="spaAddItemGudangCalcPanel" style="display:none;grid-column:1/-1;margin-top:-4px;">
+            <div class="calc-keypad-wrapper">
+              <div class="calc-keypad-top"><span>🧮 Kalkulator Gudang</span><span class="calc-live-result" id="spaAddItemGudangCalcPreview">0 Box (0 PCS)</span></div>
+              <input type="text" id="spaAddItemGudangCalcFormula" class="input-calc" inputmode="none" placeholder="Contoh: 550×20 atau 550+550" style="width:100%;margin-bottom:8px;" />
+              <div class="calc-keypad-grid">
+                <button type="button" class="key-btn key-clear">C</button><button type="button" class="key-btn key-op">(</button><button type="button" class="key-btn key-op">)</button><button type="button" class="key-btn key-op">÷</button><button type="button" class="key-btn ">7</button><button type="button" class="key-btn ">8</button><button type="button" class="key-btn ">9</button><button type="button" class="key-btn key-op">×</button><button type="button" class="key-btn ">4</button><button type="button" class="key-btn ">5</button><button type="button" class="key-btn ">6</button><button type="button" class="key-btn key-op">−</button><button type="button" class="key-btn ">1</button><button type="button" class="key-btn ">2</button><button type="button" class="key-btn ">3</button><button type="button" class="key-btn key-op">+</button><button type="button" class="key-btn ">0</button><button type="button" class="key-btn ">00</button><button type="button" class="key-btn key-back">⌫</button><button type="button" class="key-btn key-enter">＋ BOX</button>
+              </div>
+            </div>
+            <div id="spaAddItemGudangBoxList" class="box-chips-container" style="max-height:120px;margin-top:8px;"></div>
+          </div>
+        </div>
+        <div>
+          <label>Stok Khusus / NG Hold (PCS)</label>
+          <input type="text" inputmode="none" id="spaAddItemSpecialQty" placeholder="0" readonly />
+          <div class="spa-add-calc" id="spaAddItemSpecialQtyCalcPanel" style="display:none;grid-column:1/-1;margin-top:-4px;">
+            <div class="calc-keypad-wrapper">
+              <div class="calc-keypad-top"><span>🧮 Kalkulator Stok Khusus</span><span class="calc-live-result" id="spaAddItemSpecialQtyCalcPreview">0 Box (0 PCS)</span></div>
+              <input type="text" id="spaAddItemSpecialQtyCalcFormula" class="input-calc" inputmode="none" placeholder="Contoh: 550×20 atau 550+550" style="width:100%;margin-bottom:8px;" />
+              <div class="calc-keypad-grid">
+                <button type="button" class="key-btn key-clear">C</button><button type="button" class="key-btn key-op">(</button><button type="button" class="key-btn key-op">)</button><button type="button" class="key-btn key-op">÷</button><button type="button" class="key-btn ">7</button><button type="button" class="key-btn ">8</button><button type="button" class="key-btn ">9</button><button type="button" class="key-btn key-op">×</button><button type="button" class="key-btn ">4</button><button type="button" class="key-btn ">5</button><button type="button" class="key-btn ">6</button><button type="button" class="key-btn key-op">−</button><button type="button" class="key-btn ">1</button><button type="button" class="key-btn ">2</button><button type="button" class="key-btn ">3</button><button type="button" class="key-btn key-op">+</button><button type="button" class="key-btn ">0</button><button type="button" class="key-btn ">00</button><button type="button" class="key-btn key-back">⌫</button><button type="button" class="key-btn key-enter">＋ BOX</button>
+              </div>
+            </div>
+            <div id="spaAddItemSpecialQtyBoxList" class="box-chips-container" style="max-height:120px;margin-top:8px;"></div>
+          </div>
+        </div>
+        <div>
+          <label>Nama Stok Khusus (Opsional)</label>
+          <input type="text" id="spaAddItemSpecialLabel" placeholder="Contoh: NG Hold CV 8" />
+        </div>
+        <div style="grid-column:1/-1;">
+          <label>Menunggu Pengiriman Plant Beta (PCS)</label>
+          <input type="text" inputmode="none" id="spaAddItemWaiting" placeholder="0" readonly />
+          <div class="spa-add-calc" id="spaAddItemWaitingCalcPanel" style="display:none;grid-column:1/-1;margin-top:-4px;">
+            <div class="calc-keypad-wrapper">
+              <div class="calc-keypad-top"><span>🧮 Kalkulator Menunggu Plant Beta</span><span class="calc-live-result" id="spaAddItemWaitingCalcPreview">0 Box (0 PCS)</span></div>
+              <input type="text" id="spaAddItemWaitingCalcFormula" class="input-calc" inputmode="none" placeholder="Contoh: 550×20 atau 550+550" style="width:100%;margin-bottom:8px;" />
+              <div class="calc-keypad-grid">
+                <button type="button" class="key-btn key-clear">C</button><button type="button" class="key-btn key-op">(</button><button type="button" class="key-btn key-op">)</button><button type="button" class="key-btn key-op">÷</button><button type="button" class="key-btn ">7</button><button type="button" class="key-btn ">8</button><button type="button" class="key-btn ">9</button><button type="button" class="key-btn key-op">×</button><button type="button" class="key-btn ">4</button><button type="button" class="key-btn ">5</button><button type="button" class="key-btn ">6</button><button type="button" class="key-btn key-op">−</button><button type="button" class="key-btn ">1</button><button type="button" class="key-btn ">2</button><button type="button" class="key-btn ">3</button><button type="button" class="key-btn key-op">+</button><button type="button" class="key-btn ">0</button><button type="button" class="key-btn ">00</button><button type="button" class="key-btn key-back">⌫</button><button type="button" class="key-btn key-enter">＋ BOX</button>
+              </div>
+            </div>
+            <div id="spaAddItemWaitingBoxList" class="box-chips-container" style="max-height:120px;margin-top:8px;"></div>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;margin-top:14px;">
+        <button type="button" class="btn btn-outline">Batal</button>
+        <button type="button" class="btn btn-emerald">✓ Simpan Item</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL 1: RIWAYAT CLOUD & AUDIT SELISIH GUDANG (ANTI DUPLIKAT)
+       ========================================================= -->
+  <div id="cloudModal" class="modal-backdrop">
+    <div class="modal-card cloud-modal-card">
+      <div class="card-header" style="flex:0 0 auto;">
+        <span class="cloud-page-title">☁️ Database Cloud & Audit Selisih Gudang</span>
+        <button class="btn btn-danger">✕ Tutup</button>
+      </div>
+      <div class="cloud-page-toolbar">
+        <button class="btn btn-sky" type="button">🔄 Segarkan & Sync Cloud</button>
+      </div>
+
+      <div class="form-row-responsive" style="margin-bottom:12px; margin-top:0;">
+        <div>
+          <label>Filter Tanggal Produksi</label>
+          <input type="date" id="cloudFilterDate" />
+        </div>
+        <div>
+          <label>Cari Produk / Kode Part (Audit Selisih)</label>
+          <input
+            type="text"
+            id="cloudFilterKeyword"
+            placeholder="Ketik misal: 009, 8603, inbs..."
+          />
+        </div>
+      </div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
+        <span style="font-size:0.75rem; font-weight:700; color:var(--navy);">
+          Ditemukan: <b id="cloudFoundCount">0</b> Rekaman Cloud
+        </span>
+        <div style="display:flex; gap:6px;">
+          <button class="btn btn-outline" style="padding:5px 9px; font-size:0.7rem;">Tampilkan Semua</button>
+          <button class="btn btn-emerald" style="width:auto; padding:5px 10px; font-size:0.72rem;">
+            📊 Export Excel Audit
+          </button>
+        </div>
+      </div>
+
+      <div id="cloudArchiveContainer"></div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL 2: MASTER KATALOG WIP & UPLOAD EXCEL
+       ========================================================= -->
+  <!-- MENU UTAMA MASTER -->
+  <div id="masterHubModal" class="modal-backdrop">
+    <div class="modal-card" style="max-width:480px;">
+      <div class="card-header">
+        <span class="card-title">📂 MENU MASTER</span>
+        <button class="btn btn-danger">✕ Tutup</button>
+      </div>
+      <p style="font-size:.78rem;color:var(--text-muted);margin:0 0 12px;">Pilih master data yang ingin dibuka.</p>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;">
+        <button class="btn btn-outline" style="min-height:64px;justify-content:flex-start;">🏷️ Master FG <b id="masterProdukFgCount">0</b></button>
+        <button class="btn btn-outline" style="min-height:64px;justify-content:flex-start;">📦 Master WIP <b id="masterCount">0</b></button>
+        <button class="btn btn-outline" style="min-height:64px;justify-content:flex-start;">👤 Master Leader <b id="masterLeaderCount">0</b></button>
+        <button class="btn btn-outline" style="min-height:64px;justify-content:flex-start;">📋 Master JO <b id="masterJobOrderCount">0</b></button>
+        <button class="btn btn-outline" style="min-height:64px;justify-content:flex-start;grid-column:1/-1;">📥 Import ERP • Produk & JO</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="masterModal" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="card-header">
+        <span class="card-title">📂 Master Katalog WIP</span>
+        <button class="btn btn-danger">✕ Tutup</button>
+      </div>
+
+      <div id="masterCloudStatus" role="status" aria-live="polite" style="padding:9px 10px; margin:0 0 12px; border:1px solid var(--border); border-radius:9px; background:#f8fafc; font-size:0.76rem; line-height:1.45;">
+        ☁️ Memeriksa status Master Cloud...
+      </div>
+      <div style="display:flex; flex-wrap:wrap; gap:6px; margin:-4px 0 12px;">
+        <button class="btn btn-outline" type="button">↻ Sinkronkan</button>
+        <button class="btn btn-edit" type="button" id="btnUseCloudMaster" style="display:none;">Gunakan Master Cloud</button>
+        <button class="btn btn-outline" type="button" id="btnDownloadMasterRecovery" style="display:none;">Unduh Backup Lokal</button>
+      </div>
+      <div style="margin-bottom:12px;">
+        <label>Upload File Master Baru (.xlsx / .ods / .csv)</label>
+        <input type="file" accept=".xlsx,.xls,.ods,.csv" style="font-size:0.8rem;" />
+        <p style="font-size:0.72rem; color:var(--text-muted); margin-top:4px;">
+          Kolom A: Kelompok Produk (misal <code>8603 OMG</code>), Kolom B: Komponen & Kode (misal <code>Inbs(009)</code>). Data ganda otomatis ditolak.
+        </p>
+      </div>
+
+      <div class="form-row-responsive" style="margin-bottom:12px;">
+        <input type="text" id="newCatGroup" placeholder="Produk (8603 OMG)" />
+        <input type="text" id="newCatPart" placeholder="Part (Inbs(009))" />
+        <button class="btn btn-primary" style="grid-column: 1 / -1;">+ Tambah ke Master</button>
+      </div>
+
+      <div style="margin:10px 0 7px;">
+        <input type="search" id="masterSearchInput" placeholder="🔎 Cari produk / kode part..." style="width:100%;" />
+        <div id="masterSearchInfo" style="font-size:0.7rem; color:var(--text-muted); margin-top:4px;">Cari berdasarkan nama produk, nama part, atau kode.</div>
+      </div>
+      <div id="masterModalList" style="max-height:300px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:8px; font-size:0.78rem;"></div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL MASTER PRODUK FINISH GOOD
+       ========================================================= -->
+  <div id="masterProdukFgModal" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="card-header">
+        <span class="card-title">🏷️ Master Produk Finish Good</span>
+        <button class="btn btn-danger">✕ Tutup</button>
+      </div>
+      <div id="masterProdukFgCloudStatus" role="status" aria-live="polite" style="padding:9px 10px; margin:0 0 12px; border:1px solid var(--border); border-radius:9px; font-size:0.76rem; line-height:1.45;">☁️ Memeriksa Master Produk Cloud...</div>
+      <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px;">
+        <button class="btn btn-outline" type="button">↻ Sinkronkan</button>
+        <button class="btn btn-outline" type="button" id="btnBackupMasterProdukFg" style="display:none;">Unduh Backup Lokal</button>
+      </div>
+      <div style="display:grid; gap:8px; margin-bottom:12px;">
+        <label for="masterProdukFgInput">Nama Produk Finish Good</label>
+        <input type="text" id="masterProdukFgInput" placeholder="Contoh: 8603 - BS(A) PROJECT NEW YORK - OMG LIP CREAM" />
+        <label for="masterProdukFgTarget8h">Target Standar Produksi (8 Jam / PCS)</label>
+        <input type="text" inputmode="numeric" id="masterProdukFgTarget8h" placeholder="Contoh: 22440" />
+        <div style="font-size:.68rem;color:var(--text-muted);margin-top:-4px;">Target ini menjadi dasar perhitungan otomatis sesuai durasi jam kerja pada input Finish Good.</div>
+        <label for="masterProdukFgPcsPerBox">Qty Standar per Box (PCS)</label>
+        <input type="text" inputmode="numeric" id="masterProdukFgPcsPerBox" placeholder="Contoh: 550" />
+        <div style="font-size:.68rem;color:var(--text-muted);margin-top:-4px;">Qty ini otomatis mengisi kolom Isi Per Box pada kalkulator Finish Good.</div>
+        <div style="display:flex; gap:6px; flex-wrap:wrap;">
+          <button class="btn btn-primary" id="btnSimpanMasterProdukFg" type="button">+ Tambah Produk</button>
+          <button class="btn btn-outline" id="btnBatalEditMasterProdukFg" type="button" style="display:none;">Batal Edit</button>
+        </div>
+      </div>
+      <input type="search" id="masterProdukFgSearch" placeholder="🔎 Cari nama produk..." style="width:100%; margin-bottom:8px;" />
+      <div id="masterProdukFgInfo" style="font-size:0.7rem; color:var(--text-muted); margin-bottom:6px;"></div>
+      <div id="masterProdukFgList" style="max-height:300px; overflow-y:auto; border:1px solid var(--border); border-radius:8px; padding:8px; font-size:0.78rem;"></div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL MASTER JOB ORDER
+       ========================================================= -->
+  <div id="masterJobOrderModal" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="card-header">
+        <span class="card-title">📋 Master Job Order</span>
+        <button class="btn btn-danger">✕ Tutup</button>
+      </div>
+      <div id="masterJobOrderCloudStatus" role="status" aria-live="polite" style="padding:9px 10px;margin:0 0 12px;border:1px solid var(--border);border-radius:9px;font-size:.76rem;line-height:1.45;">⏳ Memeriksa Master Job Order Cloud...</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin:-4px 0 12px;">
+        <button class="btn btn-outline" type="button">↻ Sinkronkan</button>
+        <button class="btn btn-outline" type="button" id="btnBackupMasterJobOrder" style="display:none;">Unduh Backup Lokal</button>
+      </div>
+      <div style="display:grid;gap:8px;margin-bottom:12px;">
+        <label for="masterJobOrderInput">Nomor Job Order</label>
+        <input type="text" id="masterJobOrderInput" placeholder="Contoh: JD26-0771" autocomplete="off" />
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="btn btn-primary" id="btnSimpanMasterJobOrder" type="button">+ Tambah Job Order</button>
+          <button class="btn btn-outline" id="btnBatalEditMasterJobOrder" type="button" style="display:none;">Batal Edit</button>
+        </div>
+      </div>
+      <input type="search" id="masterJobOrderSearch" placeholder="🔎 Cari nomor Job Order..." style="width:100%;margin-bottom:8px;" />
+      <div id="masterJobOrderInfo" style="font-size:.7rem;color:var(--text-muted);margin-bottom:6px;"></div>
+      <div id="masterJobOrderList" style="max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px;font-size:.78rem;"></div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL IMPORT ERP: ITEM CODE, PRODUK MASTER FG & JO
+       ========================================================= -->
+  <div id="masterErpModal" class="modal-backdrop">
+    <div class="modal-card" style="max-width:900px;">
+      <div class="card-header">
+        <span class="card-title">📥 Import Data ERP — Produk & Job Order</span>
+        <button class="btn btn-danger">✕ Tutup</button>
+      </div>
+      <div id="masterErpCloudStatus" role="status" aria-live="polite" style="padding:9px 10px;margin:0 0 12px;border:1px solid var(--border);border-radius:9px;font-size:.76rem;">⏳ Memeriksa relasi ERP di Cloud...</div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px;">
+        <button class="btn btn-outline" type="button">↻ Sinkronkan ERP</button>
+        <button class="btn btn-outline" type="button">Unduh Backup ERP</button>
+        <button class="btn btn-danger" type="button" id="btnHapusSemuaMasterErp">🗑 Hapus Semua Data ERP</button>
+      </div>
+      <div style="padding:12px;border:1px solid var(--border);border-radius:10px;background:#f8fafc;margin-bottom:12px;">
+        <label for="masterErpFile">Upload file jadwal ERP (.HTM / .HTML)</label>
+        <input type="file" id="masterErpFile" accept=".htm,.html,text/html" style="width:100%;font-size:.8rem;" />
+        <p style="font-size:.7rem;color:var(--text-muted);margin:6px 0 0;">Hanya Job Order, Item Code, dan Item Name yang dibaca. Unit Produksi, Confirm Date, dan Confirm Qty diabaikan. JO berulang pada tanggal berbeda digabung.</p>
+      </div>
+      <div style="border:1px solid #cbd5e1;border-radius:10px;padding:12px;margin:12px 0;background:#f8fafc;">
+        <div style="font-weight:800;color:var(--navy);margin-bottom:5px;">📊 Import Standar Hasil & Qty/Box ke Master FG</div>
+        <label for="masterFgStandardFile">Upload file standar hasil produksi (.ODS / .XLSX / .XLS)</label>
+        <input type="file" id="masterFgStandardFile" accept=".ods,.xlsx,.xls" style="width:100%;font-size:.8rem;margin-top:5px;" />
+        <p style="font-size:.69rem;color:var(--text-muted);margin:6px 0 8px;">Kolom yang dibaca: Nama Produk, Kode Item, Isi per Box (PCS), dan Standar Hasil 8 Jam. Standar 8 Jam menjadi dasar target otomatis; kolom 9 Jam tidak digunakan. Qty/Box kosong atau “-” tidak menghapus nilai lama.</p>
+        <div id="masterFgStandardSummary" style="font-size:.72rem;color:var(--text-muted);margin:6px 0;">Belum ada file standar yang diproses.</div>
+        <div id="masterFgStandardConflicts" style="display:none;padding:8px;border:1px solid #fca5a5;border-radius:8px;background:#fef2f2;color:#991b1b;font-size:.7rem;margin:7px 0;"></div>
+        <div id="masterFgStandardPreview" style="max-height:190px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:7px;background:#fff;margin:7px 0;"></div>
+        <div style="display:flex;gap:7px;flex-wrap:wrap;">
+          <button class="btn btn-primary" id="btnImportStandarMasterFg" type="button" disabled>☁️ Tambah/Perbarui Master FG</button>
+          <button class="btn btn-outline" type="button">Batal Preview</button>
+        </div>
+      </div>
+      <div id="masterErpPreviewSummary" style="font-size:.76rem;color:var(--text-muted);margin-bottom:8px;">Belum ada file ERP yang diproses.</div>
+      <div id="masterErpPreviewConflicts" style="display:none;padding:9px;border:1px solid #fca5a5;border-radius:8px;background:#fef2f2;color:#991b1b;font-size:.72rem;margin-bottom:10px;"></div>
+      <div id="masterErpPendingList" style="max-height:320px;overflow-y:auto;border:1px solid var(--border);border-radius:9px;padding:8px;margin-bottom:10px;"></div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px;">
+        <button class="btn btn-primary" id="btnImportMasterErp" type="button" disabled>☁️ Validasi & Simpan ke Cloud</button>
+        <button class="btn btn-outline" type="button">Batal Preview</button>
+      </div>
+      <div style="border-top:1px solid var(--border);padding-top:12px;">
+        <div style="font-weight:800;color:var(--navy);margin-bottom:4px;">Pemetaan Item Code ERP ke Master FG</div>
+        <p style="font-size:.7rem;color:var(--text-muted);margin:0 0 8px;">Nama yang cocok dipetakan otomatis. Nama berbeda dipetakan manual. Target dan Qty/Box tetap bersumber dari Master FG.</p>
+        <input type="search" id="masterErpMappingSearch" placeholder="Cari Item Code / Item Name / produk Master FG..." style="width:100%;margin-bottom:8px;" />
+        <div id="masterErpMappingInfo" style="font-size:.7rem;color:var(--text-muted);margin-bottom:6px;"></div>
+        <div id="masterErpMappingList" style="max-height:360px;overflow-y:auto;border:1px solid var(--border);border-radius:9px;padding:8px;"></div>
+      </div>
+      <div style="border-top:1px solid var(--border);padding-top:12px;margin-top:14px;">
+        <div style="font-weight:800;color:var(--navy);margin-bottom:4px;">Pengelolaan Status Job Order</div>
+        <p style="font-size:.7rem;color:var(--text-muted);margin:0 0 8px;">Nonaktifkan JO yang sudah Closed tanpa menghapus Item Code, relasi produk, atau JO lain. JO nonaktif tidak muncul pada pilihan input produksi dan tidak aktif kembali saat impor ERP ulang.</p>
+        <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:8px;">
+          <button class="btn btn-outline" type="button">↻ Sinkronkan Status JO</button>
+          <input type="search" id="masterErpJoStatusSearch" placeholder="Cari nomor JO / Item Code / produk..." style="flex:1;min-width:180px;" />
+          <select id="masterErpJoStatusFilter" style="min-width:130px;"><option value="all">Semua status</option><option value="active">JO Aktif</option><option value="disabled">JO Nonaktif / Closed</option></select>
+        </div>
+        <div id="masterErpJoStatusInfo" style="font-size:.7rem;color:var(--text-muted);margin-bottom:6px;"></div>
+        <div id="masterErpJoStatusList" style="max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:9px;padding:8px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL MASTER LEADER
+       ========================================================= -->
+  <div id="masterLeaderModal" class="modal-backdrop">
+    <div class="modal-card">
+      <div class="card-header">
+        <span class="card-title">👤 Master Leader</span>
+        <button class="btn btn-danger">✕ Tutup</button>
+      </div>
+      <div id="masterLeaderCloudStatus" role="status" aria-live="polite" style="padding:9px 10px;margin:0 0 12px;border:1px solid var(--border);border-radius:9px;font-size:.76rem;line-height:1.45;">⏳ Memeriksa Master Leader Cloud...</div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin:-4px 0 12px;">
+        <button class="btn btn-outline" type="button">↻ Sinkronkan</button>
+        <button class="btn btn-outline" type="button" id="btnBackupMasterLeader" style="display:none;">Unduh Backup Lokal</button>
+      </div>
+      <div style="display:grid;gap:8px;margin-bottom:12px;">
+        <label for="masterLeaderInput">Nama Leader</label>
+        <input type="text" id="masterLeaderInput" placeholder="Contoh: ISTIANAH" autocomplete="off" />
+        <div style="display:flex;gap:6px;flex-wrap:wrap;">
+          <button class="btn btn-primary" id="btnSimpanMasterLeader" type="button">+ Tambah Leader</button>
+          <button class="btn btn-outline" id="btnBatalEditMasterLeader" type="button" style="display:none;">Batal Edit</button>
+        </div>
+      </div>
+      <input type="search" id="masterLeaderSearch" placeholder="🔎 Cari nama Leader..." style="width:100%;margin-bottom:8px;" />
+      <div id="masterLeaderInfo" style="font-size:.7rem;color:var(--text-muted);margin-bottom:6px;"></div>
+      <div id="masterLeaderList" style="max-height:300px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px;font-size:.78rem;"></div>
+    </div>
+  </div>
+
+  <!-- =========================================================
+       MODAL 4: PANDUAN INSTALL APLIKASI
+       ========================================================= -->
+  <div id="installGuideModal" class="modal-backdrop">
+    <div class="modal-card" style="max-width:440px;">
+      <div class="card-header">
+        <span class="card-title">📲 Cara Download / Pasang Aplikasi</span>
+        <button class="btn btn-danger">✕ Tutup</button>
+      </div>
+      <div style="font-size:0.84rem; line-height:1.55; color:var(--text-main);">
+        <p style="margin-bottom:10px;">
+          <b>1. Pengguna HP Android (Chrome):</b><br>
+          • Klik ikon <b>Titik Tiga (⋮)</b> di pojok kanan atas browser Chrome.<br>
+          • Pilih menu <b>"Tambahkan ke layar utama"</b> atau <b>"Instal aplikasi"</b>.
+        </p>
+        <p style="margin-bottom:10px;">
+          <b>2. Pengguna iPhone / iOS (Safari):</b><br>
+          • Ketuk tombol <b>Share / Bagikan</b> di bagian bawah Safari.<br>
+          • Pilih <b>"Add to Home Screen" (Tambah ke Layar Utama)</b>.
+        </p>
+        <p>
+          <b>3. Pengguna Laptop / PC (Chrome / Edge):</b><br>
+          • Klik ikon <b>Install (🖥️⬇️)</b> di sisi kanan kolom alamat URL browser di bagian atas.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  
+
+  <script>
+    (() => {
+      const modules = {
+        wip: { section: "sectionWip", button: "tabBtnWip" },
+        fg: { section: "sectionFg", button: "tabBtnFg" },
+        spa: { section: "sectionSpa", button: "tabBtnSpa" }
+      };
+      const body = document.body;
+      const drawer = document.getElementById("modeTabs");
+      const backdrop = document.getElementById("desktopModeBackdrop");
+      const menuButton = document.getElementById("desktopModeToggle");
+
+      function mobileLayout() {
+        return window.matchMedia && window.matchMedia("(max-width:900px)").matches;
+      }
+      function setDrawerState(open) {
+        body.classList.remove("desktop-mode-menu-open", "mobile-mode-menu-open");
+        if (open) body.classList.add(mobileLayout() ? "mobile-mode-menu-open" : "desktop-mode-menu-open");
+        if (drawer) {
+          drawer.setAttribute("aria-hidden", open ? "false" : "true");
+          if ("inert" in drawer) drawer.inert = !open;
+        }
+        if (menuButton) menuButton.setAttribute("aria-expanded", open ? "true" : "false");
+      }
+      window.closeDesktopModeMenu = () => setDrawerState(false);
+      window.toggleDesktopModeMenu = () => {
+        const open = body.classList.contains("desktop-mode-menu-open") || body.classList.contains("mobile-mode-menu-open");
+        setDrawerState(!open);
+      };
+      window.switchMode = mode => {
+        if (!modules[mode]) return;
+        Object.entries(modules).forEach(([key, cfg]) => {
+          const section = document.getElementById(cfg.section);
+          const button = document.getElementById(cfg.button);
+          if (section) section.style.display = key === mode ? "grid" : "none";
+          if (button) button.className = "tab-btn" + (key === mode ? (mode === "wip" ? " active-wip" : mode === "fg" ? " active-fg" : " active-spa") : "");
+        });
+        setDrawerState(false);
+        window.scrollTo({ top: 0, behavior: "auto" });
+      };
+      Object.entries(modules).forEach(([mode,cfg]) => {
+        const btn = document.getElementById(cfg.button);
+        if (btn) btn.addEventListener("click", () => window.switchMode(mode));
+      });
+      if (menuButton) menuButton.addEventListener("click", window.toggleDesktopModeMenu);
+      if (backdrop) backdrop.addEventListener("click", window.closeDesktopModeMenu);
+      document.addEventListener("keydown", event => {
+        if (event.key === "Escape") { window.closeDesktopModeMenu(); return; }
+        if (event.code !== "Space" || event.repeat || !window.matchMedia("(min-width:901px)").matches) return;
+        if (event.altKey || event.ctrlKey || event.metaKey) return;
+        const target = event.target;
+        if (target && (target.isContentEditable || target.closest?.("input,textarea,select,button,a,[contenteditable='true'],[role='button']"))) return;
+        event.preventDefault();
+        window.toggleDesktopModeMenu();
+      });
+      let touchStart = null;
+      document.addEventListener("touchstart", event => {
+        if (!mobileLayout() || event.touches.length !== 1) return;
+        const t = event.touches[0];
+        const open = body.classList.contains("mobile-mode-menu-open");
+        const drawerWidth = Math.min(300, window.innerWidth * .86);
+        if ((!open && t.clientX <= 28) || (open && t.clientX <= drawerWidth + 20)) {
+          touchStart = { x:t.clientX, y:t.clientY, open };
+        } else touchStart = null;
+      }, { passive:true });
+      document.addEventListener("touchend", event => {
+        if (!touchStart || !event.changedTouches.length) return;
+        const start = touchStart; touchStart = null;
+        const t = event.changedTouches[0];
+        if (Math.abs(t.clientY - start.y) > 80) return;
+        const dx = t.clientX - start.x;
+        if (!start.open && dx >= 58) setDrawerState(true);
+        if (start.open && dx <= -58) setDrawerState(false);
+      }, { passive:true });
+      document.addEventListener("touchcancel", () => { touchStart = null; }, { passive:true });
+      setDrawerState(false);
+    })();
+  </script>
+
+</body>
+</html>
