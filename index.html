@@ -23,25 +23,26 @@
 
   <style>
     :root {
-      --navy: #1a237e;
-      --navy-light: #283593;
-      --emerald: #2e7d32;
-      --emerald-bg: #e8f5e9;
+      /* Industrial Professional — preview palette */
+      --navy: #25384A;
+      --navy-light: #344F63;
+      --emerald: #39816C;
+      --emerald-bg: #EAF2EE;
       --wa-green: #25d366;
-      --wa-dark: #128c7e;
-      --purple: #6a1b9a;
-      --purple-bg: #f3e5f5;
-      --sky: #0277bd;
-      --sky-bg: #e1f5fe;
-      --orange: #ef6c00;
-      --orange-bg: #fff3e0;
-      --red: #c62828;
-      --red-bg: #ffebee;
-      --bg-main: #f1f5f9;
-      --card-bg: #ffffff;
-      --text-main: #0f172a;
-      --text-muted: #64748b;
-      --border: #cbd5e1;
+      --wa-dark: #197D71;
+      --purple: #68798A;
+      --purple-bg: #EEF2F5;
+      --sky: #426783;
+      --sky-bg: #EAF1F5;
+      --orange: #B77932;
+      --orange-bg: #FBF2E7;
+      --red: #B94A48;
+      --red-bg: #FBEDEE;
+      --bg-main: #F2F5F6;
+      --card-bg: #FFFFFF;
+      --text-main: #25313B;
+      --text-muted: #6B7883;
+      --border: #D5DEE4;
     }
 
     * {
@@ -1130,6 +1131,954 @@
     }
     @media (min-width:880px) { .sheet-section-nav { display:none !important; } }
 
+
+    /* =========================================================
+       UI REFRESH PREVIEW — INDUSTRIAL PROFESSIONAL / BALANCED
+       Visual-only layer. No DOM, workflow, or calculation changes.
+       ========================================================= */
+    html { scroll-behavior: auto !important; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-main);
+      color: var(--text-main);
+      line-height: 1.45;
+    }
+    h1, h2, h3, .font-title, .app-title, .card-title, .tab-btn, .btn {
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      letter-spacing: -0.01em;
+    }
+    .app-header {
+      background: var(--navy);
+      box-shadow: 0 2px 10px rgba(31, 49, 63, .14);
+      border-bottom: 3px solid #6B8798;
+    }
+    .app-title { font-size: 1rem; font-weight: 750; letter-spacing: 0; }
+    .app-subtitle { color: rgba(255,255,255,.82); letter-spacing: .01em; }
+    .btn-header {
+      border-radius: 8px;
+      background: rgba(255,255,255,.10);
+      border-color: rgba(255,255,255,.28);
+      font-family: inherit;
+      letter-spacing: 0;
+    }
+    .mode-tabs {
+      gap: 8px;
+      margin-top: 14px;
+    }
+    .tab-btn {
+      min-height: 48px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: #FFFFFF;
+      color: #526474;
+      box-shadow: none;
+      font-weight: 700;
+      line-height: 1.25;
+      transition: background .15s ease, border-color .15s ease, color .15s ease;
+    }
+    .tab-btn.active-wip,
+    .tab-btn.active-fg,
+    .tab-btn.active-spa {
+      background: var(--navy);
+      border-color: var(--navy);
+      color: #FFFFFF;
+      box-shadow: 0 2px 5px rgba(37,56,74,.14);
+    }
+    .container { gap: 14px; }
+    .card {
+      border: 1px solid #DCE4E8;
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 2px 8px rgba(35,53,68,.045);
+      background: var(--card-bg);
+    }
+    .card-header {
+      border-bottom: 1px solid #E8EDF0;
+      padding-bottom: 11px;
+      margin-bottom: 14px;
+    }
+    .card-title {
+      color: var(--navy);
+      font-size: .88rem;
+      font-weight: 750;
+      letter-spacing: .005em;
+    }
+    .meta-grid {
+      background: #F7F9FA;
+      border: 1px solid #E1E7EA;
+      border-radius: 10px;
+      gap: 10px;
+      padding: 11px;
+    }
+    label {
+      color: #40576A;
+      font-size: .70rem;
+      font-weight: 750;
+      letter-spacing: .015em;
+      margin-bottom: 5px;
+    }
+    input, select, textarea {
+      border: 1px solid #C9D4DB;
+      border-radius: 9px;
+      background: #FFFFFF;
+      color: #25313B;
+      font-family: inherit;
+      font-size: .88rem;
+      font-weight: 550;
+      min-height: 43px;
+      transition: border-color .15s ease, box-shadow .15s ease;
+    }
+    input::placeholder, textarea::placeholder { color: #8996A0; font-weight: 450; }
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--sky);
+      box-shadow: 0 0 0 3px rgba(66,103,131,.13);
+    }
+    .btn {
+      border-radius: 9px;
+      font-family: inherit;
+      font-weight: 700;
+      letter-spacing: 0;
+      box-shadow: none;
+      transition: background .15s ease, border-color .15s ease, transform .12s ease;
+    }
+    .btn-primary, .btn-sky, .btn-purple {
+      background: var(--sky);
+      color: #FFFFFF;
+    }
+    .btn-outline {
+      color: var(--navy);
+      border: 1px solid #AEBEC8;
+      background: #FFFFFF;
+    }
+    .btn-emerald {
+      background: var(--emerald);
+      color: #FFFFFF;
+      border-radius: 9px;
+      box-shadow: none;
+    }
+    .btn-danger, .sheet-reset-btn {
+      color: #A94442;
+      background: #FBEDEE;
+      border: 1px solid #E9C7C8;
+      border-radius: 9px;
+    }
+    .btn-edit {
+      color: #946126;
+      background: #FBF2E7;
+      border: 1px solid #EAD7B8;
+      border-radius: 8px;
+    }
+    .calc-panel {
+      background: #EFF5F1;
+      border: 1px solid #C9DDD2;
+      border-radius: 11px;
+      padding: 13px;
+    }
+    .calc-panel.purple-calc {
+      background: #F0F3F5;
+      border-color: #D6DEE4;
+    }
+    .input-calc {
+      color: var(--navy);
+      font-family: inherit;
+      letter-spacing: 0;
+    }
+    .group-card {
+      border: 1px solid #DCE4E8;
+      border-left: 4px solid var(--navy);
+      border-radius: 10px;
+      box-shadow: 0 1px 4px rgba(35,53,68,.035);
+    }
+    .group-card.fg-mode { border-left-color: var(--emerald); }
+    .group-card.spa-mode { border-left-color: var(--purple); }
+    .quick-results {
+      border: 1px solid #AEBEC8;
+      border-radius: 10px;
+      box-shadow: 0 8px 22px rgba(35,53,68,.14);
+    }
+    .quick-item:hover, .quick-item:active { background: #EEF4F6; }
+    .quick-item-left { color: var(--navy); }
+    .quick-item-badge {
+      color: #526B7D;
+      background: #EEF2F5;
+      font-family: inherit;
+    }
+    .edit-banner {
+      border: 1px solid #EAD7B8;
+      background: var(--orange-bg);
+      color: #865B26;
+      border-radius: 9px;
+    }
+    .fg-time-preset.active, .fg-break-preset.selected {
+      background: var(--navy);
+      border-color: var(--navy);
+      box-shadow: none;
+    }
+    .fg-leader-footer { border-top-color: #E5EBEE; }
+    .fg-second-jo {
+      border-color: #D7E0E5;
+      border-radius: 10px;
+      background: #F7F9FA;
+    }
+    .fg-second-jo-body { border-top-color: #E2E8EC; }
+    .fg-second-jo-preview {
+      border-color: #D7E0E5;
+      border-radius: 8px;
+      background: #F5F8F9;
+      color: var(--navy);
+    }
+    .fg-second-jo > summary::after,
+    .box-detail-disclosure>summary::after,
+    .saved-box-details>summary::after,
+    .wa-import-collapse > summary::after { color: var(--emerald); }
+    .sheet-section-nav {
+      border-color: #DCE4E8;
+      box-shadow: 0 2px 8px rgba(35,53,68,.055);
+    }
+    .sheet-nav-btn {
+      border-color: #D7E0E5;
+      background: #F6F8F9;
+      color: var(--navy);
+      border-radius: 9px;
+      font-family: inherit;
+      letter-spacing: 0;
+    }
+    .sheet-nav-btn.active {
+      background: var(--navy);
+      border-color: var(--navy);
+      color: #FFFFFF;
+    }
+    .sheet-nav-btn .nav-number {
+      background: #E5EBEF;
+      color: #526474;
+    }
+    .sheet-nav-btn.active .nav-number { background: rgba(255,255,255,.2); color: #FFFFFF; }
+    .fg-option-toggle-ui { border-color: #83939E; }
+    .fg-option-toggle:checked + .fg-option-toggle-ui {
+      background: var(--sky);
+      border-color: var(--sky);
+    }
+    #sectionFg .card { background: #FFFFFF; }
+    #sectionFg .mobile-sheet-meta { background: #F7F9FA; }
+    #sectionFg .fg-break-preset { border-radius: 8px; }
+    #sectionFg .fg-main-calc-grid input,
+    #sectionFg .fg-second-jo-grid input { min-height: 42px; }
+    #sectionFg .fg-second-jo-preview { line-height: 1.5; }
+    #sectionFg .fg-wa-preview-modal .modal-card { border-radius: 14px; }
+    :focus-visible { outline-color: var(--sky); }
+    @media (max-width: 520px) {
+      .card { padding: 14px; border-radius: 12px; }
+      .mode-tabs { gap: 6px; }
+      .tab-btn { padding: 10px 7px; min-height: 44px; }
+      #sectionFg .meta-grid { padding: 9px; }
+      #sectionFg input, #sectionFg select, #sectionFg textarea { min-height: 42px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+    }
+
+
+    /* =========================================================
+       FINISH GOOD PILOT — COMPONENT RHYTHM & VISUAL HIERARCHY
+       Scoped to Sheet 2. Field order and workflow remain intact.
+       ========================================================= */
+    #sectionFg { align-items:start; }
+    #sectionFg > section { min-width:0; }
+    #sectionFg .card { overflow:visible; margin-bottom:14px; }
+    #sectionFg .card-header { align-items:center; gap:10px; }
+    #sectionFg .card-header > .card-title { line-height:1.35; }
+    #fgInputCard .card-header > div { gap:7px; }
+    #fgInputCard .card-header .btn,
+    #fgInputCard .card-header .sheet-reset-btn {
+      min-height:36px; padding:8px 10px!important; font-size:.70rem!important; border-radius:8px;
+    }
+    #fgInputCard .edit-banner { border-radius:9px; line-height:1.45; }
+    #fgInputCard .meta-grid {
+      grid-template-columns:minmax(0,1fr); padding:12px; gap:11px; margin-bottom:16px;
+    }
+    #fgInputCard .meta-grid > div,
+    #fgInputCard .form-row-responsive > div { min-width:0; }
+    #fgInputCard .form-row-responsive { gap:13px 12px; margin-top:0; }
+    #fgInputCard .form-row-responsive > div:nth-child(1),
+    #fgInputCard .form-row-responsive > div:nth-child(2),
+    #fgInputCard .form-row-responsive > div:nth-child(3) { align-self:start; }
+    #fgInputCard .form-row-responsive > div:nth-child(5),
+    #fgInputCard .form-row-responsive > div:nth-child(6) { padding-top:2px; }
+    #fgInputCard .form-row-responsive > div:nth-child(7),
+    #fgInputCard .form-row-responsive > div:nth-child(8) { padding-top:1px; }
+    #fgInputCard .form-row-responsive input,
+    #fgInputCard .form-row-responsive select { min-width:0; }
+    #fgInputCard .form-row-responsive small,
+    #fgInputCard .form-row-responsive > div > div[style*="font-size"] { line-height:1.45; }
+    #fgInputCard #fgOvertimeBreakInfo {
+      padding:7px 9px; background:#F5F7F8; border:1px solid #E3E9EC; border-radius:7px; line-height:1.45!important;
+    }
+    #fgInputCard .fg-break-presets { gap:7px; margin-top:8px; }
+    #fgInputCard .fg-break-preset { min-height:36px; padding:7px 11px; font-size:.72rem; border-radius:8px; }
+    #fgInputCard .fg-break-preset.selected,
+    #fgInputCard .fg-break-preset.active { background:var(--navy); border-color:var(--navy); color:#fff; }
+    #fgInputCard > div[style*="grid-column:1/-1"][style*="border:1px solid"] {
+      margin-top:15px; padding:13px!important; background:#F7F9FA!important;
+      border:1px solid #D9E2E7!important; border-radius:10px!important;
+    }
+    #fgInputCard #fgManpowerFields { padding-top:2px; }
+    #fgInputCard #fgManpowerInfo,
+    #fgInputCard #fgManpowerDefaultInfo { line-height:1.5!important; }
+    #fgInputCard .calc-panel {
+      margin-top:14px; padding:14px; border-radius:11px; background:#EEF4F0; border:1px solid #C9DCD1;
+    }
+    #fgInputCard .calc-panel > div:first-child {
+      align-items:flex-start!important; padding-bottom:9px; border-bottom:1px solid #DCE8E0;
+    }
+    #fgInputCard .calc-panel > div:first-child label {
+      color:#376D5B!important; font-size:.76rem; line-height:1.35;
+    }
+    #fgInputCard #fgLiveTotalPreview {
+      color:#314D42!important; font-size:.76rem!important; text-align:right; line-height:1.4;
+    }
+    #fgInputCard .fg-main-calc-grid { gap:12px; }
+    #fgInputCard .fg-main-calc-grid label { min-height:2.1em; line-height:1.35; }
+    #fgInputCard .fg-main-calc-grid input { min-height:45px; border-radius:8px; }
+    #fgInputCard .fg-main-calc-grid #fgTarget {
+      border-color:#9AB5A5; background:#FBFDFC; color:#254D3C; font-weight:750;
+    }
+    #fgInputCard #fgBreakdownPreview {
+      border-color:#D2E1D7!important; background:#FFFFFF!important; color:#426B57!important;
+      border-radius:8px!important; line-height:1.5;
+    }
+    #fgInputCard [id^="fgLineSplitMount"] > div {
+      background:#F7F9FA!important; border-color:#D6E0E5!important; border-radius:10px!important; padding:12px!important;
+    }
+    #fgInputCard [id^="fgLineSplitFields"] [style*="border:1px solid #dbe2ed"] {
+      border-color:#D9E2E7!important; border-radius:9px!important; box-shadow:0 1px 2px rgba(35,53,68,.025);
+    }
+    #fgInputCard #fgSecondJoPanel { margin-top:13px; border-color:#D6E0E5; border-radius:10px; background:#F7F9FA; }
+    #fgInputCard #fgSecondJoPanel > summary { min-height:46px; padding:12px 13px; font-size:.78rem; letter-spacing:0; }
+    #fgInputCard .fg-second-jo-body { padding:13px; background:#FFFFFF; }
+    #fgInputCard .fg-second-jo-help { line-height:1.5; }
+    #fgInputCard .fg-second-jo-grid { gap:10px; }
+    #fgInputCard .fg-second-jo-preview { background:#F5F8F9; border-color:#D9E2E7; border-radius:8px; }
+    #fgInputCard #btnSubmitFg {
+      min-height:49px; margin-top:14px!important; padding:13px 15px; font-size:.84rem; letter-spacing:.005em;
+    }
+    #fgListCard .card-header,
+    #fgWaCard .card-header { border-bottom:1px solid #E7ECEF; }
+    #fgListCard .fg-report-time-toolbar,
+    #fgListCard .fg-list-search {
+      background:#F7F9FA!important; border-color:#DCE4E8!important; border-radius:9px!important;
+    }
+    #fgListCard .fg-report-time-toolbar #fgTimeDisplay { font-variant-numeric:tabular-nums; letter-spacing:.02em; }
+    #fgListCard .fg-wa-import-collapse { border-color:#DCE4E8; border-radius:9px; }
+    #fgListCard .fg-wa-import-collapse > summary { min-height:44px; font-size:.78rem; }
+    #fgListCard > div[style*="background:var(--emerald-bg)"] {
+      background:#EEF4F0!important; border:1px solid #D1E0D6!important; border-radius:9px!important;
+    }
+    #fgListCard .fg-list-search { padding:12px!important; }
+    #fgListCard #fgListContainer { min-width:0; }
+    #fgWaCard .wa-action-bar { gap:8px; }
+    #fgWaCard .wa-action-bar .btn { min-height:42px; padding:9px 11px; line-height:1.3; font-size:.72rem; }
+    #fgWaCard .wa-preview {
+      background:#F4F8F5; border:1px solid #C9D9CF; border-radius:10px; color:#26372E;
+      font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.76rem; line-height:1.55;
+    }
+    #fgWaCard > p { line-height:1.5; }
+    #fgSectionNav { background:rgba(255,255,255,.98); backdrop-filter:blur(10px); }
+    @media (min-width:520px) {
+      #fgInputCard .meta-grid { grid-template-columns:1.15fr 1fr 1fr; }
+      #fgInputCard .form-row-responsive { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      #fgInputCard .form-row-responsive > div:nth-child(1),
+      #fgInputCard .form-row-responsive > div:nth-child(2),
+      #fgInputCard .form-row-responsive > div:nth-child(3) { grid-column:auto; }
+      #fgInputCard .form-row-responsive > div:nth-child(5),
+      #fgInputCard .form-row-responsive > div:nth-child(6) { grid-column:1/-1; }
+      #fgInputCard .form-row-responsive > div:nth-child(7),
+      #fgInputCard .form-row-responsive > div:nth-child(8) { grid-column:auto; }
+    }
+    @media (min-width:880px) {
+      #fgInputCard .meta-grid { grid-template-columns:1.15fr 1fr 1fr; }
+      #fgInputCard .form-row-responsive { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      #fgInputCard .card-header { flex-wrap:nowrap; }
+      #fgListCard, #fgWaCard { position:relative; }
+    }
+    @media (max-width:519px) {
+      #fgInputCard .card-header { align-items:flex-start; }
+      #fgInputCard .card-header > div { width:100%; justify-content:flex-start!important; }
+      #fgInputCard .meta-grid { grid-template-columns:1fr; }
+      #fgInputCard .form-row-responsive { grid-template-columns:1fr; gap:12px; }
+      #fgInputCard .form-row-responsive > div:nth-child(5),
+      #fgInputCard .form-row-responsive > div:nth-child(6),
+      #fgInputCard .form-row-responsive > div:nth-child(7),
+      #fgInputCard .form-row-responsive > div:nth-child(8) { grid-column:1/-1; }
+      #fgInputCard .fg-main-calc-grid { gap:9px; }
+      #fgInputCard .fg-main-calc-grid label { min-height:0; font-size:.68rem; }
+      #fgInputCard .fg-main-calc-grid input { padding:9px 8px; font-size:.84rem; }
+      #fgInputCard #btnSubmitFg { width:100%; }
+      #fgWaCard .wa-action-bar { display:grid; grid-template-columns:1fr 1fr; }
+      #fgWaCard .wa-action-bar .btn:first-child { grid-column:1/-1; }
+    }
+
+
+    /* =========================================================
+       DESKTOP WORKSPACE — WEEKLY REPORT-INSPIRED NAVIGATION
+       Drawer starts hidden. Existing WIP/FG/SPA controls are reused.
+       Mobile layout and production form flow are not changed.
+       ========================================================= */
+    .desktop-mode-toggle {
+      display:inline-flex;align-items:center;justify-content:center;flex:0 0 40px;
+      width:40px;height:40px;padding:0;border-radius:10px;
+      background:#F5F8F6;border:1px solid #DCE5E0;color:#526A60;
+    }
+    .desktop-mode-toggle svg { width:18px;height:18px; }
+    .desktop-mode-toggle:hover { background:#EAF1EC;border-color:#CEDDD2; }
+    .desktop-mode-backdrop { display:none; }
+    .drawer-utility-label { margin-top:17px; }
+    .drawer-action-btn {
+      display:flex;align-items:center;gap:10px;width:100%;min-height:44px;
+      padding:10px 12px;border:1px solid #E2EAE5;border-radius:9px;
+      background:#F8FAF9;color:#526A60;text-align:left;
+      font-family:inherit;font-size:.74rem;font-weight:750;cursor:pointer;
+    }
+    .drawer-action-btn:hover { background:#EDF4EF;border-color:#D6E3DA; }
+    .drawer-action-icon { display:grid;place-items:center;width:20px;flex:0 0 20px;color:#5C806D;font-size:1rem;font-weight:900; }
+    .drawer-action-btn > span:nth-child(2) { flex:1; }
+    .drawer-action-arrow { color:#98A69E;font-size:.82rem; }
+    .drawer-cloud-action { background:#F2F6F8;border-color:#DEE8ED;color:#5D7485; }
+    .drawer-cloud-action .drawer-action-icon { color:#66889C; }
+    .drawer-action-count {
+      min-width:24px;padding:3px 7px;border:1px solid #D7E3E9;border-radius:12px;
+      background:#FFFFFF;color:#5D7485;text-align:center;font-size:.65rem;font-weight:850;
+    }
+    @media (min-width:901px) {
+      body {
+        min-height:100vh;
+        padding-bottom:0;
+        background:#F4F6F4;
+      }
+      .app-header {
+        position:sticky;
+        top:0;
+        z-index:45;
+        padding:10px 26px;
+        background:rgba(255,255,255,.96);
+        color:#263544;
+        border-bottom:1px solid #E4E9E6;
+        box-shadow:0 2px 8px rgba(37,55,48,.035);
+        backdrop-filter:blur(10px);
+      }
+      .header-inner {
+        width:100%;
+        max-width:1660px;
+        min-height:46px;
+        flex-wrap:nowrap;
+      }
+      .app-header .header-inner > div:first-child { min-width:0; }
+      .app-header img { border:1px solid #E5EBE7;box-shadow:none; }
+      .app-title { color:#34495E;font-size:.96rem;letter-spacing:.015em; }
+      .app-subtitle { color:#82908E;opacity:1;font-size:.68rem; }
+      .header-actions { flex:0 0 auto;align-items:center;gap:8px;flex-wrap:nowrap; }
+      .btn-header {
+        min-height:36px;padding:7px 11px;border:1px solid #E1E8E4;border-radius:8px;
+        background:#F8FAF9;color:#536A60;box-shadow:none;font-family:inherit;font-size:.70rem;font-weight:700;
+      }
+      .btn-header:hover { background:#EEF3F0;border-color:#D2DED7; }
+      .btn-header.install-btn {
+        background:#E8F0EC;border-color:#D7E4DC;color:#557C6E;box-shadow:none;
+      }
+      .btn-header.cloud-btn {
+        background:#EDF2F5;border-color:#DCE5EA;color:#627B8D;
+      }
+      .desktop-mode-toggle { display:inline-flex; }
+      .mode-tabs {
+        position:fixed;z-index:61;top:0;bottom:0;left:0;
+        width:min(285px,84vw);max-width:none;height:100dvh;margin:0;
+        padding:96px 14px 22px;display:flex;flex-direction:column;
+        align-items:stretch;justify-content:flex-start;gap:7px;
+        overflow-y:auto;overscroll-behavior:contain;
+        background:#FFFFFF;border-right:1px solid #E4E9E6;
+        box-shadow:12px 0 30px rgba(30,45,39,.12);
+        transform:translateX(-105%);transition:transform .22s ease;
+      }
+      .mode-tabs::before {
+        content:"WORKSPACE";display:block;padding:0 11px 12px;margin-bottom:4px;
+        border-bottom:1px solid #E8EDE9;color:#9AA5A1;
+        font-size:9px;font-weight:800;letter-spacing:.13em;
+      }
+      .mode-tabs .tab-btn {
+        display:flex;width:100%;min-height:46px;align-items:center;justify-content:flex-start;
+        padding:11px 12px;border:1px solid transparent;border-radius:9px;
+        background:transparent;color:#667582;text-align:left;font-family:inherit;
+        font-size:.75rem;font-weight:650;line-height:1.35;box-shadow:none;
+      }
+      .mode-tabs .tab-btn:hover { background:#F5F8F6;color:#34495E; }
+      .mode-tabs .tab-btn.active-home,
+      .mode-tabs .tab-btn.active-wip,
+      .mode-tabs .tab-btn.active-fg,
+      .mode-tabs .tab-btn.active-spa,
+      .mode-tabs .tab-btn.active-master {
+        background:#E8F0EC;border-color:#E0EAE4;color:#557C6E;
+        font-weight:750;box-shadow:none;
+      }
+      body.desktop-mode-menu-open .mode-tabs { transform:translateX(0); }
+      .desktop-mode-backdrop {
+        display:block;position:fixed;z-index:60;inset:0;width:100%;height:100%;
+        padding:0;border:0;background:rgba(38,53,68,.22);
+        opacity:0;visibility:hidden;pointer-events:none;cursor:default;
+        transition:opacity .22s ease,visibility .22s ease;
+      }
+      body.desktop-mode-menu-open .desktop-mode-backdrop {
+        opacity:1;visibility:visible;pointer-events:auto;
+      }
+      .mode-tabs,.mode-tabs * { -webkit-tap-highlight-color:transparent; }
+      .pwa-install-banner { max-width:1660px; }
+      .container {
+        width:100%;max-width:1660px;margin:18px auto;padding:0 26px;gap:18px;
+      }
+      .sheet-section-nav { display:none!important; }
+    }
+    /* MOBILE DRAWER: sidebar tersembunyi dan dibuka dengan swipe dari tepi kiri. */
+    @media (max-width:900px) {
+      .mode-tabs {
+        position:fixed;z-index:201;top:0;bottom:0;left:0;
+        width:min(300px,86vw);max-width:none;height:100vh;height:100dvh;
+        margin:0;padding:calc(22px + env(safe-area-inset-top, 0px)) 14px calc(20px + env(safe-area-inset-bottom, 0px));
+        display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:7px;
+        overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+        background:#FFFFFF;border-right:1px solid #E1E8E4;
+        box-shadow:12px 0 30px rgba(30,45,39,.16);
+        transform:translateX(-105%);transition:transform .22s ease;
+      }
+      .mode-tabs::before {
+        content:"MENU UTAMA";display:block;padding:0 11px 12px;margin-bottom:4px;
+        border-bottom:1px solid #E8EDE9;color:#82908E;
+        font-size:9px;font-weight:800;letter-spacing:.13em;
+      }
+      .mode-tabs .tab-btn {
+        display:flex;width:100%;min-height:48px;align-items:center;justify-content:flex-start;
+        padding:11px 12px;border:1px solid transparent;border-radius:9px;
+        background:transparent;color:#526474;text-align:left;font-family:inherit;
+        font-size:.76rem;font-weight:700;line-height:1.35;box-shadow:none;
+      }
+      .mode-tabs .tab-btn.active-home,
+      .mode-tabs .tab-btn.active-wip,
+      .mode-tabs .tab-btn.active-fg,
+      .mode-tabs .tab-btn.active-spa,
+      .mode-tabs .tab-btn.active-master {
+        background:#E8F0EC;border-color:#D7E4DC;color:#426B5C;
+        font-weight:800;box-shadow:none;
+      }
+      body.mobile-mode-menu-open .mode-tabs { transform:translateX(0); }
+      .desktop-mode-backdrop {
+        display:block;position:fixed;z-index:200;inset:0;width:100%;height:100%;
+        padding:0;border:0;background:rgba(25,39,51,.38);
+        opacity:0;visibility:hidden;pointer-events:none;cursor:default;
+        transition:opacity .22s ease,visibility .22s ease;
+      }
+      body.mobile-mode-menu-open .desktop-mode-backdrop {
+        opacity:1;visibility:visible;pointer-events:auto;
+      }
+      .mode-tabs,.mode-tabs * { -webkit-tap-highlight-color:transparent; }
+    }
+
+    @media (prefers-reduced-motion:reduce) and (min-width:901px) {
+      .mode-tabs,.desktop-mode-backdrop { transition-duration:.01ms; }
+    }
+    @media (prefers-reduced-motion:reduce) and (max-width:900px) {
+      .mode-tabs,.desktop-mode-backdrop { transition-duration:.01ms; }
+    }
+
+    /* SINGLE-PAGE WORKSPACE: Input -> Daftar -> Laporan WhatsApp. */
+    @media (min-width:880px) {
+      .sheet-section-nav { display:none !important; }
+    }
+    #sectionWip.container,
+    #sectionFg.container,
+    #sectionSpa.container {
+      grid-template-columns:minmax(0,1fr);
+      align-items:stretch;
+      width:100%;
+      max-width:1280px;
+      margin:18px auto;
+      padding:0 22px;
+      gap:16px;
+    }
+    #sectionWip > section,
+    #sectionFg > section,
+    #sectionSpa > section {
+      display:flex;
+      flex-direction:column;
+      min-width:0;
+      width:100%;
+      gap:14px;
+    }
+    #sectionWip > section .card,
+    #sectionFg > section .card,
+    #sectionSpa > section .card {
+      width:100%;
+      margin-bottom:0;
+    }
+    #sectionFg { align-items:stretch; }
+    @media (max-width:879px) {
+      body { padding-bottom:24px; }
+      #sectionWip.container,
+      #sectionFg.container,
+      #sectionSpa.container {
+        margin:12px auto;
+        padding:0 12px;
+        gap:12px;
+      }
+    }
+
+    /* MODULE INTRO + ANCHOR NAVIGATION */
+    .module-overview {
+      display:grid;
+      grid-template-columns:minmax(0,1fr) auto;
+      align-items:center;
+      gap:16px;
+      width:100%;
+      padding:20px 22px;
+      color:#FFFFFF;
+      background:linear-gradient(125deg,#25384A 0%,#344F63 64%,#426783 100%);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:14px;
+      box-shadow:0 5px 16px rgba(37,56,74,.13);
+    }
+    .module-overview-copy { min-width:0; }
+    .module-overview-eyebrow {
+      display:flex;align-items:center;gap:8px;
+      margin-bottom:5px;color:#C7D7E1;
+      font-size:.64rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;
+    }
+    .module-overview h1 {
+      margin:0;color:#FFFFFF;font-size:1.22rem;line-height:1.25;
+      font-weight:800;letter-spacing:-.025em;
+    }
+    .module-overview p {
+      margin:6px 0 0;color:rgba(255,255,255,.82);
+      font-size:.76rem;line-height:1.5;max-width:680px;
+    }
+    .module-overview-tag {
+      align-self:start;padding:7px 10px;border:1px solid rgba(255,255,255,.22);
+      border-radius:8px;background:rgba(255,255,255,.09);
+      color:#E5EDF2;font-size:.62rem;font-weight:800;letter-spacing:.07em;
+      white-space:nowrap;
+    }
+    .module-overview-steps {
+      display:flex;flex-wrap:wrap;gap:7px;margin-top:13px;
+    }
+    .module-overview-steps a {
+      display:inline-flex;align-items:center;gap:6px;min-height:32px;
+      padding:6px 10px;border:1px solid rgba(255,255,255,.24);
+      border-radius:8px;background:rgba(255,255,255,.09);
+      color:#FFFFFF;text-decoration:none;font-size:.68rem;font-weight:750;
+      transition:background .15s ease,border-color .15s ease;
+    }
+    .module-overview-steps a:hover {
+      background:rgba(255,255,255,.18);border-color:rgba(255,255,255,.42);
+    }
+    .module-overview-steps a span {
+      color:#D5E1E8;font-size:.61rem;font-weight:850;
+    }
+    #sectionWip #wipInputCard,#sectionFg #fgInputCard,#sectionSpa #spaInputCard {
+      border-top:4px solid #344F63;
+    }
+    #sectionWip #wipListCard,#sectionFg #fgListCard,#sectionSpa #spaListCard {
+      border-top:4px solid var(--emerald);
+      scroll-margin-top:18px;
+    }
+    #sectionWip #wipWaCard,#sectionFg #fgWaCard,#sectionSpa #spaWaCard {
+      border-top:4px solid var(--sky);
+      scroll-margin-top:18px;
+    }
+    #sectionWip #wipInputSection,#sectionSpa #spaInputSection,
+    #sectionFg #fgInputCard { scroll-margin-top:18px; }
+
+    /* Desktop: berikan ruang di bawah header sticky agar judul bagian tetap tampak
+       saat navigasi F1/F2/F3 menggulir ke Input, Daftar, atau WhatsApp. */
+    @media (min-width:901px) {
+      #sectionWip #wipInputSection,#sectionSpa #spaInputSection,#sectionFg #fgInputCard,
+      #sectionWip #wipListCard,#sectionFg #fgListCard,#sectionSpa #spaListCard,
+      #sectionWip #wipWaCard,#sectionFg #fgWaCard,#sectionSpa #spaWaCard {
+        scroll-margin-top:92px;
+      }
+    }
+
+    /* Kartu daftar: tiga kolom pada desktop lebar, turun ke dua lalu satu
+       kolom pada layar yang lebih sempit agar isi kartu tetap terbaca. */
+    #wipGroupedContainer,#fgListContainer,#spaGroupedContainer {
+      display:grid;
+      grid-template-columns:minmax(0,1fr);
+      align-items:start;
+      gap:12px;
+    }
+    #wipGroupedContainer > .group-card,
+    #fgListContainer > .group-card,
+    #spaGroupedContainer > .group-card {
+      min-width:0;
+      margin:0 !important;
+      height:100%;
+    }
+    #wipGroupedContainer > :only-child:not(.group-card),
+    #fgListContainer > :only-child:not(.group-card),
+    #spaGroupedContainer > :only-child:not(.group-card) {
+      grid-column:1 / -1;
+    }
+    @media (min-width:880px) {
+      #wipGroupedContainer,#fgListContainer,#spaGroupedContainer {
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:14px;
+      }
+    }
+    @media (min-width:1200px) {
+      #wipGroupedContainer,#fgListContainer,#spaGroupedContainer {
+        grid-template-columns:repeat(3,minmax(0,1fr));
+      }
+    }
+    #wipMetaControls { margin-top:0; }
+
+    @media (max-width:600px) {
+      .module-overview {
+        grid-template-columns:minmax(0,1fr);
+        gap:10px;padding:16px;border-radius:12px;
+      }
+      .module-overview h1 { font-size:1.05rem; }
+      .module-overview p { font-size:.72rem; }
+      .module-overview-tag { justify-self:start;grid-row:1; }
+      .module-overview-eyebrow { margin-bottom:4px;font-size:.59rem; }
+      .module-overview-steps { gap:6px;margin-top:11px; }
+      .module-overview-steps a { min-height:34px;padding:6px 8px;font-size:.64rem; }
+    }
+
+    /* MOBILE BOTTOM NAV — compact, tanpa strip warna tambahan. */
+    @media (max-width:879px) {
+      body { padding-bottom:calc(82px + env(safe-area-inset-bottom, 0px)); }
+      .sheet-section-nav {
+        display:none !important;
+        position:fixed !important;
+        top:auto !important;right:0 !important;bottom:0 !important;left:0 !important;
+        transform:none !important;
+        width:100% !important;max-width:none !important;
+        margin:0 !important;
+        grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+        align-items:stretch;gap:7px;
+        padding:8px 10px calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+        background:#FFFFFF !important;
+        border:0 !important;border-top:1px solid #E4EAF0 !important;
+        border-radius:15px 15px 0 0 !important;
+        box-shadow:0 -5px 16px rgba(27,42,64,.12) !important;
+        z-index:120 !important;
+        scroll-margin:0;
+      }
+      .sheet-section-nav.is-active:not(.modal-nav-hidden) { display:grid !important; }
+      .sheet-nav-btn {
+        display:flex;min-width:0;min-height:52px;
+        align-items:center;justify-content:center;gap:5px;
+        padding:6px 4px;
+        border:1px solid #D6DEE7;
+        border-radius:11px;
+        background:#F6F8FA;
+        color:#1D2C78;
+        font-family:Inter,system-ui,sans-serif;
+        font-size:.64rem;font-weight:850;line-height:1.1;
+        white-space:nowrap;
+        box-shadow:none;
+      }
+      .sheet-nav-btn .nav-number {
+        display:inline-flex;flex:0 0 25px;width:25px;height:25px;
+        align-items:center;justify-content:center;
+        border-radius:50%;background:#E2E8F0;color:#1D2C78;
+        font-size:.77rem;font-weight:850;
+      }
+      .sheet-nav-btn.active {
+        background:#1D287E;border-color:#1D287E;color:#FFFFFF;
+        box-shadow:0 2px 6px rgba(29,40,126,.15);
+      }
+      .sheet-nav-btn.active .nav-number { background:rgba(255,255,255,.20);color:#FFFFFF; }
+      .sheet-section-target,#wipInputSection,#fgInputCard,#spaInputSection {
+        scroll-margin-top:14px;
+        scroll-margin-bottom:94px;
+      }
+      .module-overview { scroll-margin-top:12px; }
+    }
+    @media (max-width:390px) {
+      .sheet-section-nav.is-active:not(.modal-nav-hidden) { gap:5px;padding-left:7px!important;padding-right:7px!important; }
+      .sheet-nav-btn { gap:3px;padding:5px 2px;font-size:.59rem;border-radius:10px; }
+      .sheet-nav-btn .nav-number { flex-basis:23px;width:23px;height:23px;font-size:.73rem; }
+    }
+
+    /* HOME / INDEX */
+    .home-page {
+      display:block;width:100%;max-width:1320px;margin:24px auto;padding:0 26px 30px;
+      color:#263640;
+    }
+    .home-hero {
+      display:flex;justify-content:space-between;align-items:center;gap:18px;
+      padding:27px 30px;border:1px solid #DDE8E1;border-radius:16px;
+      background:linear-gradient(120deg,#EFF5F0 0%,#F7F9F7 62%,#E8F1EB 100%);
+      box-shadow:0 3px 12px rgba(39,69,53,.045);
+    }
+    .home-hero-copy { max-width:820px; }
+    .home-eyebrow { color:#4C7C65;font-size:.62rem;font-weight:900;letter-spacing:.13em; }
+    .home-hero h1,.page-heading-row h1 {
+      margin:7px 0 0;color:#243D32;font-size:1.62rem;font-weight:850;letter-spacing:-.035em;
+    }
+    .home-hero p,.page-heading-row p {
+      max-width:720px;margin:8px 0 0;color:#687A72;font-size:.82rem;line-height:1.6;
+    }
+    .home-hero-mark {
+      width:76px;height:76px;flex:0 0 76px;display:grid;place-items:center;
+      border:1px solid #D8E7DC;border-radius:20px;background:#FFFFFF;color:#39785E;
+      font-size:2rem;font-weight:900;box-shadow:0 3px 12px rgba(39,69,53,.06);
+    }
+    .home-section-heading {
+      display:flex;justify-content:space-between;align-items:end;gap:12px;margin:26px 2px 12px;
+    }
+    .home-section-heading span { color:#819087;font-size:.59rem;font-weight:850;letter-spacing:.13em; }
+    .home-section-heading h2 { margin:3px 0 0;color:#2D4539;font-size:1.02rem;font-weight:850; }
+    .home-section-heading p { margin:0 0 2px;color:#85928B;font-size:.69rem; }
+    .home-app-grid { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px; }
+    .home-app-card {
+      display:flex;flex-direction:column;min-width:0;min-height:248px;padding:18px;
+      border:1px solid #DCE5E0;border-radius:13px;background:#FFFFFF;
+      box-shadow:0 2px 8px rgba(35,53,44,.045);
+    }
+    .home-card-top { display:flex;justify-content:space-between;align-items:center;gap:8px; }
+    .home-app-icon {
+      width:38px;height:38px;display:grid;place-items:center;border-radius:10px;
+      background:#EAF2ED;color:#39785E;font-size:1.1rem;font-weight:900;
+    }
+    .home-card-index { color:#91A097;font-size:.58rem;font-weight:850;letter-spacing:.09em; }
+    .home-app-card h3 { margin:14px 0 0;color:#2D4539;font-size:1rem;font-weight:850; }
+    .home-app-card p { min-height:58px;margin:7px 0 13px;color:#74817A;font-size:.72rem;line-height:1.55; }
+    .home-flow { display:flex;align-items:center;gap:6px;margin:0 0 14px;color:#607A6B;font-size:.62rem;font-weight:800; }
+    .home-flow span { padding:5px 7px;border:1px solid #E2EAE5;border-radius:6px;background:#F8FAF8; }
+    .home-flow i { color:#9AAA9F;font-style:normal; }
+    .home-open-btn,.home-secondary-btn,.master-page-action {
+      display:flex;justify-content:space-between;align-items:center;gap:10px;
+      min-height:40px;padding:9px 12px;border:1px solid #D3E2D8;border-radius:8px;
+      background:#EDF4EF;color:#38684F;font-family:inherit;font-size:.70rem;font-weight:850;cursor:pointer;
+    }
+    .home-open-btn { width:100%;margin-top:auto; }
+    .home-open-btn:hover,.home-secondary-btn:hover,.master-page-action:hover { background:#E4EFE7; }
+    .home-open-btn span,.home-secondary-btn span,.master-page-action span { font-size:1rem; }
+    .home-lower-grid { display:grid;grid-template-columns:1fr 1.4fr;gap:14px;margin-top:16px; }
+    .home-info-card { padding:17px 18px;border:1px solid #DCE5E0;border-radius:12px;background:#FFFFFF; }
+    .home-info-heading { display:flex;align-items:center;gap:10px; }
+    .home-info-icon { width:34px;height:34px;display:grid;place-items:center;border-radius:9px;background:#EDF3EF;color:#47755C;font-size:1rem; }
+    .home-info-heading span:not(.home-info-icon) { color:#8B9990;font-size:.57rem;font-weight:850;letter-spacing:.1em; }
+    .home-info-heading h3 { margin:2px 0 0;color:#31483B;font-size:.82rem;font-weight:850; }
+    .home-info-card p { margin:11px 0;color:#74817A;font-size:.70rem;line-height:1.55; }
+    .home-secondary-btn { min-width:180px; }
+    .home-workflow-steps { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:13px; }
+    .home-workflow-steps div { display:flex;align-items:flex-start;gap:9px;padding:10px;border-radius:8px;background:#F5F8F6;color:#64756A;font-size:.65rem;font-weight:700; }
+    .home-workflow-steps div > span { display:flex;flex-direction:column;gap:3px;line-height:1.4; }
+    .home-workflow-steps strong { color:#425A4B;font-size:.68rem; }
+    .home-workflow-steps small { color:#718078;font-size:.62rem;font-weight:500;line-height:1.4; }
+    .home-workflow-steps b { color:#4E7A60;font-size:.73rem; }
+    .home-navigation-guide { margin-top:22px; }
+    .home-navigation-grid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px; }
+    .home-guide-card { min-width:0;padding:18px;border:1px solid #DCE5E0;border-radius:12px;background:#FFFFFF;box-shadow:0 2px 8px rgba(35,53,44,.035); }
+    .home-guide-heading { display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid #E8EEE9; }
+    .home-guide-icon { width:38px;height:38px;display:grid;place-items:center;border-radius:10px;background:#EAF2ED;color:#39785E;font-size:1.05rem;font-weight:900; }
+    .home-guide-heading div > span { color:#84938A;font-size:.57rem;font-weight:850;letter-spacing:.10em; }
+    .home-guide-heading h3 { margin:3px 0 0;color:#2D4539;font-size:.88rem;font-weight:850; }
+    .home-guide-list { display:flex;flex-direction:column;gap:8px; }
+    .home-guide-row { display:flex;align-items:center;gap:10px;min-width:0;padding:8px 9px;border:1px solid #E8EEE9;border-radius:8px;background:#F9FBF9; }
+    .home-guide-row kbd,.home-guide-step { display:grid;place-items:center;min-width:42px;height:32px;padding:0 7px;border:1px solid #365A47;border-radius:6px;background:#365A47;color:#FFFFFF;font-family:inherit;font-size:.68rem;font-weight:900;box-shadow:0 2px 0 #274433; }
+    .home-guide-row kbd { white-space:nowrap; }
+    .home-guide-step { min-width:32px;width:32px;flex:0 0 32px;border-color:#D4E3D8;background:#EAF2ED;color:#47755C;box-shadow:none; }
+    .home-guide-detail { display:flex;flex-direction:column;gap:3px;min-width:0; }
+    .home-guide-detail strong { color:#40564A;font-size:.69rem;line-height:1.3; }
+    .home-guide-detail small { color:#74817A;font-size:.63rem;line-height:1.45; }
+    .home-guide-note { margin:12px 0 0;padding:10px 11px;border-left:3px solid #7A9B84;border-radius:0 7px 7px 0;background:#F1F6F2;color:#697A70;font-size:.63rem;line-height:1.5; }
+    .home-footnote { margin-top:20px;padding-top:12px;border-top:1px solid #E4EAE6;color:#9AA69F;font-size:.60rem; }
+
+    /* MASTER PAGE — lima submenu tetap memakai form/modal Master existing. */
+    .page-heading-row {
+      display:flex;justify-content:space-between;align-items:end;gap:16px;
+      margin:8px 0 19px;padding-bottom:16px;border-bottom:1px solid #E1E8E3;
+    }
+    .page-heading-row h1 { font-size:1.45rem; }
+    .page-heading-tag {
+      padding:7px 10px;border:1px solid #DBE7DE;border-radius:8px;
+      background:#EFF5F0;color:#4D735B;font-size:.61rem;font-weight:850;white-space:nowrap;
+    }
+    .master-page-grid { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px; }
+    .master-page-card {
+      display:flex;flex-direction:column;min-width:0;min-height:190px;padding:17px;
+      border:1px solid #DCE5E0;border-radius:12px;background:#FFFFFF;
+      box-shadow:0 2px 8px rgba(35,53,44,.035);
+    }
+    .master-page-icon {
+      display:grid;place-items:center;width:36px;height:36px;margin-bottom:10px;
+      border-radius:9px;background:#EEF4F0;font-size:1rem;
+    }
+    .master-page-kicker { color:#8B9990;font-size:.57rem;font-weight:850;letter-spacing:.10em; }
+    .master-page-card h3 { margin:5px 0 0;color:#31483B;font-size:.86rem;font-weight:850; }
+    .master-page-card p { flex:1;margin:7px 0 14px;color:#74817A;font-size:.69rem;line-height:1.55; }
+    .master-page-action { width:100%;margin-top:auto; }
+    .master-page-card-import { border-style:dashed;border-color:#BFCFC4; }
+    .master-page-note {
+      margin-top:16px;padding:11px 13px;border:1px dashed #CFDCD3;border-radius:9px;
+      background:#F7FAF8;color:#728078;font-size:.67rem;
+    }
+    .sidebar-brand {
+      display:flex;align-items:center;gap:11px;min-height:56px;margin:0 0 16px;padding:3px 8px 13px;
+      border-bottom:1px solid #E8EDE9;
+    }
+    .sidebar-brand-mark {
+      width:38px;height:38px;flex:0 0 38px;display:grid;place-items:center;
+      border-radius:10px;background:#39785E;color:#FFFFFF;font-size:.88rem;font-weight:900;
+    }
+    .sidebar-brand b { display:block;color:#34495E;font-size:.82rem;letter-spacing:.045em; }
+    .sidebar-brand span { display:block;margin-top:3px;color:#82908E;font-size:.65rem; }
+    .drawer-section-label {
+      padding:0 10px;margin:0 0 5px;color:#9AA5A1;font-size:.59rem;
+      font-weight:850;letter-spacing:.13em;
+    }
+    .drawer-master-label { margin-top:16px; }
+    .drawer-icon { width:18px;flex:0 0 18px;text-align:center;font-size:.92rem;color:#A2B0B7; }
+    .drawer-chevron { margin-left:auto;color:#82908E;font-size:.85rem; }
+    .sidebar-footer {
+      display:flex;flex-direction:column;gap:4px;margin-top:auto;padding:17px 10px 5px;
+      border-top:1px solid #E8EDE9;color:#A0AAA6;font-size:.58rem;
+    }
+    .sidebar-footer span:first-child { color:#708079;font-weight:800;letter-spacing:.06em; }
+
+    @media (max-width:900px) {
+      .app-header { padding:10px 13px; }
+      .header-inner { flex-wrap:nowrap;gap:10px; }
+      .app-title { font-size:.83rem; }
+      .app-subtitle { font-size:.62rem; }
+      .desktop-mode-toggle { width:38px;height:38px;flex-basis:38px; }
+      .home-page { margin:15px auto;padding:0 13px 25px; }
+      .home-hero { padding:19px 17px;border-radius:13px; }
+      .home-hero h1 { font-size:1.28rem; }
+      .home-hero p { font-size:.74rem; }
+      .home-hero-mark { width:53px;height:53px;flex-basis:53px;border-radius:14px;font-size:1.45rem; }
+      .home-section-heading { margin:20px 2px 10px;align-items:flex-start;flex-direction:column;gap:4px; }
+      .home-app-grid { grid-template-columns:1fr;gap:10px; }
+      .home-app-card { min-height:0;padding:15px; }
+      .home-app-card p { min-height:0; }
+      .home-lower-grid { grid-template-columns:1fr;gap:10px;margin-top:11px; }
+      .home-workflow-steps { grid-template-columns:1fr;gap:6px; }
+      .home-navigation-grid { grid-template-columns:1fr;gap:10px; }
+      .home-guide-card { padding:15px; }
+      .master-page-grid { grid-template-columns:1fr;gap:9px; }
+      .page-heading-row { align-items:flex-start; }
+      .page-heading-row h1 { font-size:1.22rem; }
+      .sidebar-brand { margin-bottom:13px; }
+    }
+    @media (min-width:601px) and (max-width:900px) {
+      .home-app-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .master-page-grid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+    }
+    @media (min-width:901px) { .home-page { padding-left:30px;padding-right:30px; } }
+    @media (max-width:879px) {
+      body:not(.workspace-module-active) { padding-bottom:0 !important; }
+      body.workspace-module-active { padding-bottom:calc(82px + env(safe-area-inset-bottom, 0px)) !important; }
+    }
+
   </style>
 </head>
 <body>
@@ -1144,17 +2093,9 @@
           <div class="app-subtitle">Aplikasi assembly untuk rekapitulasi WIP &amp; FG antar shift</div>
         </div>
       </div>
-      <div class="header-actions">
-        <button class="btn-header install-btn" id="btnInstallHeader" onclick="triggerInstallApp()">
-          📲 Download Aplikasi
-        </button>
-        <button class="btn-header cloud-btn" onclick="bukaModalCloud()">
-          ☁️ Cloud (<span id="cloudCountHeader">0</span>)
-        </button>
-        <button class="btn-header" onclick="toggleModal('masterHubModal', true)">
-          📂 Master
-        </button>
-      </div>
+      <button type="button" class="btn-header desktop-mode-toggle" id="desktopModeToggle" aria-label="Buka menu workspace" aria-expanded="false" aria-controls="modeTabs" title="Buka menu workspace" onclick="toggleDesktopModeMenu()">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </button>
     </div>
   </header>
 
@@ -1176,28 +2117,203 @@
     </div>
   </div>
 
-  <!-- PILIHAN 3 MODE SHEET -->
-  <div class="mode-tabs">
-    <button id="tabBtnWip" class="tab-btn active-wip" onclick="switchMode('wip')">
-      📦 1. SISA BARANG BAGUS (WIP)
+  <!-- NAVIGASI WORKSPACE: HOME, MODUL PRODUKSI, DAN MASTER -->
+  <div class="mode-tabs" id="modeTabs" aria-label="Menu workspace" aria-hidden="true">
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-mark">A</div>
+      <div><b>ASSEMBLY</b><span>Production Workspace</span></div>
+    </div>
+    <div class="drawer-section-label">WORKSPACE</div>
+    <button id="tabBtnHome" class="tab-btn active-home" onclick="switchMode('home')">
+      <span class="drawer-icon">⌂</span><span>Home</span>
+    </button>
+    <button id="tabBtnWip" class="tab-btn" onclick="switchMode('wip')">
+      <span class="drawer-icon">▤</span><span>Aplikasi WIP</span>
     </button>
     <button id="tabBtnFg" class="tab-btn" onclick="switchMode('fg')">
-      🏆 2. LAPORAN FINISH GOOD (+WIP)
+      <span class="drawer-icon">▦</span><span>Finish Good</span>
     </button>
     <button id="tabBtnSpa" class="tab-btn" onclick="switchMode('spa')">
-      📋 3. LAPORAN SPA AWAL SHIFT
+      <span class="drawer-icon">▧</span><span>Laporan Awal Shift</span>
     </button>
+    <div class="drawer-section-label drawer-master-label">DATA MASTER</div>
+    <button id="tabBtnMaster" class="tab-btn" onclick="switchMode('master')">
+      <span class="drawer-icon">▣</span><span>Master</span><span class="drawer-chevron">⌄</span>
+    </button>
+    <div class="drawer-section-label drawer-utility-label">AKSES CEPAT</div>
+    <button type="button" class="drawer-action-btn" id="btnInstallHeader" onclick="closeDesktopModeMenu(); triggerInstallApp()">
+      <span class="drawer-action-icon">⇩</span><span>Download Aplikasi</span><span class="drawer-action-arrow">↗</span>
+    </button>
+    <button type="button" class="drawer-action-btn drawer-cloud-action" onclick="closeDesktopModeMenu(); bukaModalCloud()">
+      <span class="drawer-action-icon">☁</span><span>Cloud</span><span class="drawer-action-count" id="cloudCountHeader">0</span>
+    </button>
+    <div class="sidebar-footer">
+      <span>ASSEMBLY OPERATIONS</span>
+      <span>Internal Production System</span>
+    </div>
   </div>
+  <button type="button" id="desktopModeBackdrop" class="desktop-mode-backdrop" aria-label="Tutup menu workspace" tabindex="-1" onclick="closeDesktopModeMenu()"></button>
+
+  <!-- HOME / INDEX: HALAMAN PERTAMA SAAT APLIKASI DIBUKA -->
+  <main id="sectionHome" class="home-page">
+    <section class="home-hero">
+      <div class="home-hero-copy">
+        <div class="home-eyebrow">ASSEMBLY OPERATIONS</div>
+        <h1>Production Workspace</h1>
+        <p>Selamat datang di workspace Assembly. Pilih aplikasi untuk input produksi, memeriksa daftar hasil, dan menyiapkan laporan antar shift.</p>
+      </div>
+      <div class="home-hero-mark" aria-hidden="true">A</div>
+    </section>
+
+    <div class="home-section-heading">
+      <div><span>WORKSPACE</span><h2>Aplikasi Operasional</h2></div>
+      <p>Pilih modul yang akan digunakan</p>
+    </div>
+
+    <section class="home-app-grid" aria-label="Aplikasi operasional Assembly">
+      <article class="home-app-card home-app-wip">
+        <div class="home-card-top"><span class="home-app-icon">▤</span><span class="home-card-index">01 / WIP</span></div>
+        <h3>Aplikasi WIP</h3>
+        <p>Pencatatan sisa barang bagus, rincian box, pengelolaan daftar, dan laporan WhatsApp.</p>
+        <div class="home-flow"><span>Input</span><i>→</i><span>Daftar</span><i>→</i><span>WhatsApp</span></div>
+        <button type="button" class="home-open-btn" onclick="switchMode('wip')">Buka Aplikasi WIP <span>→</span></button>
+      </article>
+
+      <article class="home-app-card home-app-fg">
+        <div class="home-card-top"><span class="home-app-icon">▦</span><span class="home-card-index">02 / FINISH GOOD</span></div>
+        <h3>Finish Good</h3>
+        <p>Input hasil produksi, data operator dan JO, rekap pencapaian, serta laporan gabungan dengan WIP.</p>
+        <div class="home-flow"><span>Input</span><i>→</i><span>Daftar</span><i>→</i><span>WhatsApp</span></div>
+        <button type="button" class="home-open-btn" onclick="switchMode('fg')">Buka Finish Good <span>→</span></button>
+      </article>
+
+      <article class="home-app-card home-app-spa">
+        <div class="home-card-top"><span class="home-app-icon">▧</span><span class="home-card-index">03 / SPA</span></div>
+        <h3>Laporan Awal Shift</h3>
+        <p>Pencatatan ketersediaan stok Assy dan Gudang, rincian komponen, serta laporan SPA.</p>
+        <div class="home-flow"><span>Input</span><i>→</i><span>Daftar</span><i>→</i><span>WhatsApp</span></div>
+        <button type="button" class="home-open-btn" onclick="switchMode('spa')">Buka Laporan SPA <span>→</span></button>
+      </article>
+    </section>
+
+    <section class="home-lower-grid">
+      <article class="home-info-card">
+        <div class="home-info-heading"><span class="home-info-icon">▣</span><div><span>DATA MASTER</span><h3>Pengelolaan Data</h3></div></div>
+        <p>Kelola Master FG, Master WIP, Master Leader, Master JO, dan Import ERP yang digunakan oleh modul produksi.</p>
+        <button type="button" class="home-secondary-btn" onclick="switchMode('master')">Buka Data Master <span>→</span></button>
+      </article>
+      <article class="home-info-card home-workflow-card">
+        <div class="home-info-heading"><span class="home-info-icon">◎</span><div><span>ALUR PENGGUNAAN</span><h3>Alur kerja aplikasi</h3></div></div>
+        <div class="home-workflow-steps">
+          <div><b>01</b><span><strong>Pilih modul</strong><small>Buka WIP, Finish Good, atau Laporan Awal Shift sesuai kebutuhan.</small></span></div>
+          <div><b>02</b><span><strong>Input &amp; verifikasi</strong><small>Lengkapi data produksi, lalu cek hasilnya pada menu Daftar. Koreksi bila diperlukan.</small></span></div>
+          <div><b>03</b><span><strong>Siapkan laporan</strong><small>Buka WhatsApp, periksa isi laporan, lalu bagikan ke grup yang dituju.</small></span></div>
+        </div>
+      </article>
+    </section>
+
+    <section class="home-navigation-guide" aria-label="Panduan shortcut dan navigasi">
+      <div class="home-section-heading">
+        <div><span>QUICK GUIDE</span><h2>Shortcut &amp; Navigasi</h2></div>
+        <p>Panduan berpindah bagian melalui desktop dan HP</p>
+      </div>
+      <div class="home-navigation-grid">
+        <article class="home-guide-card">
+          <div class="home-guide-heading">
+            <span class="home-guide-icon">⌨</span>
+            <div><span>DESKTOP · LAPTOP / PC</span><h3>Shortcut keyboard</h3></div>
+          </div>
+          <div class="home-guide-list">
+            <div class="home-guide-row"><kbd>F1</kbd><span class="home-guide-detail"><strong>Input</strong><small>Langsung menuju bagian Input pada modul produksi terakhir yang dibuka.</small></span></div>
+            <div class="home-guide-row"><kbd>F2</kbd><span class="home-guide-detail"><strong>Daftar</strong><small>Langsung menuju daftar data pada modul yang sedang digunakan.</small></span></div>
+            <div class="home-guide-row"><kbd>F3</kbd><span class="home-guide-detail"><strong>WhatsApp</strong><small>Langsung menuju bagian laporan WhatsApp pada modul tersebut.</small></span></div>
+            <div class="home-guide-row"><kbd>SPACE</kbd><span class="home-guide-detail"><strong>Buka / tutup sidebar</strong><small>Tekan spasi saat tidak sedang mengetik atau memilih tombol/link.</small></span></div>
+            <div class="home-guide-row"><kbd>ESC</kbd><span class="home-guide-detail"><strong>Tutup sidebar</strong><small>Menutup panel navigasi yang sedang terbuka.</small></span></div>
+          </div>
+          <p class="home-guide-note">F1–F3 juga dapat digunakan dari Home atau Master; aplikasi akan kembali ke modul produksi terakhir. Pada pembukaan pertama, modul awalnya adalah WIP. Shortcut bagian berlaku saat tidak ada modal yang terbuka.</p>
+        </article>
+
+        <article class="home-guide-card">
+          <div class="home-guide-heading">
+            <span class="home-guide-icon">▣</span>
+            <div><span>HP · TOUCH NAVIGATION</span><h3>Navigasi dengan sentuhan</h3></div>
+          </div>
+          <div class="home-guide-list">
+            <div class="home-guide-row"><span class="home-guide-step">01</span><span class="home-guide-detail"><strong>Buka sidebar</strong><small>Usap ke kanan dari bagian mana pun di layar. Tidak harus dimulai dari tepi. Tombol hamburger di header juga bisa digunakan.</small></span></div>
+            <div class="home-guide-row"><span class="home-guide-step">02</span><span class="home-guide-detail"><strong>Pilih aplikasi</strong><small>Ketuk Home, Aplikasi WIP, Finish Good, Laporan Awal Shift, atau Master.</small></span></div>
+            <div class="home-guide-row"><span class="home-guide-step">03</span><span class="home-guide-detail"><strong>Pindah bagian produksi</strong><small>Gunakan menu bawah: Input, Daftar, dan WhatsApp. Menu ini tampil di halaman modul produksi.</small></span></div>
+            <div class="home-guide-row"><span class="home-guide-step">04</span><span class="home-guide-detail"><strong>Tutup sidebar</strong><small>Mulai dari area sedikit di kanan tengah sidebar, lalu geser ke kiri. Bisa juga ketuk area di luar panel.</small></span></div>
+          </div>
+          <p class="home-guide-note">Di HP tidak diperlukan shortcut keyboard. Gunakan gesture sidebar dan menu bawah agar navigasi tetap mudah dijangkau dengan satu tangan.</p>
+        </article>
+      </div>
+    </section>
+    <div class="home-footnote">Assembly Operations · Internal Production System</div>
+  </main>
+
+  <!-- MASTER: SATU HALAMAN DENGAN LIMA SUBMODUL -->
+  <main id="sectionMaster" class="home-page" style="display:none;">
+    <div class="page-heading-row">
+      <div>
+        <div class="home-eyebrow">ASSEMBLY OPERATIONS · DATA MASTER</div>
+        <h1>Master Data</h1>
+        <p>Pilih master data yang ingin dikelola. Setiap menu membuka form Master yang sudah tersedia.</p>
+      </div>
+      <span class="page-heading-tag">DATA MASTER</span>
+    </div>
+
+    <section class="master-page-grid" aria-label="Submodul Master">
+      <article class="master-page-card">
+        <div class="master-page-icon">🏷️</div><div class="master-page-kicker">SUBMODUL 01</div>
+        <h3>Master FG</h3><p>Daftar produk Finish Good, target standar produksi 8 jam, dan qty standar per box.</p>
+        <button type="button" class="master-page-action" onclick="bukaSubmenuMaster('fg')">Buka Master FG <span>→</span></button>
+      </article>
+      <article class="master-page-card">
+        <div class="master-page-icon">📦</div><div class="master-page-kicker">SUBMODUL 02</div>
+        <h3>Master WIP</h3><p>Kelompok produk serta nama komponen dan kode part yang digunakan untuk input WIP.</p>
+        <button type="button" class="master-page-action" onclick="bukaSubmenuMaster('wip')">Buka Master WIP <span>→</span></button>
+      </article>
+      <article class="master-page-card">
+        <div class="master-page-icon">👤</div><div class="master-page-kicker">SUBMODUL 03</div>
+        <h3>Master Leader</h3><p>Daftar nama leader untuk referensi input hasil produksi Finish Good.</p>
+        <button type="button" class="master-page-action" onclick="bukaSubmenuMaster('leader')">Buka Master Leader <span>→</span></button>
+      </article>
+      <article class="master-page-card">
+        <div class="master-page-icon">📋</div><div class="master-page-kicker">SUBMODUL 04</div>
+        <h3>Master JO</h3><p>Daftar Job Order untuk pemilihan dan pencatatan hasil produksi Finish Good.</p>
+        <button type="button" class="master-page-action" onclick="bukaSubmenuMaster('jo')">Buka Master JO <span>→</span></button>
+      </article>
+      <article class="master-page-card master-page-card-import">
+        <div class="master-page-icon">📥</div><div class="master-page-kicker">SUBMODUL 05</div>
+        <h3>Import ERP</h3><p>Import referensi produk dan Job Order dari ERP serta pengelolaan mapping data.</p>
+        <button type="button" class="master-page-action" onclick="bukaSubmenuMaster('erp')">Buka Import ERP <span>→</span></button>
+      </article>
+    </section>
+    <div class="master-page-note">Master FG · Master WIP · Master Leader · Master JO · Import ERP</div>
+  </main>
 
   <!-- =========================================================
        SHEET 1: SISA BARANG BAGUS ASSY (WIP)
        ========================================================= -->
-  <nav class="sheet-section-nav is-active" id="wipSectionNav" aria-label="Navigasi Sisa Barang Bagus">
+  <nav class="sheet-section-nav" id="wipSectionNav" aria-label="Navigasi Sisa Barang Bagus">
     <button type="button" class="sheet-nav-btn active" onclick="scrollToSheetSection('wipInputSection','wipSectionNav',this)"><span class="nav-number">1</span> INPUT WIP</button>
     <button type="button" class="sheet-nav-btn" onclick="scrollToSheetSection('wipListCard','wipSectionNav',this)"><span class="nav-number">2</span> DAFTAR WIP</button>
     <button type="button" class="sheet-nav-btn" onclick="scrollToSheetSection('wipWaCard','wipSectionNav',this)"><span class="nav-number">3</span> WHATSAPP</button>
   </nav>
-  <main id="sectionWip" class="container">
+  <main id="sectionWip" class="container" style="display:none;">
+    <div class="module-overview">
+      <div class="module-overview-copy">
+        <div class="module-overview-eyebrow">ASSEMBLY WORKSPACE · MODUL 01</div>
+        <h1>Sisa Barang Bagus (WIP)</h1>
+        <p>Catat stok aktual, periksa rincian barang yang tersimpan, lalu susun laporan untuk dikirim melalui WhatsApp.</p>
+        <nav class="module-overview-steps" aria-label="Alur WIP">
+          <a href="#wipInputSection"><span>01</span> INPUT</a>
+          <a href="#wipListCard"><span>02</span> DAFTAR</a>
+          <a href="#wipWaCard"><span>03</span> WHATSAPP</a>
+        </nav>
+      </div>
+      <div class="module-overview-tag">SINGLE PAGE</div>
+    </div>
     <div class="meta-grid mobile-sheet-meta" id="wipMetaControls">
       <div><label>Pilih Tanggal</label><input type="date" id="wipDate" onchange="simpanDraftLokal(); renderWipAll(); renderFgAll();" /></div>
       <div><label>Shift</label><select id="wipShift" onchange="simpanDraftLokal(); renderWipAll();"><option value="shift 1">Shift 1</option><option value="shift 2">Shift 2</option><option value="shift 3">Shift 3</option></select></div>
@@ -1274,7 +2390,7 @@
 
     <!-- KOLOM KANAN: REKAP, SIMPAN CLOUD & SHARE LANGSUNG WA -->
     <section>
-      <div class="card sheet-section-target mobile-tab-hidden" id="wipListCard">
+      <div class="card sheet-section-target" id="wipListCard">
         <div class="card-header" style="margin-bottom:8px; border-bottom:none; padding-bottom:0;">
           <span class="card-title">2. Daftar Sisa Barang Bagus (Rincian Box & Edit)</span>
         </div>
@@ -1296,7 +2412,7 @@
         <div id="wipGroupedContainer"></div>
       </div>
 
-      <div class="card sheet-section-target mobile-tab-hidden" id="wipWaCard">
+      <div class="card sheet-section-target" id="wipWaCard">
         <div class="card-header">
           <span class="card-title">3. Laporan WhatsApp (Khusus Sisa WIP)</span>
         </div>
@@ -1327,6 +2443,19 @@
     <button type="button" class="sheet-nav-btn" onclick="scrollToSheetSection('fgWaCard','fgSectionNav',this)"><span class="nav-number">3</span> WHATSAPP</button>
   </nav>
   <main id="sectionFg" class="container" style="display:none;">
+    <div class="module-overview">
+      <div class="module-overview-copy">
+        <div class="module-overview-eyebrow">ASSEMBLY WORKSPACE · MODUL 02</div>
+        <h1>Laporan Finish Good</h1>
+        <p>Input hasil produksi dan parameter shift, tinjau daftar Finish Good, kemudian periksa laporan gabungan sebelum dikirim.</p>
+        <nav class="module-overview-steps" aria-label="Alur Finish Good">
+          <a href="#fgInputCard"><span>01</span> INPUT</a>
+          <a href="#fgListCard"><span>02</span> DAFTAR</a>
+          <a href="#fgWaCard"><span>03</span> WHATSAPP</a>
+        </nav>
+      </div>
+      <div class="module-overview-tag">SINGLE PAGE</div>
+    </div>
     <!-- KOLOM KIRI: INPUT HASIL PRODUKSI FINISH GOOD -->
     <section>
       <div class="card" id="fgInputCard">
@@ -1580,7 +2709,7 @@
 
     <!-- KOLOM KANAN: DAFTAR FINISH GOOD & LAPORAN WA GABUNGAN -->
     <section>
-      <div class="card sheet-section-target mobile-tab-hidden" id="fgListCard">
+      <div class="card sheet-section-target" id="fgListCard">
         <div class="card-header">
           <span class="card-title">2. Daftar Hasil Produksi (Finish Good)</span>
           <div style="display:flex; gap:6px;">
@@ -1657,7 +2786,7 @@
         <div id="fgListContainer"></div>
       </div>
 
-      <div class="card sheet-section-target mobile-tab-hidden" id="fgWaCard">
+      <div class="card sheet-section-target" id="fgWaCard">
         <div class="card-header">
           <span class="card-title">3. Laporan WA (Finish Good + Sisa WIP)</span>
         </div>
@@ -1688,6 +2817,19 @@
     <button type="button" class="sheet-nav-btn" onclick="scrollToSheetSection('spaWaCard','spaSectionNav',this)"><span class="nav-number">3</span> WHATSAPP</button>
   </nav>
   <main id="sectionSpa" class="container" style="display:none;">
+    <div class="module-overview">
+      <div class="module-overview-copy">
+        <div class="module-overview-eyebrow">ASSEMBLY WORKSPACE · MODUL 03</div>
+        <h1>SPA Awal Shift</h1>
+        <p>Masukkan ketersediaan stok Assy dan Gudang, periksa rincian komponen, lalu siapkan laporan SPA awal shift.</p>
+        <nav class="module-overview-steps" aria-label="Alur SPA">
+          <a href="#spaInputSection"><span>01</span> INPUT</a>
+          <a href="#spaListCard"><span>02</span> DAFTAR</a>
+          <a href="#spaWaCard"><span>03</span> WHATSAPP</a>
+        </nav>
+      </div>
+      <div class="module-overview-tag">SINGLE PAGE</div>
+    </div>
     <div class="meta-grid two-cols mobile-sheet-meta" id="spaMetaControls">
       <div><label>Pilih Tanggal SPA</label><input type="date" id="spaDate" onchange="simpanDraftLokal(); renderSpaAll();" /></div>
       <div><label>Plant</label><select id="spaPlant" onchange="simpanDraftLokal(); renderSpaAll();"><option value="plant alpha">Plant Alpha</option><option value="plant beta">Plant Beta</option></select></div>
@@ -1798,7 +2940,7 @@
     </section>
 
     <section>
-      <div class="card sheet-section-target mobile-tab-hidden" id="spaListCard">
+      <div class="card sheet-section-target" id="spaListCard">
         <div class="card-header">
           <span class="card-title">2. Rincian SPA (Assy + Gudang & Edit)</span>
           <button class="btn btn-danger" onclick="hapusSemuaSpa()">🗑️ Reset SPA</button>
@@ -1806,7 +2948,7 @@
         <details class="wa-import-collapse"><summary>📥 Import laporan WhatsApp SPA <span class="wa-import-hint">Buka untuk tempel laporan SPA</span></summary><div class="wa-import-body"><p style="font-size:.73rem;color:var(--text-muted);">Tempel laporan SPA. Stok Assy, Gudang, stok khusus, NG Hold, dan barang menunggu dari Plant Beta dipisahkan.</p><textarea id="waImportSpaText" class="wa-preview" style="min-height:150px;" placeholder="Tempel laporan SPA dari WhatsApp di sini..."></textarea><button class="btn btn-sky" onclick="previewImportSpa()">🔎 Proses & Preview</button> <button class="btn btn-outline" onclick="bersihkanImportSpa()">Bersihkan</button><div id="waImportSpaPreview" style="margin-top:8px;font-size:.78rem;"></div></div></details><div id="spaGroupedContainer"></div>
       </div>
 
-      <div class="card sheet-section-target mobile-tab-hidden" id="spaWaCard">
+      <div class="card sheet-section-target" id="spaWaCard">
         <div class="card-header">
           <span class="card-title">3. Laporan WA SPA</span>
         </div>
@@ -2459,6 +3601,7 @@
     let spaEditPlaceholder = null;
     let spaEditWasMobileHidden = false;
     let activeTabMode = "wip";
+    let activeWorkspacePage = "home";
 
     /********************************************************************
      * 2B. PARSER CERDAS PEMECAH RUMUS JADI RINCIAN BOX INDIVIDUAL
@@ -2977,13 +4120,11 @@
     function alignSheetPanelToTop(panelId) {
       const panel = document.getElementById(panelId);
       if (!panel) return;
-      // Tab sekarang fixed di bawah, jadi gulir panel aktif ke awal layar,
-      // bukan menggulir elemen navigasi ke atas seperti perilaku lama.
+      // Pindah tepat ke awal panel tanpa animasi, karena navigasi bawah harus responsif.
       const root = document.scrollingElement || document.documentElement || document.body;
       const currentTop = Number(root.scrollTop || window.pageYOffset || 0);
       const targetTop = Math.max(0, currentTop + panel.getBoundingClientRect().top - 12);
       root.scrollTop = targetTop;
-      window.scrollTo(0, targetTop);
     }
 
     function setSheetTab(mode, tabIndex = 0, alignToTop = true) {
@@ -2994,12 +4135,8 @@
       const safeIndex = Math.max(0, Math.min(config.panels.length - 1, Number(tabIndex) || 0));
       const activePanelId = config.panels[safeIndex];
 
-      // Reset SEMUA panel pada sheet ini. Di mobile hanya panel aktif terlihat;
-      // di desktop seluruh panel tetap tampil seperti layout sebelumnya.
-      config.panels.forEach((id, index) => {
-        const panel = document.getElementById(id);
-        if (panel) panel.classList.toggle("mobile-tab-hidden", mobile && index !== safeIndex);
-      });
+      // Semua bagian Input, Daftar, dan WhatsApp kini tampil berurutan
+      // dalam satu halaman. Indeks hanya dipakai untuk status navigasi lama.
 
       if (nav) {
         nav.classList.add("is-active");
@@ -3023,51 +4160,220 @@
       const tabIndex = config.panels.indexOf(targetId);
       if (tabIndex < 0) return;
 
-      if (isMobileSheetLayout()) {
-        setSheetTab(mode, tabIndex, true);
-        return;
-      }
-
       setSheetTab(mode, tabIndex, false);
       const target = document.getElementById(targetId);
-      if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (target) {
+        if (isMobileSheetLayout()) alignSheetPanelToTop(targetId);
+        else target.scrollIntoView({ behavior: "auto", block: "start" });
+      }
     }
+
+    let sheetNavScrollQueued = false;
+    function updateSheetNavFromScroll() {
+      if (!isMobileSheetLayout() || !["wip","fg","spa"].includes(activeWorkspacePage)) return;
+      const config = SHEET_TAB_CONFIG[activeTabMode];
+      if (!config) return;
+
+      const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
+      const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+      let activeIndex = 0;
+      const activationLine = Math.min(260, Math.max(125, window.innerHeight * 0.36));
+
+      config.panels.forEach((id,index) => {
+        const panel = document.getElementById(id);
+        if (panel && panel.getBoundingClientRect().top <= activationLine) activeIndex = index;
+      });
+      if (maxScroll - scrollY <= 18) activeIndex = config.panels.length - 1;
+
+      setSheetTab(activeTabMode, activeIndex, false);
+    }
+
+    window.addEventListener("scroll", () => {
+      if (sheetNavScrollQueued) return;
+      sheetNavScrollQueued = true;
+      requestAnimationFrame(() => {
+        sheetNavScrollQueued = false;
+        updateSheetNavFromScroll();
+      });
+    }, { passive:true });
 
     /********************************************************************
      * 3. PINDAH TAB MODE (SISA WIP vs FINISH GOOD vs SPA AWAL SHIFT)
      ********************************************************************/
+    function isMobileModeMenuLayout() {
+      return !!(window.matchMedia && window.matchMedia("(max-width: 900px)").matches);
+    }
+
+    function updateModeMenuA11y(isOpen) {
+      const tabs = document.getElementById("modeTabs");
+      if (tabs) {
+        tabs.setAttribute("aria-hidden", isOpen ? "false" : "true");
+        if ("inert" in tabs) tabs.inert = !isOpen;
+      }
+      const button = document.getElementById("desktopModeToggle");
+      if (button) button.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    }
+
+    function toggleDesktopModeMenu() {
+      const menuClass = isMobileModeMenuLayout() ? "mobile-mode-menu-open" : "desktop-mode-menu-open";
+      document.body.classList.toggle(menuClass);
+      updateModeMenuA11y(document.body.classList.contains(menuClass));
+    }
+
+    function openMobileModeMenu() {
+      if (!isMobileModeMenuLayout()) return;
+      document.body.classList.add("mobile-mode-menu-open");
+      updateModeMenuA11y(true);
+    }
+
+    function closeDesktopModeMenu() {
+      document.body.classList.remove("desktop-mode-menu-open", "mobile-mode-menu-open");
+      updateModeMenuA11y(false);
+    }
+
+    // Gesture sidebar HP:
+    // - Sidebar tertutup: swipe dominan ke kanan dari area layar mana pun untuk membuka.
+    // - Sidebar terbuka: swipe dominan ke kiri dari area kanan-tengah drawer untuk menutup.
+    // Gerakan vertikal dan tap biasa tidak akan mengubah status sidebar.
+    let mobileModeTouchStart = null;
+    document.addEventListener("touchstart", event => {
+      if (!isMobileModeMenuLayout() || !event.touches || event.touches.length !== 1) return;
+
+      const touch = event.touches[0];
+      const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 360;
+      const isOpen = document.body.classList.contains("mobile-mode-menu-open");
+      const drawerWidth = Math.min(300, viewportWidth * 0.86);
+      const closeZoneMin = Math.min(viewportWidth * 0.56, drawerWidth * 0.66);
+      const closeZoneMax = drawerWidth - 8;
+
+      // Saat sidebar tertutup, rekam sentuhan dari seluruh lebar layar.
+      // Tidak membatasi titik awal pada tepi/kiri/tengah/kanan.
+      const canOpenFromHere = !isOpen;
+      const canCloseFromHere = isOpen &&
+        touch.clientX >= closeZoneMin && touch.clientX <= closeZoneMax;
+
+      mobileModeTouchStart = (canOpenFromHere || canCloseFromHere)
+        ? { x: touch.clientX, y: touch.clientY, wasOpen: isOpen }
+        : null;
+    }, { passive: true });
+
+    document.addEventListener("touchend", event => {
+      if (!mobileModeTouchStart || !event.changedTouches || !event.changedTouches.length) return;
+      const start = mobileModeTouchStart;
+      mobileModeTouchStart = null;
+      const touch = event.changedTouches[0];
+      const deltaX = touch.clientX - start.x;
+      const deltaY = touch.clientY - start.y;
+
+      // Harus dominan horizontal; scroll vertikal biasa tidak membuka/menutup sidebar.
+      if (Math.abs(deltaX) < 58 || Math.abs(deltaX) < Math.abs(deltaY) * 1.2) return;
+      if (!start.wasOpen && deltaX > 0) openMobileModeMenu();
+      else if (start.wasOpen && deltaX < 0) closeDesktopModeMenu();
+    }, { passive: true });
+
+    document.addEventListener("touchcancel", () => {
+      mobileModeTouchStart = null;
+    }, { passive: true });
+
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape") {
+        closeDesktopModeMenu();
+        return;
+      }
+
+      const isDesktop = !!(window.matchMedia && window.matchMedia("(min-width: 901px)").matches);
+      const target = event.target;
+      const isTypingTarget = !!(target && (
+        target.isContentEditable ||
+        (typeof target.closest === "function" &&
+         target.closest("input, textarea, select, [contenteditable='true'], [role='textbox']"))
+      ));
+      const hasModifier = event.altKey || event.ctrlKey || event.metaKey;
+
+      // Shortcut desktop: F1 Input, F2 Daftar, F3 Laporan WhatsApp.
+      // Berlaku di modul terakhir yang dibuka; dari Home/Master akan kembali ke modul tersebut.
+      // Tombol fungsi tidak mengetik karakter, sehingga tetap dapat dipakai saat fokus di kolom input.
+      const functionKeyIndex = ({ F1:0, F2:1, F3:2 })[event.key];
+      if (isDesktop && functionKeyIndex !== undefined) {
+        if (!event.repeat && !hasModifier) {
+          event.preventDefault();
+          const hasOpenModal = Array.from(document.querySelectorAll(".modal-backdrop"))
+            .some(modal => getComputedStyle(modal).display !== "none");
+          if (!hasOpenModal) {
+            const config = SHEET_TAB_CONFIG[activeTabMode];
+            if (config && config.panels[functionKeyIndex]) {
+              if (activeWorkspacePage !== activeTabMode) switchMode(activeTabMode);
+              closeDesktopModeMenu();
+              scrollToSheetSection(config.panels[functionKeyIndex], config.navId, null);
+            }
+          }
+        }
+        return;
+      }
+
+      // Space membuka/menutup sidebar hanya di desktop dan tidak mengambil alih
+      // spasi ketika pengguna sedang mengetik atau mengoperasikan tombol/link.
+      if (event.code !== "Space" || event.repeat || !window.matchMedia("(min-width: 901px)").matches) return;
+      if (hasModifier || isTypingTarget) return;
+      if (target && typeof target.closest === "function" &&
+          target.closest("button, a, [role='button']")) return;
+
+      event.preventDefault();
+      toggleDesktopModeMenu();
+    });
+
     function switchMode(mode) {
-      activeTabMode = mode;
-      const secWip = document.getElementById("sectionWip");
-      const secFg = document.getElementById("sectionFg");
-      const secSpa = document.getElementById("sectionSpa");
+      const validModes = ["home","wip","fg","spa","master"];
+      if (!validModes.includes(mode)) return;
 
-      const btnWip = document.getElementById("tabBtnWip");
-      const btnFg = document.getElementById("tabBtnFg");
-      const btnSpa = document.getElementById("tabBtnSpa");
+      closeDesktopModeMenu();
+      activeWorkspacePage = mode;
+      const isProductionModule = ["wip","fg","spa"].includes(mode);
+      if (isProductionModule) activeTabMode = mode;
 
-      secWip.style.display = mode === "wip" ? "grid" : "none";
-      secFg.style.display = mode === "fg" ? "grid" : "none";
-      secSpa.style.display = mode === "spa" ? "grid" : "none";
+      const pageMap = {
+        home: "sectionHome",
+        wip: "sectionWip",
+        fg: "sectionFg",
+        spa: "sectionSpa",
+        master: "sectionMaster"
+      };
+      Object.entries(pageMap).forEach(([key,id]) => {
+        const section = document.getElementById(id);
+        if (section) section.style.display = key !== mode ? "none" : (["wip","fg","spa"].includes(key) ? "grid" : "block");
+      });
 
-      btnWip.className = mode === "wip" ? "tab-btn active-wip" : "tab-btn";
-      btnFg.className = mode === "fg" ? "tab-btn active-fg" : "tab-btn";
-      btnSpa.className = mode === "spa" ? "tab-btn active-spa" : "tab-btn";
+      const buttonClasses = {
+        home: "active-home",
+        wip: "active-wip",
+        fg: "active-fg",
+        spa: "active-spa",
+        master: "active-master"
+      };
+      Object.entries(buttonClasses).forEach(([key,activeClass]) => {
+        const button = document.getElementById("tabBtn" + key.charAt(0).toUpperCase() + key.slice(1));
+        if (button) button.className = "tab-btn" + (key === mode ? " " + activeClass : "");
+      });
 
-      // Setiap perpindahan sheet selalu kembali ke panel pertama dan
-      // membersihkan sisa status tersembunyi dari sheet/tab sebelumnya.
-      [ "wip", "fg", "spa" ].forEach(key => {
+      // Bottom navigation hanya aktif pada salah satu dari tiga modul produksi.
+      ["wip","fg","spa"].forEach(key => {
         const config = SHEET_TAB_CONFIG[key];
         const nav = document.getElementById(config.navId);
         if (nav) nav.classList.toggle("is-active", key === mode);
-        if (key === mode) setSheetTab(mode, 0, true);
+        if (key === mode) setSheetTab(mode, 0, false);
         else config.panels.forEach(id => {
           const panel = document.getElementById(id);
           if (panel) panel.classList.remove("mobile-tab-hidden");
         });
       });
 
-      // Jangan render ulang seluruh daftar saat hanya berpindah sheet.
+      document.body.classList.toggle("workspace-module-active", isProductionModule);
+      const scrollRoot = document.scrollingElement || document.documentElement || document.body;
+      scrollRoot.scrollTop = 0;
+      window.scrollTo(0, 0);
+      if (isProductionModule) requestAnimationFrame(updateSheetNavFromScroll);
+
+      // Pertahankan draft ketika meninggalkan modul produksi.
       simpanDraftLokal();
     }
 
@@ -10148,6 +11454,7 @@
 
     // INISIALISASI SAAT BUKA APLIKASI
     window.addEventListener("DOMContentLoaded", () => {
+      updateModeMenuA11y(false);
       getActiveProjectId();
 
       document.getElementById("masterCount").textContent = catalog.length;
@@ -10179,6 +11486,8 @@
       renderWipAll();
       renderFgAll();
       renderSpaAll();
+      switchMode("home");
+      updateModeMenuA11y(false);
 
       // Beri prioritas pada tampilan dan input lokal terlebih dahulu.
       // Sinkronisasi dimulai setelah UI awal selesai dirender.
