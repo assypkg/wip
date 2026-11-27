@@ -1136,7 +1136,7 @@
        UI REFRESH PREVIEW — INDUSTRIAL PROFESSIONAL / BALANCED
        Visual-only layer. No DOM, workflow, or calculation changes.
        ========================================================= */
-    html { scroll-behavior: smooth; }
+    html { scroll-behavior: auto !important; }
     body {
       font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
       background: var(--bg-main);
@@ -2295,7 +2295,7 @@
   <!-- =========================================================
        SHEET 1: SISA BARANG BAGUS ASSY (WIP)
        ========================================================= -->
-  <nav class="sheet-section-nav" id="wipSectionNav aria-label="Navigasi Sisa Barang Bagus">
+  <nav class="sheet-section-nav" id="wipSectionNav" aria-label="Navigasi Sisa Barang Bagus">
     <button type="button" class="sheet-nav-btn active" onclick="scrollToSheetSection('wipInputSection','wipSectionNav',this)"><span class="nav-number">1</span> INPUT WIP</button>
     <button type="button" class="sheet-nav-btn" onclick="scrollToSheetSection('wipListCard','wipSectionNav',this)"><span class="nav-number">2</span> DAFTAR WIP</button>
     <button type="button" class="sheet-nav-btn" onclick="scrollToSheetSection('wipWaCard','wipSectionNav',this)"><span class="nav-number">3</span> WHATSAPP</button>
@@ -4120,13 +4120,11 @@
     function alignSheetPanelToTop(panelId) {
       const panel = document.getElementById(panelId);
       if (!panel) return;
-      // Tab sekarang fixed di bawah, jadi gulir panel aktif ke awal layar,
-      // bukan menggulir elemen navigasi ke atas seperti perilaku lama.
+      // Pindah tepat ke awal panel tanpa animasi, karena navigasi bawah harus responsif.
       const root = document.scrollingElement || document.documentElement || document.body;
       const currentTop = Number(root.scrollTop || window.pageYOffset || 0);
       const targetTop = Math.max(0, currentTop + panel.getBoundingClientRect().top - 12);
       root.scrollTop = targetTop;
-      window.scrollTo(0, targetTop);
     }
 
     function setSheetTab(mode, tabIndex = 0, alignToTop = true) {
@@ -4166,7 +4164,7 @@
       const target = document.getElementById(targetId);
       if (target) {
         if (isMobileSheetLayout()) alignSheetPanelToTop(targetId);
-        else target.scrollIntoView({ behavior: "smooth", block: "start" });
+        else target.scrollIntoView({ behavior: "auto", block: "start" });
       }
     }
 
@@ -4234,34 +4232,27 @@
     }
 
     // Gesture sidebar HP:
-    // - Buka: mulai dari sisi kiri hingga area sedikit di kiri tengah, lalu geser ke kanan.
-    // - Tutup: mulai dari area sedikit di kanan tengah panel, lalu geser ke kiri.
-    // Zona sentuh diperlebar agar pengguna tidak harus memulai dari tepi layar.
+    // - Sidebar tertutup: swipe dominan ke kanan dari area layar mana pun untuk membuka.
+    // - Sidebar terbuka: swipe dominan ke kiri dari area kanan-tengah drawer untuk menutup.
+    // Gerakan vertikal dan tap biasa tidak akan mengubah status sidebar.
     let mobileModeTouchStart = null;
     document.addEventListener("touchstart", event => {
       if (!isMobileModeMenuLayout() || !event.touches || event.touches.length !== 1) return;
-      const target = event.target;
-      if (target && typeof target.closest === "function" &&
-          target.closest("input, textarea, select, button, a, [contenteditable='true'], [role='button'], .no-sidebar-swipe")) {
-        mobileModeTouchStart = null;
-        return;
-      }
 
       const touch = event.touches[0];
       const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 360;
       const isOpen = document.body.classList.contains("mobile-mode-menu-open");
       const drawerWidth = Math.min(300, viewportWidth * 0.86);
-      const openZoneMax = viewportWidth * 0.52;
       const closeZoneMin = Math.min(viewportWidth * 0.56, drawerWidth * 0.66);
       const closeZoneMax = drawerWidth - 8;
-      const startsInOpenZone = !isOpen && (
-        touch.clientX <= 24 ||
-        (touch.clientX >= viewportWidth * 0.16 && touch.clientX <= openZoneMax)
-      );
-      const startsInCloseZone = isOpen &&
+
+      // Saat sidebar tertutup, rekam sentuhan dari seluruh lebar layar.
+      // Tidak membatasi titik awal pada tepi/kiri/tengah/kanan.
+      const canOpenFromHere = !isOpen;
+      const canCloseFromHere = isOpen &&
         touch.clientX >= closeZoneMin && touch.clientX <= closeZoneMax;
 
-      mobileModeTouchStart = (startsInOpenZone || startsInCloseZone)
+      mobileModeTouchStart = (canOpenFromHere || canCloseFromHere)
         ? { x: touch.clientX, y: touch.clientY, wasOpen: isOpen }
         : null;
     }, { passive: true });
@@ -4274,7 +4265,7 @@
       const deltaX = touch.clientX - start.x;
       const deltaY = touch.clientY - start.y;
 
-      // Gerakan harus dominan horizontal agar scroll vertikal biasa tidak membuka sidebar.
+      // Harus dominan horizontal; scroll vertikal biasa tidak membuka/menutup sidebar.
       if (Math.abs(deltaX) < 58 || Math.abs(deltaX) < Math.abs(deltaY) * 1.2) return;
       if (!start.wasOpen && deltaX > 0) openMobileModeMenu();
       else if (start.wasOpen && deltaX < 0) closeDesktopModeMenu();
