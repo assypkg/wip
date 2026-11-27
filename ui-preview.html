@@ -1524,9 +1524,31 @@
        Drawer starts hidden. Existing WIP/FG/SPA controls are reused.
        Mobile layout and production form flow are not changed.
        ========================================================= */
-    .desktop-mode-toggle { display:none; }
-    .desktop-mode-toggle svg { width:16px;height:16px; }
+    .desktop-mode-toggle {
+      display:inline-flex;align-items:center;justify-content:center;flex:0 0 40px;
+      width:40px;height:40px;padding:0;border-radius:10px;
+      background:#F5F8F6;border:1px solid #DCE5E0;color:#526A60;
+    }
+    .desktop-mode-toggle svg { width:18px;height:18px; }
+    .desktop-mode-toggle:hover { background:#EAF1EC;border-color:#CEDDD2; }
     .desktop-mode-backdrop { display:none; }
+    .drawer-utility-label { margin-top:17px; }
+    .drawer-action-btn {
+      display:flex;align-items:center;gap:10px;width:100%;min-height:44px;
+      padding:10px 12px;border:1px solid #E2EAE5;border-radius:9px;
+      background:#F8FAF9;color:#526A60;text-align:left;
+      font-family:inherit;font-size:.74rem;font-weight:750;cursor:pointer;
+    }
+    .drawer-action-btn:hover { background:#EDF4EF;border-color:#D6E3DA; }
+    .drawer-action-icon { display:grid;place-items:center;width:20px;flex:0 0 20px;color:#5C806D;font-size:1rem;font-weight:900; }
+    .drawer-action-btn > span:nth-child(2) { flex:1; }
+    .drawer-action-arrow { color:#98A69E;font-size:.82rem; }
+    .drawer-cloud-action { background:#F2F6F8;border-color:#DEE8ED;color:#5D7485; }
+    .drawer-cloud-action .drawer-action-icon { color:#66889C; }
+    .drawer-action-count {
+      min-width:24px;padding:3px 7px;border:1px solid #D7E3E9;border-radius:12px;
+      background:#FFFFFF;color:#5D7485;text-align:center;font-size:.65rem;font-weight:850;
+    }
     @media (min-width:901px) {
       body {
         min-height:100vh;
@@ -2024,6 +2046,11 @@
     .sidebar-footer span:first-child { color:#708079;font-weight:800;letter-spacing:.06em; }
 
     @media (max-width:900px) {
+      .app-header { padding:10px 13px; }
+      .header-inner { flex-wrap:nowrap;gap:10px; }
+      .app-title { font-size:.83rem; }
+      .app-subtitle { font-size:.62rem; }
+      .desktop-mode-toggle { width:38px;height:38px;flex-basis:38px; }
       .home-page { margin:15px auto;padding:0 13px 25px; }
       .home-hero { padding:19px 17px;border-radius:13px; }
       .home-hero h1 { font-size:1.28rem; }
@@ -2072,21 +2099,9 @@
           <div class="app-subtitle">Aplikasi assembly untuk rekapitulasi WIP &amp; FG antar shift</div>
         </div>
       </div>
-      <div class="header-actions">
-        <button type="button" class="btn-header desktop-mode-toggle" id="desktopModeToggle" aria-label="Buka menu workspace" aria-expanded="false" aria-controls="modeTabs">
-          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
-          Menu
-        </button>
-        <button class="btn-header install-btn" id="btnInstallHeader">
-          📲 Download Aplikasi
-        </button>
-        <button class="btn-header cloud-btn">
-          ☁️ Cloud (<span id="cloudCountHeader">0</span>)
-        </button>
-        <button class="btn-header" data-preview-mode="master">
-          📂 Master
-        </button>
-      </div>
+      <button type="button" class="btn-header desktop-mode-toggle" id="desktopModeToggle" aria-label="Buka menu workspace" aria-expanded="false" aria-controls="modeTabs" title="Buka menu workspace">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+      </button>
     </div>
   </header>
 <div class="preview-notice" role="note"><b>PREVIEW FINAL — TAMPILAN SAJA</b><span>Home, sidebar, modul WIP/FG/SPA, Master, navigasi HP, dan shortcut desktop dapat ditinjau.</span><span>Input, penyimpanan, Cloud, Import, dan WhatsApp tidak terhubung.</span></div>
@@ -2131,6 +2146,13 @@
     <div class="drawer-section-label drawer-master-label">DATA MASTER</div>
     <button id="tabBtnMaster" class="tab-btn" data-preview-mode="master">
       <span class="drawer-icon">▣</span><span>Master</span><span class="drawer-chevron">⌄</span>
+    </button>
+    <div class="drawer-section-label drawer-utility-label">AKSES CEPAT</div>
+    <button type="button" class="drawer-action-btn" id="btnInstallHeader" data-preview-static>
+      <span class="drawer-action-icon">⇩</span><span>Download Aplikasi</span><span class="drawer-action-arrow">↗</span>
+    </button>
+    <button type="button" class="drawer-action-btn drawer-cloud-action" data-preview-static>
+      <span class="drawer-action-icon">☁</span><span>Cloud</span><span class="drawer-action-count" id="cloudCountHeader">0</span>
     </button>
     <div class="sidebar-footer">
       <span>ASSEMBLY OPERATIONS</span>
@@ -2224,10 +2246,10 @@
             <div><span>HP · TOUCH NAVIGATION</span><h3>Navigasi dengan sentuhan</h3></div>
           </div>
           <div class="home-guide-list">
-            <div class="home-guide-row"><span class="home-guide-step">01</span><span class="home-guide-detail"><strong>Buka sidebar</strong><small>Usap layar dari tepi paling kiri ke arah kanan.</small></span></div>
+            <div class="home-guide-row"><span class="home-guide-step">01</span><span class="home-guide-detail"><strong>Buka sidebar</strong><small>Mulai usap dari area kiri-tengah layar (sedikit di kiri titik tengah), lalu geser ke kanan.</small></span></div>
             <div class="home-guide-row"><span class="home-guide-step">02</span><span class="home-guide-detail"><strong>Pilih aplikasi</strong><small>Ketuk Home, Aplikasi WIP, Finish Good, Laporan Awal Shift, atau Master.</small></span></div>
             <div class="home-guide-row"><span class="home-guide-step">03</span><span class="home-guide-detail"><strong>Pindah bagian produksi</strong><small>Gunakan menu bawah: Input, Daftar, dan WhatsApp. Menu ini tampil di halaman modul produksi.</small></span></div>
-            <div class="home-guide-row"><span class="home-guide-step">04</span><span class="home-guide-detail"><strong>Tutup sidebar</strong><small>Usap dari dalam sidebar ke arah kiri, atau ketuk area di luar panel.</small></span></div>
+            <div class="home-guide-row"><span class="home-guide-step">04</span><span class="home-guide-detail"><strong>Tutup sidebar</strong><small>Mulai dari area sedikit di kanan tengah sidebar, lalu geser ke kiri. Bisa juga ketuk area di luar panel.</small></span></div>
           </div>
           <p class="home-guide-note">Di HP tidak diperlukan shortcut keyboard. Gunakan gesture sidebar dan menu bawah agar navigasi tetap mudah dijangkau dengan satu tangan.</p>
         </article>
@@ -3393,8 +3415,22 @@
       menuButton?.addEventListener("click",window.toggleDesktopModeMenu);backdrop?.addEventListener("click",window.closeDesktopModeMenu);
       document.addEventListener("click",e=>{if(e.target?.classList?.contains("modal-backdrop")){e.target.style.display="none";if(!Array.from(document.querySelectorAll(".modal-backdrop")).some(m=>getComputedStyle(m).display!=="none"))document.querySelectorAll(".sheet-section-nav").forEach(n=>n.classList.remove("modal-nav-hidden"));}});
       document.addEventListener("keydown",e=>{if(e.key==="Escape"){window.closeDesktopModeMenu();document.querySelectorAll(".modal-backdrop").forEach(m=>m.style.display="none");document.querySelectorAll(".sheet-section-nav").forEach(n=>n.classList.remove("modal-nav-hidden"));return;}const t=e.target,typing=t&&(t.isContentEditable||t.closest?.("input,textarea,select,[contenteditable='true'],[role='textbox']"));if(!mobile()&&!e.repeat&&!e.altKey&&!e.ctrlKey&&!e.metaKey){const index=({F1:0,F2:1,F3:2})[e.key],modal=Array.from(document.querySelectorAll(".modal-backdrop")).some(m=>getComputedStyle(m).display!=="none");if(index!==undefined&&!modal){e.preventDefault();if(!pages[activePage]?.panels)window.switchMode(lastModule);setDrawer(false);scrollSection(index);return;}}if(e.code==="Space"&&!mobile()&&!typing&&!e.repeat&&!e.altKey&&!e.ctrlKey&&!e.metaKey&&!t?.closest?.("button,a,[role='button']")){e.preventDefault();window.toggleDesktopModeMenu();}});
-      document.addEventListener("touchstart",e=>{if(!mobile()||e.touches.length!==1)return;const t=e.touches[0],open=body.classList.contains("mobile-mode-menu-open"),width=Math.min(300,window.innerWidth*.86);touchStart=((!open&&t.clientX<=28)||(open&&t.clientX<=width+20))?{x:t.clientX,y:t.clientY,open}:null;},{passive:true});
-      document.addEventListener("touchend",e=>{if(!touchStart||!e.changedTouches.length)return;const s=touchStart;touchStart=null;const t=e.changedTouches[0],dx=t.clientX-s.x;if(Math.abs(t.clientY-s.y)>80)return;if(!s.open&&dx>=58)setDrawer(true);if(s.open&&dx<=-58)setDrawer(false);},{passive:true});
+      document.addEventListener("touchstart",e=>{
+        if(!mobile()||e.touches.length!==1)return;
+        const target=e.target;
+        if(target?.closest?.("input,textarea,select,button,a,[contenteditable='true'],[role='button'],.no-sidebar-swipe")){touchStart=null;return;}
+        const t=e.touches[0],viewport=window.innerWidth||360,open=body.classList.contains("mobile-mode-menu-open"),width=Math.min(300,viewport*.86);
+        const openZone=!open&&(t.clientX<=24||(t.clientX>=viewport*.16&&t.clientX<=viewport*.52));
+        const closeMin=Math.min(viewport*.56,width*.66),closeMax=width-8;
+        const closeZone=open&&t.clientX>=closeMin&&t.clientX<=closeMax;
+        touchStart=(openZone||closeZone)?{x:t.clientX,y:t.clientY,open}:null;
+      },{passive:true});
+      document.addEventListener("touchend",e=>{
+        if(!touchStart||!e.changedTouches.length)return;
+        const s=touchStart;touchStart=null;const t=e.changedTouches[0],dx=t.clientX-s.x,dy=t.clientY-s.y;
+        if(Math.abs(dx)<58||Math.abs(dx)<Math.abs(dy)*1.2)return;
+        if(!s.open&&dx>0)setDrawer(true);else if(s.open&&dx<0)setDrawer(false);
+      },{passive:true});
       document.addEventListener("touchcancel",()=>{touchStart=null;},{passive:true});
       document.addEventListener("scroll",()=>{if(!mobile()||scrollQueued||!pages[activePage]?.panels)return;scrollQueued=true;requestAnimationFrame(()=>{scrollQueued=false;const cfg=pages[activePage];let active=0,line=Math.min(260,Math.max(125,window.innerHeight*.36));cfg.panels.forEach((id,i)=>{const n=document.getElementById(id);if(n&&n.getBoundingClientRect().top<=line)active=i;});if(document.documentElement.scrollHeight-window.innerHeight-window.scrollY<=18)active=2;markNav(active);});},{passive:true});
       window.switchMode("home");setDrawer(false);
