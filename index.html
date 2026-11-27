@@ -822,7 +822,85 @@
       max-height: 92vh;
       overflow-y: auto;
       overscroll-behavior: contain;
+    }    
+
+    /* MASTER DATA: SUBMODUL DIBUKA SEBAGAI HALAMAN PENUH, BUKAN POP-UP */
+    #masterHubModal,
+    #masterModal,
+    #masterProdukFgModal,
+    #masterJobOrderModal,
+    #masterLeaderModal,
+    #masterErpModal {
+      position:fixed;
+      inset:0;
+      align-items:flex-start;
+      justify-content:stretch;
+      width:100%;
+      height:100vh;
+      height:100dvh;
+      min-height:100vh;
+      min-height:100dvh;
+      padding:0;
+      overflow-y:auto;
+      overscroll-behavior:contain;
+      background:var(--bg-main);
+      z-index:1100;
     }
+    #masterHubModal .modal-card,
+    #masterModal .modal-card,
+    #masterProdukFgModal .modal-card,
+    #masterJobOrderModal .modal-card,
+    #masterLeaderModal .modal-card,
+    #masterErpModal .modal-card {
+      display:block;
+      width:100%;
+      max-width:none!important;
+      min-height:100vh;
+      min-height:100dvh;
+      max-height:none;
+      margin:0;
+      padding:calc(17px + env(safe-area-inset-top, 0px)) clamp(14px, 2.4vw, 32px) calc(24px + env(safe-area-inset-bottom, 0px));
+      border:0;
+      border-radius:0;
+      box-shadow:none;
+      overflow:visible;
+      background:var(--card-bg);
+    }
+    #masterHubModal .card-header,
+    #masterModal .card-header,
+    #masterProdukFgModal .card-header,
+    #masterJobOrderModal .card-header,
+    #masterLeaderModal .card-header,
+    #masterErpModal .card-header {
+      position:sticky;
+      top:0;
+      z-index:5;
+      padding:8px 0 12px;
+      margin-bottom:14px;
+      background:var(--card-bg);
+      border-bottom:1px solid var(--border);
+    }
+    #masterHubModal .card-header .btn,
+    #masterModal .card-header .btn,
+    #masterProdukFgModal .card-header .btn,
+    #masterJobOrderModal .card-header .btn,
+    #masterLeaderModal .card-header .btn,
+    #masterErpModal .card-header .btn {
+      min-height:38px;
+      white-space:nowrap;
+    }
+    /* Daftar master mengikuti scroll halaman; preview impor tetap memakai scroll sendiri. */
+    #masterModalList,
+    #masterProdukFgList,
+    #masterJobOrderList,
+    #masterLeaderList,
+    #masterErpMappingList,
+    #masterErpJoStatusList {
+      max-height:none!important;
+      overflow:visible!important;
+      min-height:0;
+    }
+
     #wipEditModal .modal-card { max-width: 760px; max-height: 94vh; }
     #wipEditModalContent #wipInputCard { margin-bottom: 0; box-shadow: none; }
     #spaAddItemModal .modal-card { max-width: 560px; }
@@ -2268,7 +2346,7 @@
       <div>
         <div class="home-eyebrow">ASSEMBLY OPERATIONS · DATA MASTER</div>
         <h1>Master Data</h1>
-        <p>Pilih master data yang ingin dikelola. Setiap menu membuka form Master yang sudah tersedia.</p>
+        <p>Pilih modul Master untuk mengelola data. Setiap modul dibuka sebagai halaman penuh di area kerja, bukan jendela pop-up.</p>
       </div>
       <span class="page-heading-tag">DATA MASTER</span>
     </div>
@@ -3171,7 +3249,7 @@
     <div class="modal-card" style="max-width:480px;">
       <div class="card-header">
         <span class="card-title">📂 MENU MASTER</span>
-        <button class="btn btn-danger" onclick="toggleModal('masterHubModal', false)">✕ Tutup</button>
+        <button class="btn btn-outline" onclick="toggleModal('masterHubModal', false)">← Kembali ke Master Data</button>
       </div>
       <p style="font-size:.78rem;color:var(--text-muted);margin:0 0 12px;">Pilih master data yang ingin dibuka.</p>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;">
@@ -3188,7 +3266,7 @@
     <div class="modal-card">
       <div class="card-header">
         <span class="card-title">📂 Master Katalog WIP</span>
-        <button class="btn btn-danger" onclick="toggleModal('masterModal', false)">✕ Tutup</button>
+        <button class="btn btn-outline" onclick="toggleModal('masterModal', false)">← Kembali ke Master Data</button>
       </div>
 
       <div id="masterCloudStatus" role="status" aria-live="polite" style="padding:9px 10px; margin:0 0 12px; border:1px solid var(--border); border-radius:9px; background:#f8fafc; font-size:0.76rem; line-height:1.45;">
@@ -3228,7 +3306,7 @@
     <div class="modal-card">
       <div class="card-header">
         <span class="card-title">🏷️ Master Produk Finish Good</span>
-        <button class="btn btn-danger" onclick="toggleModal('masterProdukFgModal', false)">✕ Tutup</button>
+        <button class="btn btn-outline" onclick="toggleModal('masterProdukFgModal', false)">← Kembali ke Master Data</button>
       </div>
       <div id="masterProdukFgCloudStatus" role="status" aria-live="polite" style="padding:9px 10px; margin:0 0 12px; border:1px solid var(--border); border-radius:9px; font-size:0.76rem; line-height:1.45;">☁️ Memeriksa Master Produk Cloud...</div>
       <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px;">
@@ -3262,7 +3340,7 @@
     <div class="modal-card">
       <div class="card-header">
         <span class="card-title">📋 Master Job Order</span>
-        <button class="btn btn-danger" onclick="toggleModal('masterJobOrderModal', false)">✕ Tutup</button>
+        <button class="btn btn-outline" onclick="toggleModal('masterJobOrderModal', false)">← Kembali ke Master Data</button>
       </div>
       <div id="masterJobOrderCloudStatus" role="status" aria-live="polite" style="padding:9px 10px;margin:0 0 12px;border:1px solid var(--border);border-radius:9px;font-size:.76rem;line-height:1.45;">⏳ Memeriksa Master Job Order Cloud...</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin:-4px 0 12px;">
@@ -3290,7 +3368,7 @@
     <div class="modal-card" style="max-width:900px;">
       <div class="card-header">
         <span class="card-title">📥 Import Data ERP — Produk & Job Order</span>
-        <button class="btn btn-danger" onclick="toggleModal('masterErpModal', false)">✕ Tutup</button>
+        <button class="btn btn-outline" onclick="toggleModal('masterErpModal', false)">← Kembali ke Master Data</button>
       </div>
       <div id="masterErpCloudStatus" role="status" aria-live="polite" style="padding:9px 10px;margin:0 0 12px;border:1px solid var(--border);border-radius:9px;font-size:.76rem;">⏳ Memeriksa relasi ERP di Cloud...</div>
       <div style="display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px;">
@@ -3351,7 +3429,7 @@
     <div class="modal-card">
       <div class="card-header">
         <span class="card-title">👤 Master Leader</span>
-        <button class="btn btn-danger" onclick="toggleModal('masterLeaderModal', false)">✕ Tutup</button>
+        <button class="btn btn-outline" onclick="toggleModal('masterLeaderModal', false)">← Kembali ke Master Data</button>
       </div>
       <div id="masterLeaderCloudStatus" role="status" aria-live="polite" style="padding:9px 10px;margin:0 0 12px;border:1px solid var(--border);border-radius:9px;font-size:.76rem;line-height:1.45;">⏳ Memeriksa Master Leader Cloud...</div>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin:-4px 0 12px;">
