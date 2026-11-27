@@ -1518,6 +1518,104 @@
       #fgWaCard .wa-action-bar .btn:first-child { grid-column:1/-1; }
     }
 
+
+    /* =========================================================
+       DESKTOP WORKSPACE — WEEKLY REPORT-INSPIRED NAVIGATION
+       Drawer starts hidden. Existing WIP/FG/SPA controls are reused.
+       Mobile layout and production form flow are not changed.
+       ========================================================= */
+    .desktop-mode-toggle { display:none; }
+    .desktop-mode-toggle svg { width:16px;height:16px; }
+    .desktop-mode-backdrop { display:none; }
+    @media (min-width:901px) {
+      body {
+        min-height:100vh;
+        padding-bottom:0;
+        background:#F4F6F4;
+      }
+      .app-header {
+        position:sticky;
+        top:0;
+        z-index:45;
+        padding:10px 26px;
+        background:rgba(255,255,255,.96);
+        color:#263544;
+        border-bottom:1px solid #E4E9E6;
+        box-shadow:0 2px 8px rgba(37,55,48,.035);
+        backdrop-filter:blur(10px);
+      }
+      .header-inner {
+        width:100%;
+        max-width:1660px;
+        min-height:46px;
+        flex-wrap:nowrap;
+      }
+      .app-header .header-inner > div:first-child { min-width:0; }
+      .app-header img { border:1px solid #E5EBE7;box-shadow:none; }
+      .app-title { color:#34495E;font-size:.96rem;letter-spacing:.015em; }
+      .app-subtitle { color:#82908E;opacity:1;font-size:.68rem; }
+      .header-actions { flex:0 0 auto;align-items:center;gap:8px;flex-wrap:nowrap; }
+      .btn-header {
+        min-height:36px;padding:7px 11px;border:1px solid #E1E8E4;border-radius:8px;
+        background:#F8FAF9;color:#536A60;box-shadow:none;font-family:inherit;font-size:.70rem;font-weight:700;
+      }
+      .btn-header:hover { background:#EEF3F0;border-color:#D2DED7; }
+      .btn-header.install-btn {
+        background:#E8F0EC;border-color:#D7E4DC;color:#557C6E;box-shadow:none;
+      }
+      .btn-header.cloud-btn {
+        background:#EDF2F5;border-color:#DCE5EA;color:#627B8D;
+      }
+      .desktop-mode-toggle { display:inline-flex; }
+      .mode-tabs {
+        position:fixed;z-index:61;top:0;bottom:0;left:0;
+        width:min(285px,84vw);max-width:none;height:100dvh;margin:0;
+        padding:96px 14px 22px;display:flex;flex-direction:column;
+        align-items:stretch;justify-content:flex-start;gap:7px;
+        overflow-y:auto;overscroll-behavior:contain;
+        background:#FFFFFF;border-right:1px solid #E4E9E6;
+        box-shadow:12px 0 30px rgba(30,45,39,.12);
+        transform:translateX(-105%);transition:transform .22s ease;
+      }
+      .mode-tabs::before {
+        content:"WORKSPACE";display:block;padding:0 11px 12px;margin-bottom:4px;
+        border-bottom:1px solid #E8EDE9;color:#9AA5A1;
+        font-size:9px;font-weight:800;letter-spacing:.13em;
+      }
+      .mode-tabs .tab-btn {
+        display:flex;width:100%;min-height:46px;align-items:center;justify-content:flex-start;
+        padding:11px 12px;border:1px solid transparent;border-radius:9px;
+        background:transparent;color:#667582;text-align:left;font-family:inherit;
+        font-size:.75rem;font-weight:650;line-height:1.35;box-shadow:none;
+      }
+      .mode-tabs .tab-btn:hover { background:#F5F8F6;color:#34495E; }
+      .mode-tabs .tab-btn.active-wip,
+      .mode-tabs .tab-btn.active-fg,
+      .mode-tabs .tab-btn.active-spa {
+        background:#E8F0EC;border-color:#E0EAE4;color:#557C6E;
+        font-weight:750;box-shadow:none;
+      }
+      body.desktop-mode-menu-open .mode-tabs { transform:translateX(0); }
+      .desktop-mode-backdrop {
+        display:block;position:fixed;z-index:60;inset:0;width:100%;height:100%;
+        padding:0;border:0;background:rgba(38,53,68,.22);
+        opacity:0;visibility:hidden;pointer-events:none;cursor:default;
+        transition:opacity .22s ease,visibility .22s ease;
+      }
+      body.desktop-mode-menu-open .desktop-mode-backdrop {
+        opacity:1;visibility:visible;pointer-events:auto;
+      }
+      .mode-tabs,.mode-tabs * { -webkit-tap-highlight-color:transparent; }
+      .pwa-install-banner { max-width:1660px; }
+      .container {
+        width:100%;max-width:1660px;margin:18px auto;padding:0 26px;gap:18px;
+      }
+      .sheet-section-nav { display:none!important; }
+    }
+    @media (prefers-reduced-motion:reduce) and (min-width:901px) {
+      .mode-tabs,.desktop-mode-backdrop { transition-duration:.01ms; }
+    }
+
   </style>
 </head>
 <body>
@@ -1533,6 +1631,10 @@
         </div>
       </div>
       <div class="header-actions">
+        <button type="button" class="btn-header desktop-mode-toggle" id="desktopModeToggle" aria-label="Buka menu workspace" aria-expanded="false" aria-controls="modeTabs" onclick="toggleDesktopModeMenu()">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+          Menu
+        </button>
         <button class="btn-header install-btn" id="btnInstallHeader" onclick="triggerInstallApp()">
           📲 Download Aplikasi
         </button>
@@ -1565,7 +1667,7 @@
   </div>
 
   <!-- PILIHAN 3 MODE SHEET -->
-  <div class="mode-tabs">
+  <div class="mode-tabs" id="modeTabs" aria-label="Menu workspace">
     <button id="tabBtnWip" class="tab-btn active-wip" onclick="switchMode('wip')">
       📦 1. SISA BARANG BAGUS (WIP)
     </button>
@@ -1576,6 +1678,7 @@
       📋 3. LAPORAN SPA AWAL SHIFT
     </button>
   </div>
+  <button type="button" id="desktopModeBackdrop" class="desktop-mode-backdrop" aria-label="Tutup menu workspace" tabindex="-1" onclick="closeDesktopModeMenu()"></button>
 
   <!-- =========================================================
        SHEET 1: SISA BARANG BAGUS ASSY (WIP)
@@ -3424,7 +3527,25 @@
     /********************************************************************
      * 3. PINDAH TAB MODE (SISA WIP vs FINISH GOOD vs SPA AWAL SHIFT)
      ********************************************************************/
+    function toggleDesktopModeMenu() {
+      document.body.classList.toggle("desktop-mode-menu-open");
+      const isOpen=document.body.classList.contains("desktop-mode-menu-open");
+      const button=document.getElementById("desktopModeToggle");
+      if(button)button.setAttribute("aria-expanded",isOpen?"true":"false");
+    }
+
+    function closeDesktopModeMenu() {
+      document.body.classList.remove("desktop-mode-menu-open");
+      const button=document.getElementById("desktopModeToggle");
+      if(button)button.setAttribute("aria-expanded","false");
+    }
+
+    document.addEventListener("keydown",event=>{
+      if(event.key==="Escape")closeDesktopModeMenu();
+    });
+
     function switchMode(mode) {
+      closeDesktopModeMenu();
       activeTabMode = mode;
       const secWip = document.getElementById("sectionWip");
       const secFg = document.getElementById("sectionFg");
