@@ -1136,7 +1136,7 @@
        UI REFRESH PREVIEW — INDUSTRIAL PROFESSIONAL / BALANCED
        Visual-only layer. No DOM, workflow, or calculation changes.
        ========================================================= */
-    html { scroll-behavior: smooth; }
+    html { scroll-behavior: auto !important; }
     body {
       font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
       background: var(--bg-main);
@@ -2302,7 +2302,7 @@
   <!-- =========================================================
        SHEET 1: SISA BARANG BAGUS ASSY (WIP)
        ========================================================= -->
-  <nav class="sheet-section-nav" id="wipSectionNav aria-label="Navigasi Sisa Barang Bagus">
+  <nav class="sheet-section-nav" id="wipSectionNav" aria-label="Navigasi Sisa Barang Bagus">
     <button type="button" class="sheet-nav-btn active" data-preview-scroll="wipInputSection" data-preview-nav="wipSectionNav"><span class="nav-number">1</span> INPUT WIP</button>
     <button type="button" class="sheet-nav-btn" data-preview-scroll="wipListCard" data-preview-nav="wipSectionNav"><span class="nav-number">2</span> DAFTAR WIP</button>
     <button type="button" class="sheet-nav-btn" data-preview-scroll="wipWaCard" data-preview-nav="wipSectionNav"><span class="nav-number">3</span> WHATSAPP</button>
@@ -3406,7 +3406,7 @@
       window.toggleDesktopModeMenu=()=>setDrawer(!(body.classList.contains("desktop-mode-menu-open")||body.classList.contains("mobile-mode-menu-open")));
       function moduleConfig(){return pages[activePage]?.panels?pages[activePage]:pages[lastModule];}
       function markNav(index){const cfg=moduleConfig();if(!cfg?.nav)return;document.getElementById(cfg.nav)?.querySelectorAll(".sheet-nav-btn").forEach((b,i)=>{b.classList.toggle("active",i===index);b.setAttribute("aria-current",i===index?"page":"false");});}
-      function scrollSection(index){const cfg=moduleConfig(),node=cfg?.panels&&document.getElementById(cfg.panels[index]);if(!node)return;markNav(index);const offset=mobile()?12:92;window.scrollTo({top:Math.max(0,window.scrollY+node.getBoundingClientRect().top-offset),behavior:"smooth"});}
+      function scrollSection(index){const cfg=moduleConfig(),node=cfg?.panels&&document.getElementById(cfg.panels[index]);if(!node)return;markNav(index);const offset=mobile()?12:92;window.scrollTo({top:Math.max(0,window.scrollY+node.getBoundingClientRect().top-offset),behavior:"auto"});}
       window.switchMode=page=>{const cfg=pages[page];if(!cfg)return;activePage=page;if(cfg.panels)lastModule=page;Object.entries(pages).forEach(([key,item])=>{const section=document.getElementById(item.section),button=document.getElementById(item.button),nav=item.nav&&document.getElementById(item.nav);if(section)section.style.display=key===page?(item.panels?"grid":"block"):"none";if(button)button.className="tab-btn"+(key===page?" "+({home:"active-home",wip:"active-wip",fg:"active-fg",spa:"active-spa",master:"active-master"})[page]:"");if(nav)nav.classList.toggle("is-active",key===page);});body.classList.toggle("workspace-module-active",!!cfg.panels);setDrawer(false);markNav(0);window.scrollTo({top:0,behavior:"auto"});};
       document.querySelectorAll("[data-preview-mode]").forEach(b=>b.addEventListener("click",()=>window.switchMode(b.dataset.previewMode)));
       document.querySelectorAll("[data-preview-scroll]").forEach(b=>b.addEventListener("click",()=>{const nav=b.dataset.previewNav,mode=Object.keys(pages).find(k=>pages[k].nav===nav);if(mode&&activePage!==mode)window.switchMode(mode);const node=document.getElementById(b.dataset.previewScroll);if(node)window.scrollTo({top:Math.max(0,window.scrollY+node.getBoundingClientRect().top-(mobile()?12:92)),behavior:"smooth"});}));
@@ -3417,13 +3417,12 @@
       document.addEventListener("keydown",e=>{if(e.key==="Escape"){window.closeDesktopModeMenu();document.querySelectorAll(".modal-backdrop").forEach(m=>m.style.display="none");document.querySelectorAll(".sheet-section-nav").forEach(n=>n.classList.remove("modal-nav-hidden"));return;}const t=e.target,typing=t&&(t.isContentEditable||t.closest?.("input,textarea,select,[contenteditable='true'],[role='textbox']"));if(!mobile()&&!e.repeat&&!e.altKey&&!e.ctrlKey&&!e.metaKey){const index=({F1:0,F2:1,F3:2})[e.key],modal=Array.from(document.querySelectorAll(".modal-backdrop")).some(m=>getComputedStyle(m).display!=="none");if(index!==undefined&&!modal){e.preventDefault();if(!pages[activePage]?.panels)window.switchMode(lastModule);setDrawer(false);scrollSection(index);return;}}if(e.code==="Space"&&!mobile()&&!typing&&!e.repeat&&!e.altKey&&!e.ctrlKey&&!e.metaKey&&!t?.closest?.("button,a,[role='button']")){e.preventDefault();window.toggleDesktopModeMenu();}});
       document.addEventListener("touchstart",e=>{
         if(!mobile()||e.touches.length!==1)return;
-        const target=e.target;
-        if(target?.closest?.("input,textarea,select,button,a,[contenteditable='true'],[role='button'],.no-sidebar-swipe")){touchStart=null;return;}
         const t=e.touches[0],viewport=window.innerWidth||360,open=body.classList.contains("mobile-mode-menu-open"),width=Math.min(300,viewport*.86);
-        const openZone=!open&&(t.clientX<=24||(t.clientX>=viewport*.16&&t.clientX<=viewport*.52));
         const closeMin=Math.min(viewport*.56,width*.66),closeMax=width-8;
-        const closeZone=open&&t.clientX>=closeMin&&t.clientX<=closeMax;
-        touchStart=(openZone||closeZone)?{x:t.clientX,y:t.clientY,open}:null;
+        // Sidebar tertutup: semua titik awal layar diterima. Sidebar terbuka: area kanan-tengah drawer untuk menutup.
+        const canOpenFromHere=!open;
+        const canCloseFromHere=open&&t.clientX>=closeMin&&t.clientX<=closeMax;
+        touchStart=(canOpenFromHere||canCloseFromHere)?{x:t.clientX,y:t.clientY,open}:null;
       },{passive:true});
       document.addEventListener("touchend",e=>{
         if(!touchStart||!e.changedTouches.length)return;
