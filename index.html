@@ -1662,7 +1662,9 @@
     }
 
     /* SINGLE-PAGE WORKSPACE: Input -> Daftar -> Laporan WhatsApp. */
-    .sheet-section-nav { display:none !important; }
+    @media (min-width:880px) {
+      .sheet-section-nav { display:none !important; }
+    }
     #sectionWip.container,
     #sectionFg.container,
     #sectionSpa.container {
@@ -1777,6 +1779,63 @@
       .module-overview-eyebrow { margin-bottom:4px;font-size:.59rem; }
       .module-overview-steps { gap:6px;margin-top:11px; }
       .module-overview-steps a { min-height:34px;padding:6px 8px;font-size:.64rem; }
+    }
+
+    /* MOBILE BOTTOM NAV — tetap, horizontal, dan aktif mengikuti posisi scroll. */
+    @media (max-width:879px) {
+      body { padding-bottom:calc(126px + env(safe-area-inset-bottom, 0px)); }
+      .sheet-section-nav {
+        display:none !important;
+        position:fixed !important;
+        top:auto !important;right:0 !important;bottom:0 !important;left:0 !important;
+        transform:none !important;
+        width:100% !important;max-width:none !important;
+        margin:0 !important;
+        grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+        align-items:stretch;gap:8px;
+        padding:12px 12px calc(34px + env(safe-area-inset-bottom, 0px)) !important;
+        background:linear-gradient(to bottom,#FFFFFF 0%,#FFFFFF calc(100% - 28px),#1D287E calc(100% - 28px),#1D287E 100%) !important;
+        border:0 !important;border-top:1px solid #E4EAF0 !important;
+        border-radius:20px 20px 0 0 !important;
+        box-shadow:0 -7px 22px rgba(27,42,64,.14) !important;
+        z-index:120 !important;
+        scroll-margin:0;
+      }
+      .sheet-section-nav.is-active:not(.modal-nav-hidden) { display:grid !important; }
+      .sheet-nav-btn {
+        display:flex;min-width:0;min-height:68px;
+        align-items:center;justify-content:center;gap:6px;
+        padding:8px 5px;
+        border:1.5px solid #D6DEE7;
+        border-radius:16px;
+        background:#F6F8FA;
+        color:#1D2C78;
+        font-family:Inter,system-ui,sans-serif;
+        font-size:.70rem;font-weight:850;line-height:1.12;
+        white-space:nowrap;
+        box-shadow:none;
+      }
+      .sheet-nav-btn .nav-number {
+        display:inline-flex;flex:0 0 31px;width:31px;height:31px;
+        align-items:center;justify-content:center;
+        border-radius:50%;background:#E2E8F0;color:#1D2C78;
+        font-size:.9rem;font-weight:850;
+      }
+      .sheet-nav-btn.active {
+        background:#1D287E;border-color:#1D287E;color:#FFFFFF;
+        box-shadow:0 3px 9px rgba(29,40,126,.17);
+      }
+      .sheet-nav-btn.active .nav-number { background:rgba(255,255,255,.20);color:#FFFFFF; }
+      .sheet-section-target,#wipInputSection,#fgInputCard,#spaInputSection {
+        scroll-margin-top:14px;
+        scroll-margin-bottom:130px;
+      }
+      .module-overview { scroll-margin-top:12px; }
+    }
+    @media (max-width:390px) {
+      .sheet-section-nav.is-active:not(.modal-nav-hidden) { gap:5px;padding-left:8px!important;padding-right:8px!important; }
+      .sheet-nav-btn { gap:4px;padding:7px 3px;font-size:.61rem;border-radius:13px; }
+      .sheet-nav-btn .nav-number { flex-basis:27px;width:27px;height:27px;font-size:.8rem; }
     }
 
   </style>
@@ -3712,15 +3771,42 @@
       const tabIndex = config.panels.indexOf(targetId);
       if (tabIndex < 0) return;
 
-      if (isMobileSheetLayout()) {
-        setSheetTab(mode, tabIndex, true);
-        return;
-      }
-
       setSheetTab(mode, tabIndex, false);
       const target = document.getElementById(targetId);
-      if (target) target.scrollIntoView({ behavior: "smooth", block: "start" });
+      if (target) {
+        if (isMobileSheetLayout()) alignSheetPanelToTop(targetId);
+        else target.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
     }
+
+    let sheetNavScrollQueued = false;
+    function updateSheetNavFromScroll() {
+      if (!isMobileSheetLayout()) return;
+      const config = SHEET_TAB_CONFIG[activeTabMode];
+      if (!config) return;
+
+      const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
+      const maxScroll = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+      let activeIndex = 0;
+      const activationLine = Math.min(260, Math.max(125, window.innerHeight * 0.36));
+
+      config.panels.forEach((id,index) => {
+        const panel = document.getElementById(id);
+        if (panel && panel.getBoundingClientRect().top <= activationLine) activeIndex = index;
+      });
+      if (maxScroll - scrollY <= 18) activeIndex = config.panels.length - 1;
+
+      setSheetTab(activeTabMode, activeIndex, false);
+    }
+
+    window.addEventListener("scroll", () => {
+      if (sheetNavScrollQueued) return;
+      sheetNavScrollQueued = true;
+      requestAnimationFrame(() => {
+        sheetNavScrollQueued = false;
+        updateSheetNavFromScroll();
+      });
+    }, { passive:true });
 
     /********************************************************************
      * 3. PINDAH TAB MODE (SISA WIP vs FINISH GOOD vs SPA AWAL SHIFT)
@@ -3844,6 +3930,7 @@
       const scrollRoot = document.scrollingElement || document.documentElement || document.body;
       scrollRoot.scrollTop = 0;
       window.scrollTo(0, 0);
+      requestAnimationFrame(updateSheetNavFromScroll);
 
       // Jangan render ulang seluruh daftar saat hanya berpindah sheet.
       simpanDraftLokal();
