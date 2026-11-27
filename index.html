@@ -4201,19 +4201,21 @@
       const hasModifier = event.altKey || event.ctrlKey || event.metaKey;
 
       // Shortcut desktop: F1 Input, F2 Daftar, F3 Laporan WhatsApp.
-      // Berlaku pada modul yang terakhir dibuka; dari Home/Master, buka modul terakhir tersebut.
-      // Tetap nonaktif ketika fokus berada di field teks/editor atau modal sedang terbuka.
+      // Berlaku di modul terakhir yang dibuka; dari Home/Master akan kembali ke modul tersebut.
+      // Tombol fungsi tidak mengetik karakter, sehingga tetap dapat dipakai saat fokus di kolom input.
       const functionKeyIndex = ({ F1:0, F2:1, F3:2 })[event.key];
-      if (isDesktop && functionKeyIndex !== undefined && !event.repeat && !hasModifier && !isTypingTarget) {
-        const hasOpenModal = Array.from(document.querySelectorAll(".modal-backdrop"))
-          .some(modal => getComputedStyle(modal).display !== "none");
-        if (!hasOpenModal) {
-          const config = SHEET_TAB_CONFIG[activeTabMode];
-          if (config && config.panels[functionKeyIndex]) {
-            event.preventDefault();
-            if (activeWorkspacePage !== activeTabMode) switchMode(activeTabMode);
-            closeDesktopModeMenu();
-            scrollToSheetSection(config.panels[functionKeyIndex], config.navId, null);
+      if (isDesktop && functionKeyIndex !== undefined) {
+        if (!event.repeat && !hasModifier) {
+          event.preventDefault();
+          const hasOpenModal = Array.from(document.querySelectorAll(".modal-backdrop"))
+            .some(modal => getComputedStyle(modal).display !== "none");
+          if (!hasOpenModal) {
+            const config = SHEET_TAB_CONFIG[activeTabMode];
+            if (config && config.panels[functionKeyIndex]) {
+              if (activeWorkspacePage !== activeTabMode) switchMode(activeTabMode);
+              closeDesktopModeMenu();
+              scrollToSheetSection(config.panels[functionKeyIndex], config.navId, null);
+            }
           }
         }
         return;
@@ -4282,7 +4284,7 @@
       if (isProductionModule) requestAnimationFrame(updateSheetNavFromScroll);
 
       // Pertahankan draft ketika meninggalkan modul produksi.
-      if (isProductionModule) simpanDraftLokal();
+      simpanDraftLokal();
     }
 
     /********************************************************************
