@@ -1378,6 +1378,146 @@
       *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
     }
 
+
+    /* =========================================================
+       FINISH GOOD PILOT — COMPONENT RHYTHM & VISUAL HIERARCHY
+       Scoped to Sheet 2. Field order and workflow remain intact.
+       ========================================================= */
+    #sectionFg { align-items:start; }
+    #sectionFg > section { min-width:0; }
+    #sectionFg .card { overflow:visible; margin-bottom:14px; }
+    #sectionFg .card-header { align-items:center; gap:10px; }
+    #sectionFg .card-header > .card-title { line-height:1.35; }
+    #fgInputCard .card-header > div { gap:7px; }
+    #fgInputCard .card-header .btn,
+    #fgInputCard .card-header .sheet-reset-btn {
+      min-height:36px; padding:8px 10px!important; font-size:.70rem!important; border-radius:8px;
+    }
+    #fgInputCard .edit-banner { border-radius:9px; line-height:1.45; }
+    #fgInputCard .meta-grid {
+      grid-template-columns:minmax(0,1fr); padding:12px; gap:11px; margin-bottom:16px;
+    }
+    #fgInputCard .meta-grid > div,
+    #fgInputCard .form-row-responsive > div { min-width:0; }
+    #fgInputCard .form-row-responsive { gap:13px 12px; margin-top:0; }
+    #fgInputCard .form-row-responsive > div:nth-child(1),
+    #fgInputCard .form-row-responsive > div:nth-child(2),
+    #fgInputCard .form-row-responsive > div:nth-child(3) { align-self:start; }
+    #fgInputCard .form-row-responsive > div:nth-child(5),
+    #fgInputCard .form-row-responsive > div:nth-child(6) { padding-top:2px; }
+    #fgInputCard .form-row-responsive > div:nth-child(7),
+    #fgInputCard .form-row-responsive > div:nth-child(8) { padding-top:1px; }
+    #fgInputCard .form-row-responsive input,
+    #fgInputCard .form-row-responsive select { min-width:0; }
+    #fgInputCard .form-row-responsive small,
+    #fgInputCard .form-row-responsive > div > div[style*="font-size"] { line-height:1.45; }
+    #fgInputCard #fgOvertimeBreakInfo {
+      padding:7px 9px; background:#F5F7F8; border:1px solid #E3E9EC; border-radius:7px; line-height:1.45!important;
+    }
+    #fgInputCard .fg-break-presets { gap:7px; margin-top:8px; }
+    #fgInputCard .fg-break-preset { min-height:36px; padding:7px 11px; font-size:.72rem; border-radius:8px; }
+    #fgInputCard .fg-break-preset.selected,
+    #fgInputCard .fg-break-preset.active { background:var(--navy); border-color:var(--navy); color:#fff; }
+    #fgInputCard > div[style*="grid-column:1/-1"][style*="border:1px solid"] {
+      margin-top:15px; padding:13px!important; background:#F7F9FA!important;
+      border:1px solid #D9E2E7!important; border-radius:10px!important;
+    }
+    #fgInputCard #fgManpowerFields { padding-top:2px; }
+    #fgInputCard #fgManpowerInfo,
+    #fgInputCard #fgManpowerDefaultInfo { line-height:1.5!important; }
+    #fgInputCard .calc-panel {
+      margin-top:14px; padding:14px; border-radius:11px; background:#EEF4F0; border:1px solid #C9DCD1;
+    }
+    #fgInputCard .calc-panel > div:first-child {
+      align-items:flex-start!important; padding-bottom:9px; border-bottom:1px solid #DCE8E0;
+    }
+    #fgInputCard .calc-panel > div:first-child label {
+      color:#376D5B!important; font-size:.76rem; line-height:1.35;
+    }
+    #fgInputCard #fgLiveTotalPreview {
+      color:#314D42!important; font-size:.76rem!important; text-align:right; line-height:1.4;
+    }
+    #fgInputCard .fg-main-calc-grid { gap:12px; }
+    #fgInputCard .fg-main-calc-grid label { min-height:2.1em; line-height:1.35; }
+    #fgInputCard .fg-main-calc-grid input { min-height:45px; border-radius:8px; }
+    #fgInputCard .fg-main-calc-grid #fgTarget {
+      border-color:#9AB5A5; background:#FBFDFC; color:#254D3C; font-weight:750;
+    }
+    #fgInputCard #fgBreakdownPreview {
+      border-color:#D2E1D7!important; background:#FFFFFF!important; color:#426B57!important;
+      border-radius:8px!important; line-height:1.5;
+    }
+    #fgInputCard [id^="fgLineSplitMount"] > div {
+      background:#F7F9FA!important; border-color:#D6E0E5!important; border-radius:10px!important; padding:12px!important;
+    }
+    #fgInputCard [id^="fgLineSplitFields"] [style*="border:1px solid #dbe2ed"] {
+      border-color:#D9E2E7!important; border-radius:9px!important; box-shadow:0 1px 2px rgba(35,53,68,.025);
+    }
+    #fgInputCard #fgSecondJoPanel { margin-top:13px; border-color:#D6E0E5; border-radius:10px; background:#F7F9FA; }
+    #fgInputCard #fgSecondJoPanel > summary { min-height:46px; padding:12px 13px; font-size:.78rem; letter-spacing:0; }
+    #fgInputCard .fg-second-jo-body { padding:13px; background:#FFFFFF; }
+    #fgInputCard .fg-second-jo-help { line-height:1.5; }
+    #fgInputCard .fg-second-jo-grid { gap:10px; }
+    #fgInputCard .fg-second-jo-preview { background:#F5F8F9; border-color:#D9E2E7; border-radius:8px; }
+    #fgInputCard #btnSubmitFg {
+      min-height:49px; margin-top:14px!important; padding:13px 15px; font-size:.84rem; letter-spacing:.005em;
+    }
+    #fgListCard .card-header,
+    #fgWaCard .card-header { border-bottom:1px solid #E7ECEF; }
+    #fgListCard .fg-report-time-toolbar,
+    #fgListCard .fg-list-search {
+      background:#F7F9FA!important; border-color:#DCE4E8!important; border-radius:9px!important;
+    }
+    #fgListCard .fg-report-time-toolbar #fgTimeDisplay { font-variant-numeric:tabular-nums; letter-spacing:.02em; }
+    #fgListCard .fg-wa-import-collapse { border-color:#DCE4E8; border-radius:9px; }
+    #fgListCard .fg-wa-import-collapse > summary { min-height:44px; font-size:.78rem; }
+    #fgListCard > div[style*="background:var(--emerald-bg)"] {
+      background:#EEF4F0!important; border:1px solid #D1E0D6!important; border-radius:9px!important;
+    }
+    #fgListCard .fg-list-search { padding:12px!important; }
+    #fgListCard #fgListContainer { min-width:0; }
+    #fgWaCard .wa-action-bar { gap:8px; }
+    #fgWaCard .wa-action-bar .btn { min-height:42px; padding:9px 11px; line-height:1.3; font-size:.72rem; }
+    #fgWaCard .wa-preview {
+      background:#F4F8F5; border:1px solid #C9D9CF; border-radius:10px; color:#26372E;
+      font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:.76rem; line-height:1.55;
+    }
+    #fgWaCard > p { line-height:1.5; }
+    #fgSectionNav { background:rgba(255,255,255,.98); backdrop-filter:blur(10px); }
+    @media (min-width:520px) {
+      #fgInputCard .meta-grid { grid-template-columns:1.15fr 1fr 1fr; }
+      #fgInputCard .form-row-responsive { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      #fgInputCard .form-row-responsive > div:nth-child(1),
+      #fgInputCard .form-row-responsive > div:nth-child(2),
+      #fgInputCard .form-row-responsive > div:nth-child(3) { grid-column:auto; }
+      #fgInputCard .form-row-responsive > div:nth-child(5),
+      #fgInputCard .form-row-responsive > div:nth-child(6) { grid-column:1/-1; }
+      #fgInputCard .form-row-responsive > div:nth-child(7),
+      #fgInputCard .form-row-responsive > div:nth-child(8) { grid-column:auto; }
+    }
+    @media (min-width:880px) {
+      #fgInputCard .meta-grid { grid-template-columns:1.15fr 1fr 1fr; }
+      #fgInputCard .form-row-responsive { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      #fgInputCard .card-header { flex-wrap:nowrap; }
+      #fgListCard, #fgWaCard { position:relative; }
+    }
+    @media (max-width:519px) {
+      #fgInputCard .card-header { align-items:flex-start; }
+      #fgInputCard .card-header > div { width:100%; justify-content:flex-start!important; }
+      #fgInputCard .meta-grid { grid-template-columns:1fr; }
+      #fgInputCard .form-row-responsive { grid-template-columns:1fr; gap:12px; }
+      #fgInputCard .form-row-responsive > div:nth-child(5),
+      #fgInputCard .form-row-responsive > div:nth-child(6),
+      #fgInputCard .form-row-responsive > div:nth-child(7),
+      #fgInputCard .form-row-responsive > div:nth-child(8) { grid-column:1/-1; }
+      #fgInputCard .fg-main-calc-grid { gap:9px; }
+      #fgInputCard .fg-main-calc-grid label { min-height:0; font-size:.68rem; }
+      #fgInputCard .fg-main-calc-grid input { padding:9px 8px; font-size:.84rem; }
+      #fgInputCard #btnSubmitFg { width:100%; }
+      #fgWaCard .wa-action-bar { display:grid; grid-template-columns:1fr 1fr; }
+      #fgWaCard .wa-action-bar .btn:first-child { grid-column:1/-1; }
+    }
+
   </style>
 </head>
 <body>
