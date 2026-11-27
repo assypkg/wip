@@ -1612,7 +1612,52 @@
       }
       .sheet-section-nav { display:none!important; }
     }
+    /* MOBILE DRAWER: sidebar tersembunyi dan dibuka dengan swipe dari tepi kiri. */
+    @media (max-width:900px) {
+      .mode-tabs {
+        position:fixed;z-index:201;top:0;bottom:0;left:0;
+        width:min(300px,86vw);max-width:none;height:100vh;height:100dvh;
+        margin:0;padding:calc(22px + env(safe-area-inset-top, 0px)) 14px calc(20px + env(safe-area-inset-bottom, 0px));
+        display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:7px;
+        overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+        background:#FFFFFF;border-right:1px solid #E1E8E4;
+        box-shadow:12px 0 30px rgba(30,45,39,.16);
+        transform:translateX(-105%);transition:transform .22s ease;
+      }
+      .mode-tabs::before {
+        content:"MENU UTAMA";display:block;padding:0 11px 12px;margin-bottom:4px;
+        border-bottom:1px solid #E8EDE9;color:#82908E;
+        font-size:9px;font-weight:800;letter-spacing:.13em;
+      }
+      .mode-tabs .tab-btn {
+        display:flex;width:100%;min-height:48px;align-items:center;justify-content:flex-start;
+        padding:11px 12px;border:1px solid transparent;border-radius:9px;
+        background:transparent;color:#526474;text-align:left;font-family:inherit;
+        font-size:.76rem;font-weight:700;line-height:1.35;box-shadow:none;
+      }
+      .mode-tabs .tab-btn.active-wip,
+      .mode-tabs .tab-btn.active-fg,
+      .mode-tabs .tab-btn.active-spa {
+        background:#E8F0EC;border-color:#D7E4DC;color:#426B5C;
+        font-weight:800;box-shadow:none;
+      }
+      body.mobile-mode-menu-open .mode-tabs { transform:translateX(0); }
+      .desktop-mode-backdrop {
+        display:block;position:fixed;z-index:200;inset:0;width:100%;height:100%;
+        padding:0;border:0;background:rgba(25,39,51,.38);
+        opacity:0;visibility:hidden;pointer-events:none;cursor:default;
+        transition:opacity .22s ease,visibility .22s ease;
+      }
+      body.mobile-mode-menu-open .desktop-mode-backdrop {
+        opacity:1;visibility:visible;pointer-events:auto;
+      }
+      .mode-tabs,.mode-tabs * { -webkit-tap-highlight-color:transparent; }
+    }
+
     @media (prefers-reduced-motion:reduce) and (min-width:901px) {
+      .mode-tabs,.desktop-mode-backdrop { transition-duration:.01ms; }
+    }
+    @media (prefers-reduced-motion:reduce) and (max-width:900px) {
       .mode-tabs,.desktop-mode-backdrop { transition-duration:.01ms; }
     }
 
@@ -1667,7 +1712,7 @@
   </div>
 
   <!-- PILIHAN 3 MODE SHEET -->
-  <div class="mode-tabs" id="modeTabs" aria-label="Menu workspace">
+  <div class="mode-tabs" id="modeTabs" aria-label="Menu workspace" aria-hidden="true">
     <button id="tabBtnWip" class="tab-btn active-wip" onclick="switchMode('wip')">
       📦 1. SISA BARANG BAGUS (WIP)
     </button>
@@ -3527,21 +3572,86 @@
     /********************************************************************
      * 3. PINDAH TAB MODE (SISA WIP vs FINISH GOOD vs SPA AWAL SHIFT)
      ********************************************************************/
+    function isMobileModeMenuLayout() {
+      return !!(window.matchMedia && window.matchMedia("(max-width: 900px)").matches);
+    }
+
+    function updateModeMenuA11y(isOpen) {
+      const tabs = document.getElementById("modeTabs");
+      if (tabs) {
+        tabs.setAttribute("aria-hidden", isOpen ? "false" : "true");
+        if ("inert" in tabs) tabs.inert = !isOpen;
+      }
+      const button = document.getElementById("desktopModeToggle");
+      if (button) button.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    }
+
     function toggleDesktopModeMenu() {
-      document.body.classList.toggle("desktop-mode-menu-open");
-      const isOpen=document.body.classList.contains("desktop-mode-menu-open");
-      const button=document.getElementById("desktopModeToggle");
-      if(button)button.setAttribute("aria-expanded",isOpen?"true":"false");
+      const menuClass = isMobileModeMenuLayout() ? "mobile-mode-menu-open" : "desktop-mode-menu-open";
+      document.body.classList.toggle(menuClass);
+      updateModeMenuA11y(document.body.classList.contains(menuClass));
+    }
+
+    function openMobileModeMenu() {
+      if (!isMobileModeMenuLayout()) return;
+      document.body.classList.add("mobile-mode-menu-open");
+      updateModeMenuA11y(true);
     }
 
     function closeDesktopModeMenu() {
-      document.body.classList.remove("desktop-mode-menu-open");
-      const button=document.getElementById("desktopModeToggle");
-      if(button)button.setAttribute("aria-expanded","false");
+      document.body.classList.remove("desktop-mode-menu-open", "mobile-mode-menu-open");
+      updateModeMenuA11y(false);
     }
 
-    document.addEventListener("keydown",event=>{
-      if(event.key==="Escape")closeDesktopModeMenu();
+    // Gesture sidebar ala X/Twitter: swipe ke kanan dari tepi kiri untuk membuka,
+    // lalu swipe ke kiri dari area drawer untuk menutupnya.
+    let mobileModeTouchStart = null;
+    document.addEventListener("touchstart", event => {
+      if (!isMobileModeMenuLayout() || !event.touches || event.touches.length !== 1) return;
+      const touch = event.touches[0];
+      const isOpen = document.body.classList.contains("mobile-mode-menu-open");
+      const drawerWidth = Math.min(300, window.innerWidth * 0.86);
+      const startsAtLeftEdge = !isOpen && touch.clientX <= 28;
+      const startsInsideDrawer = isOpen && touch.clientX <= drawerWidth + 20;
+      mobileModeTouchStart = (startsAtLeftEdge || startsInsideDrawer)
+        ? { x: touch.clientX, y: touch.clientY, wasOpen: isOpen }
+        : null;
+    }, { passive: true });
+
+    document.addEventListener("touchend", event => {
+      if (!mobileModeTouchStart || !event.changedTouches || !event.changedTouches.length) return;
+      const start = mobileModeTouchStart;
+      mobileModeTouchStart = null;
+      const touch = event.changedTouches[0];
+      const deltaX = touch.clientX - start.x;
+      const deltaY = touch.clientY - start.y;
+      if (Math.abs(deltaY) > 80) return;
+
+      if (!start.wasOpen && deltaX >= 58) openMobileModeMenu();
+      else if (start.wasOpen && deltaX <= -58) closeDesktopModeMenu();
+    }, { passive: true });
+
+    document.addEventListener("touchcancel", () => {
+      mobileModeTouchStart = null;
+    }, { passive: true });
+
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape") {
+        closeDesktopModeMenu();
+        return;
+      }
+
+      // Space membuka/menutup sidebar hanya di desktop dan tidak mengambil alih
+      // spasi ketika pengguna sedang mengetik atau mengoperasikan tombol/link.
+      if (event.code !== "Space" || event.repeat || !window.matchMedia("(min-width: 901px)").matches) return;
+      if (event.altKey || event.ctrlKey || event.metaKey) return;
+      const target = event.target;
+      if (target && (target.isContentEditable ||
+          (typeof target.closest === "function" &&
+           target.closest("input, textarea, select, button, a, [contenteditable='true'], [role='button']")))) return;
+
+      event.preventDefault();
+      toggleDesktopModeMenu();
     });
 
     function switchMode(mode) {
@@ -3575,6 +3685,14 @@
           if (panel) panel.classList.remove("mobile-tab-hidden");
         });
       });
+
+      // Saat berpindah aplikasi/sheet di desktop, selalu kembali ke bagian
+      // paling atas agar klik Home tidak meninggalkan posisi menu sebelumnya.
+      if (!isMobileSheetLayout()) {
+        const scrollRoot = document.scrollingElement || document.documentElement || document.body;
+        scrollRoot.scrollTop = 0;
+        window.scrollTo(0, 0);
+      }
 
       // Jangan render ulang seluruh daftar saat hanya berpindah sheet.
       simpanDraftLokal();
@@ -10657,6 +10775,7 @@
 
     // INISIALISASI SAAT BUKA APLIKASI
     window.addEventListener("DOMContentLoaded", () => {
+      updateModeMenuA11y(false);
       getActiveProjectId();
 
       document.getElementById("masterCount").textContent = catalog.length;
