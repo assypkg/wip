@@ -1490,8 +1490,14 @@
       #fgInputCard .form-row-responsive > div:nth-child(1),
       #fgInputCard .form-row-responsive > div:nth-child(2),
       #fgInputCard .form-row-responsive > div:nth-child(3) { grid-column:auto; }
+      /* Nama Produk dan JO tetap berada di baris masing-masing,
+         tetapi input hanya memakai setengah lebar form. */
       #fgInputCard .form-row-responsive > div:nth-child(5),
-      #fgInputCard .form-row-responsive > div:nth-child(6) { grid-column:auto; }
+      #fgInputCard .form-row-responsive > div:nth-child(6) {
+        grid-column:1/-1;
+        width:50%;
+        max-width:50%;
+      }
       #fgInputCard .form-row-responsive > div:nth-child(7),
       #fgInputCard .form-row-responsive > div:nth-child(8) { grid-column:auto; }
     }
@@ -1510,6 +1516,11 @@
       #fgInputCard .form-row-responsive > div:nth-child(6),
       #fgInputCard .form-row-responsive > div:nth-child(7),
       #fgInputCard .form-row-responsive > div:nth-child(8) { grid-column:1/-1; }
+      #fgInputCard .form-row-responsive > div:nth-child(5),
+      #fgInputCard .form-row-responsive > div:nth-child(6) {
+        width:100%;
+        max-width:none;
+      }
       #fgInputCard .fg-main-calc-grid { gap:9px; }
       #fgInputCard .fg-main-calc-grid label { min-height:0; font-size:.68rem; }
       #fgInputCard .fg-main-calc-grid input { padding:9px 8px; font-size:.84rem; }
@@ -3940,10 +3951,9 @@
         if (!raw) return;
         const draft = JSON.parse(raw);
 
-        if (draft.savedDayIso !== todayIso) {
-          localStorage.removeItem(DRAFT_STORAGE_KEY);
-          return;
-        }
+        // Draft tidak boleh kedaluwarsa hanya karena pergantian tanggal pukul 00.00.
+        // savedDayIso tetap dipertahankan untuk kompatibilitas dengan draft versi lama,
+        // tetapi tidak digunakan untuk menghapus pekerjaan yang belum dikirim.
 
         wipList = Array.isArray(draft.wipList) ? draft.wipList : [];
         fgList = Array.isArray(draft.fgList) ? draft.fgList : [];
