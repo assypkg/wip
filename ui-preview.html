@@ -1948,8 +1948,27 @@
     .home-info-card p { margin:11px 0;color:#74817A;font-size:.70rem;line-height:1.55; }
     .home-secondary-btn { min-width:180px; }
     .home-workflow-steps { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:13px; }
-    .home-workflow-steps div { display:flex;align-items:center;gap:8px;padding:9px;border-radius:8px;background:#F5F8F6;color:#64756A;font-size:.65rem;font-weight:700; }
+    .home-workflow-steps div { display:flex;align-items:flex-start;gap:9px;padding:10px;border-radius:8px;background:#F5F8F6;color:#64756A;font-size:.65rem;font-weight:700; }
+    .home-workflow-steps div > span { display:flex;flex-direction:column;gap:3px;line-height:1.4; }
+    .home-workflow-steps strong { color:#425A4B;font-size:.68rem; }
+    .home-workflow-steps small { color:#718078;font-size:.62rem;font-weight:500;line-height:1.4; }
     .home-workflow-steps b { color:#4E7A60;font-size:.73rem; }
+    .home-navigation-guide { margin-top:22px; }
+    .home-navigation-grid { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px; }
+    .home-guide-card { min-width:0;padding:18px;border:1px solid #DCE5E0;border-radius:12px;background:#FFFFFF;box-shadow:0 2px 8px rgba(35,53,44,.035); }
+    .home-guide-heading { display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid #E8EEE9; }
+    .home-guide-icon { width:38px;height:38px;display:grid;place-items:center;border-radius:10px;background:#EAF2ED;color:#39785E;font-size:1.05rem;font-weight:900; }
+    .home-guide-heading div > span { color:#84938A;font-size:.57rem;font-weight:850;letter-spacing:.10em; }
+    .home-guide-heading h3 { margin:3px 0 0;color:#2D4539;font-size:.88rem;font-weight:850; }
+    .home-guide-list { display:flex;flex-direction:column;gap:8px; }
+    .home-guide-row { display:flex;align-items:center;gap:10px;min-width:0;padding:8px 9px;border:1px solid #E8EEE9;border-radius:8px;background:#F9FBF9; }
+    .home-guide-row kbd,.home-guide-step { display:grid;place-items:center;min-width:42px;height:32px;padding:0 7px;border:1px solid #365A47;border-radius:6px;background:#365A47;color:#FFFFFF;font-family:inherit;font-size:.68rem;font-weight:900;box-shadow:0 2px 0 #274433; }
+    .home-guide-row kbd { white-space:nowrap; }
+    .home-guide-step { min-width:32px;width:32px;flex:0 0 32px;border-color:#D4E3D8;background:#EAF2ED;color:#47755C;box-shadow:none; }
+    .home-guide-detail { display:flex;flex-direction:column;gap:3px;min-width:0; }
+    .home-guide-detail strong { color:#40564A;font-size:.69rem;line-height:1.3; }
+    .home-guide-detail small { color:#74817A;font-size:.63rem;line-height:1.45; }
+    .home-guide-note { margin:12px 0 0;padding:10px 11px;border-left:3px solid #7A9B84;border-radius:0 7px 7px 0;background:#F1F6F2;color:#697A70;font-size:.63rem;line-height:1.5; }
     .home-footnote { margin-top:20px;padding-top:12px;border-top:1px solid #E4EAE6;color:#9AA69F;font-size:.60rem; }
 
     /* MASTER PAGE — lima submenu tetap memakai form/modal Master existing. */
@@ -2016,6 +2035,8 @@
       .home-app-card p { min-height:0; }
       .home-lower-grid { grid-template-columns:1fr;gap:10px;margin-top:11px; }
       .home-workflow-steps { grid-template-columns:1fr;gap:6px; }
+      .home-navigation-grid { grid-template-columns:1fr;gap:10px; }
+      .home-guide-card { padding:15px; }
       .master-page-grid { grid-template-columns:1fr;gap:9px; }
       .page-heading-row { align-items:flex-start; }
       .page-heading-row h1 { font-size:1.22rem; }
@@ -2169,11 +2190,48 @@
       <article class="home-info-card home-workflow-card">
         <div class="home-info-heading"><span class="home-info-icon">◎</span><div><span>ALUR PENGGUNAAN</span><h3>Alur kerja aplikasi</h3></div></div>
         <div class="home-workflow-steps">
-          <div><b>01</b><span>Input data sesuai modul</span></div>
-          <div><b>02</b><span>Periksa dan koreksi daftar</span></div>
-          <div><b>03</b><span>Susun lalu kirim laporan</span></div>
+          <div><b>01</b><span><strong>Pilih modul</strong><small>Buka WIP, Finish Good, atau Laporan Awal Shift sesuai kebutuhan.</small></span></div>
+          <div><b>02</b><span><strong>Input &amp; verifikasi</strong><small>Lengkapi data produksi, lalu cek hasilnya pada menu Daftar. Koreksi bila diperlukan.</small></span></div>
+          <div><b>03</b><span><strong>Siapkan laporan</strong><small>Buka WhatsApp, periksa isi laporan, lalu bagikan ke grup yang dituju.</small></span></div>
         </div>
       </article>
+    </section>
+
+    <section class="home-navigation-guide" aria-label="Panduan shortcut dan navigasi">
+      <div class="home-section-heading">
+        <div><span>QUICK GUIDE</span><h2>Shortcut &amp; Navigasi</h2></div>
+        <p>Panduan berpindah bagian melalui desktop dan HP</p>
+      </div>
+      <div class="home-navigation-grid">
+        <article class="home-guide-card">
+          <div class="home-guide-heading">
+            <span class="home-guide-icon">⌨</span>
+            <div><span>DESKTOP · LAPTOP / PC</span><h3>Shortcut keyboard</h3></div>
+          </div>
+          <div class="home-guide-list">
+            <div class="home-guide-row"><kbd>F1</kbd><span class="home-guide-detail"><strong>Input</strong><small>Langsung menuju bagian Input pada modul produksi terakhir yang dibuka.</small></span></div>
+            <div class="home-guide-row"><kbd>F2</kbd><span class="home-guide-detail"><strong>Daftar</strong><small>Langsung menuju daftar data pada modul yang sedang digunakan.</small></span></div>
+            <div class="home-guide-row"><kbd>F3</kbd><span class="home-guide-detail"><strong>WhatsApp</strong><small>Langsung menuju bagian laporan WhatsApp pada modul tersebut.</small></span></div>
+            <div class="home-guide-row"><kbd>SPACE</kbd><span class="home-guide-detail"><strong>Buka / tutup sidebar</strong><small>Tekan spasi saat tidak sedang mengetik atau memilih tombol/link.</small></span></div>
+            <div class="home-guide-row"><kbd>ESC</kbd><span class="home-guide-detail"><strong>Tutup sidebar</strong><small>Menutup panel navigasi yang sedang terbuka.</small></span></div>
+          </div>
+          <p class="home-guide-note">F1–F3 juga dapat digunakan dari Home atau Master; aplikasi akan kembali ke modul produksi terakhir. Pada pembukaan pertama, modul awalnya adalah WIP. Shortcut bagian berlaku saat tidak ada modal yang terbuka.</p>
+        </article>
+
+        <article class="home-guide-card">
+          <div class="home-guide-heading">
+            <span class="home-guide-icon">▣</span>
+            <div><span>HP · TOUCH NAVIGATION</span><h3>Navigasi dengan sentuhan</h3></div>
+          </div>
+          <div class="home-guide-list">
+            <div class="home-guide-row"><span class="home-guide-step">01</span><span class="home-guide-detail"><strong>Buka sidebar</strong><small>Usap layar dari tepi paling kiri ke arah kanan.</small></span></div>
+            <div class="home-guide-row"><span class="home-guide-step">02</span><span class="home-guide-detail"><strong>Pilih aplikasi</strong><small>Ketuk Home, Aplikasi WIP, Finish Good, Laporan Awal Shift, atau Master.</small></span></div>
+            <div class="home-guide-row"><span class="home-guide-step">03</span><span class="home-guide-detail"><strong>Pindah bagian produksi</strong><small>Gunakan menu bawah: Input, Daftar, dan WhatsApp. Menu ini tampil di halaman modul produksi.</small></span></div>
+            <div class="home-guide-row"><span class="home-guide-step">04</span><span class="home-guide-detail"><strong>Tutup sidebar</strong><small>Usap dari dalam sidebar ke arah kiri, atau ketuk area di luar panel.</small></span></div>
+          </div>
+          <p class="home-guide-note">Di HP tidak diperlukan shortcut keyboard. Gunakan gesture sidebar dan menu bawah agar navigasi tetap mudah dijangkau dengan satu tangan.</p>
+        </article>
+      </div>
     </section>
     <div class="home-footnote">Assembly Operations · Internal Production System</div>
   </main>
