@@ -1661,6 +1661,46 @@
       .mode-tabs,.desktop-mode-backdrop { transition-duration:.01ms; }
     }
 
+    /* SINGLE-PAGE WORKSPACE: Input -> Daftar -> Laporan WhatsApp. */
+    .sheet-section-nav { display:none !important; }
+    #sectionWip.container,
+    #sectionFg.container,
+    #sectionSpa.container {
+      grid-template-columns:minmax(0,1fr);
+      align-items:stretch;
+      width:100%;
+      max-width:1280px;
+      margin:18px auto;
+      padding:0 22px;
+      gap:16px;
+    }
+    #sectionWip > section,
+    #sectionFg > section,
+    #sectionSpa > section {
+      display:flex;
+      flex-direction:column;
+      min-width:0;
+      width:100%;
+      gap:14px;
+    }
+    #sectionWip > section .card,
+    #sectionFg > section .card,
+    #sectionSpa > section .card {
+      width:100%;
+      margin-bottom:0;
+    }
+    #sectionFg { align-items:stretch; }
+    @media (max-width:879px) {
+      body { padding-bottom:24px; }
+      #sectionWip.container,
+      #sectionFg.container,
+      #sectionSpa.container {
+        margin:12px auto;
+        padding:0 12px;
+        gap:12px;
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -1810,7 +1850,7 @@
 
     <!-- KOLOM KANAN: REKAP, SIMPAN CLOUD & SHARE LANGSUNG WA -->
     <section>
-      <div class="card sheet-section-target mobile-tab-hidden" id="wipListCard">
+      <div class="card sheet-section-target" id="wipListCard">
         <div class="card-header" style="margin-bottom:8px; border-bottom:none; padding-bottom:0;">
           <span class="card-title">2. Daftar Sisa Barang Bagus (Rincian Box & Edit)</span>
         </div>
@@ -1832,7 +1872,7 @@
         <div id="wipGroupedContainer"></div>
       </div>
 
-      <div class="card sheet-section-target mobile-tab-hidden" id="wipWaCard">
+      <div class="card sheet-section-target" id="wipWaCard">
         <div class="card-header">
           <span class="card-title">3. Laporan WhatsApp (Khusus Sisa WIP)</span>
         </div>
@@ -2116,7 +2156,7 @@
 
     <!-- KOLOM KANAN: DAFTAR FINISH GOOD & LAPORAN WA GABUNGAN -->
     <section>
-      <div class="card sheet-section-target mobile-tab-hidden" id="fgListCard">
+      <div class="card sheet-section-target" id="fgListCard">
         <div class="card-header">
           <span class="card-title">2. Daftar Hasil Produksi (Finish Good)</span>
           <div style="display:flex; gap:6px;">
@@ -2193,7 +2233,7 @@
         <div id="fgListContainer"></div>
       </div>
 
-      <div class="card sheet-section-target mobile-tab-hidden" id="fgWaCard">
+      <div class="card sheet-section-target" id="fgWaCard">
         <div class="card-header">
           <span class="card-title">3. Laporan WA (Finish Good + Sisa WIP)</span>
         </div>
@@ -2334,7 +2374,7 @@
     </section>
 
     <section>
-      <div class="card sheet-section-target mobile-tab-hidden" id="spaListCard">
+      <div class="card sheet-section-target" id="spaListCard">
         <div class="card-header">
           <span class="card-title">2. Rincian SPA (Assy + Gudang & Edit)</span>
           <button class="btn btn-danger" onclick="hapusSemuaSpa()">🗑️ Reset SPA</button>
@@ -2342,7 +2382,7 @@
         <details class="wa-import-collapse"><summary>📥 Import laporan WhatsApp SPA <span class="wa-import-hint">Buka untuk tempel laporan SPA</span></summary><div class="wa-import-body"><p style="font-size:.73rem;color:var(--text-muted);">Tempel laporan SPA. Stok Assy, Gudang, stok khusus, NG Hold, dan barang menunggu dari Plant Beta dipisahkan.</p><textarea id="waImportSpaText" class="wa-preview" style="min-height:150px;" placeholder="Tempel laporan SPA dari WhatsApp di sini..."></textarea><button class="btn btn-sky" onclick="previewImportSpa()">🔎 Proses & Preview</button> <button class="btn btn-outline" onclick="bersihkanImportSpa()">Bersihkan</button><div id="waImportSpaPreview" style="margin-top:8px;font-size:.78rem;"></div></div></details><div id="spaGroupedContainer"></div>
       </div>
 
-      <div class="card sheet-section-target mobile-tab-hidden" id="spaWaCard">
+      <div class="card sheet-section-target" id="spaWaCard">
         <div class="card-header">
           <span class="card-title">3. Laporan WA SPA</span>
         </div>
@@ -3530,12 +3570,8 @@
       const safeIndex = Math.max(0, Math.min(config.panels.length - 1, Number(tabIndex) || 0));
       const activePanelId = config.panels[safeIndex];
 
-      // Reset SEMUA panel pada sheet ini. Di mobile hanya panel aktif terlihat;
-      // di desktop seluruh panel tetap tampil seperti layout sebelumnya.
-      config.panels.forEach((id, index) => {
-        const panel = document.getElementById(id);
-        if (panel) panel.classList.toggle("mobile-tab-hidden", mobile && index !== safeIndex);
-      });
+      // Semua bagian Input, Daftar, dan WhatsApp kini tampil berurutan
+      // dalam satu halaman. Indeks hanya dipakai untuk status navigasi lama.
 
       if (nav) {
         nav.classList.add("is-active");
@@ -3679,7 +3715,7 @@
         const config = SHEET_TAB_CONFIG[key];
         const nav = document.getElementById(config.navId);
         if (nav) nav.classList.toggle("is-active", key === mode);
-        if (key === mode) setSheetTab(mode, 0, true);
+        if (key === mode) setSheetTab(mode, 0, false);
         else config.panels.forEach(id => {
           const panel = document.getElementById(id);
           if (panel) panel.classList.remove("mobile-tab-hidden");
@@ -3688,11 +3724,9 @@
 
       // Saat berpindah aplikasi/sheet di desktop, selalu kembali ke bagian
       // paling atas agar klik Home tidak meninggalkan posisi menu sebelumnya.
-      if (!isMobileSheetLayout()) {
-        const scrollRoot = document.scrollingElement || document.documentElement || document.body;
-        scrollRoot.scrollTop = 0;
-        window.scrollTo(0, 0);
-      }
+      const scrollRoot = document.scrollingElement || document.documentElement || document.body;
+      scrollRoot.scrollTop = 0;
+      window.scrollTo(0, 0);
 
       // Jangan render ulang seluruh daftar saat hanya berpindah sheet.
       simpanDraftLokal();
