@@ -5935,7 +5935,7 @@
           jobNames:parsed.jobNames,
           jobMap:new Map(),
           pcsPerBox:0,target:0,duration:"",note:"",gapNote:"",
-          ensureJob:null,activeJob:""
+          ensureJob:null,activeJob:"",activeLot:""
         };
         product.ensureJob=jobName=>ensureJob(product,jobName);
         if(parsed.jobNames.length===1)product.ensureJob(parsed.jobNames[0]);
@@ -5980,19 +5980,37 @@
         if(gapMatch){currentProduct.gapNote=gapMatch[1].trim();continue;}
         if(/^HASIL\b/i.test(line))continue;
 
+        // Beberapa laporan menulis kelompok A dan B pada baris tersendiri,
+        // lalu merinci hasil per line dengan format "5 : 10 BOX @990 = ...".
+        if(/^[AB]$/i.test(line)){
+          currentProduct.activeLot=line.toUpperCase();
+          continue;
+        }
+
         if(/^[A-Z0-9]{2,12}-[A-Z0-9]{3,12}$/i.test(line)){
           currentProduct.ensureJob(line);
           currentProduct.activeJob=line.toUpperCase();
+          currentProduct.activeLot="";
           continue;
         }
+
+        const activeName=currentProduct.activeJob||
+          (currentProduct.jobNames.length===1?currentProduct.jobNames[0]:"");
+        const activeJob=activeName?currentProduct.ensureJob(activeName):null;
 
         const rowMatch=line.match(/^(RECEH\s*[AB]|LOT\s*[AB]|[AB])\s*:\s*(.+)$/i);
         if(rowMatch){
           const label=rowMatch[1].replace(/\s+/g," ").toUpperCase().replace(/^LOT\s+/,"");
-          const activeName=currentProduct.activeJob||
-            (currentProduct.jobNames.length===1?currentProduct.jobNames[0]:"");
-          const activeJob=activeName?currentProduct.ensureJob(activeName):null;
+          if(label==="A"||label==="B")currentProduct.activeLot=label;
           bacaBarisHasilImportFg(label,rowMatch[2],currentProduct,activeJob);
+          continue;
+        }
+
+        // Baris bernomor seperti "1 : 3 BOX @3.080 = 9.240 PCS"
+        // dijumlahkan ke Lot A/B yang sedang aktif.
+        const lineBreakdownMatch=line.match(/^([A-Z0-9]{1,8})\s*:\s*(.+)$/i);
+        if(lineBreakdownMatch&&currentProduct.activeLot&&/\b(?:BOX|PCS)\b/i.test(lineBreakdownMatch[2])){
+          bacaBarisHasilImportFg(currentProduct.activeLot,lineBreakdownMatch[2],currentProduct,activeJob);
           continue;
         }
 
