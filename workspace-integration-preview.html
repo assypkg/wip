@@ -1159,6 +1159,8 @@ body.workspace-sidebar-open:before{content:"";position:fixed;inset:0;background:
 body.workspace-sidebar-open .workspace-edge{display:none}
 .workspace-menu-btn{border:1px solid rgba(255,255,255,.32);background:rgba(255,255,255,.1);color:#fff;border-radius:8px;padding:7px 10px;font:700 .72rem Inter,system-ui,sans-serif;cursor:pointer}
 .workspace-menu-btn:hover{background:rgba(255,255,255,.2)}
+.workspace-preview-note{display:inline-flex;align-items:center;padding:6px 9px;border:1px solid rgba(255,255,255,.28);border-radius:8px;background:rgba(20,35,48,.28);color:#fff;font:750 .62rem Inter,system-ui,sans-serif;letter-spacing:.06em}
+@media(max-width:600px){.workspace-preview-note{display:none}}
 /* Sidebar becomes the application switcher; legacy tabs stay in DOM for switchMode(). */
 .mode-tabs{display:none!important}
 .header-actions > button[onclick*="masterHubModal"]{display:none!important}
@@ -1205,6 +1207,7 @@ body.workspace-sidebar-open .workspace-edge{display:none}
       </div>
       <div class="header-actions">
         <button type="button" class="workspace-menu-btn" id="workspaceMenuToggle">☰ Menu</button>
+        <span class="workspace-preview-note">PREVIEW · CLOUD DINONAKTIFKAN</span>
         <button class="btn-header install-btn" id="btnInstallHeader" onclick="triggerInstallApp()">
           📲 Download Aplikasi
         </button>
@@ -2308,6 +2311,19 @@ body.workspace-sidebar-open .workspace-edge{display:none}
   </div>
 
   <script>
+/* PREVIEW SAFETY: prevent any production Firestore reads or writes from this copy. */
+    const __workspacePreviewNativeFetch = window.fetch.bind(window);
+    window.fetch = (input, init) => {
+      const requestUrl = typeof input === "string" ? input : (input && input.url) || "";
+      if (requestUrl.includes("firestore.googleapis.com")) {
+        return Promise.resolve(new Response(
+          JSON.stringify({error:{message:"Workspace UI preview: Cloud access is disabled."}}),
+          {status:503,headers:{"Content-Type":"application/json"}}
+        ));
+      }
+      return __workspacePreviewNativeFetch(input, init);
+    };
+
     /********************************************************************
      * 0. REGISTRASI SERVICE WORKER (sw.js) & TOMBOL DOWNLOAD APLIKASI PWA
      ********************************************************************/
