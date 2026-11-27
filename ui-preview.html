@@ -1662,7 +1662,9 @@
     }
 
     /* SINGLE-PAGE WORKSPACE: Input -> Daftar -> Laporan WhatsApp. */
-    .sheet-section-nav { display:none !important; }
+    @media (min-width:880px) {
+      .sheet-section-nav { display:none !important; }
+    }
     #sectionWip.container,
     #sectionFg.container,
     #sectionSpa.container {
@@ -1779,6 +1781,64 @@
       .module-overview-steps a { min-height:34px;padding:6px 8px;font-size:.64rem; }
     }
 
+    /* MOBILE BOTTOM NAV — tetap, horizontal, dan aktif mengikuti posisi scroll. */
+    @media (max-width:879px) {
+      body { padding-bottom:calc(126px + env(safe-area-inset-bottom, 0px)); }
+      .sheet-section-nav {
+        display:none !important;
+        position:fixed !important;
+        top:auto !important;right:0 !important;bottom:0 !important;left:0 !important;
+        transform:none !important;
+        width:100% !important;max-width:none !important;
+        margin:0 !important;
+        grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+        align-items:stretch;gap:8px;
+        padding:12px 12px calc(34px + env(safe-area-inset-bottom, 0px)) !important;
+        background:linear-gradient(to bottom,#FFFFFF 0%,#FFFFFF calc(100% - 28px),#1D287E calc(100% - 28px),#1D287E 100%) !important;
+        border:0 !important;border-top:1px solid #E4EAF0 !important;
+        border-radius:20px 20px 0 0 !important;
+        box-shadow:0 -7px 22px rgba(27,42,64,.14) !important;
+        z-index:120 !important;
+        scroll-margin:0;
+      }
+      .sheet-section-nav.is-active:not(.modal-nav-hidden) { display:grid !important; }
+      .sheet-nav-btn {
+        display:flex;min-width:0;min-height:68px;
+        align-items:center;justify-content:center;gap:6px;
+        padding:8px 5px;
+        border:1.5px solid #D6DEE7;
+        border-radius:16px;
+        background:#F6F8FA;
+        color:#1D2C78;
+        font-family:Inter,system-ui,sans-serif;
+        font-size:.70rem;font-weight:850;line-height:1.12;
+        white-space:nowrap;
+        box-shadow:none;
+      }
+      .sheet-nav-btn .nav-number {
+        display:inline-flex;flex:0 0 31px;width:31px;height:31px;
+        align-items:center;justify-content:center;
+        border-radius:50%;background:#E2E8F0;color:#1D2C78;
+        font-size:.9rem;font-weight:850;
+      }
+      .sheet-nav-btn.active {
+        background:#1D287E;border-color:#1D287E;color:#FFFFFF;
+        box-shadow:0 3px 9px rgba(29,40,126,.17);
+      }
+      .sheet-nav-btn.active .nav-number { background:rgba(255,255,255,.20);color:#FFFFFF; }
+      .sheet-section-target,#wipInputSection,#fgInputCard,#spaInputSection {
+        scroll-margin-top:14px;
+        scroll-margin-bottom:130px;
+      }
+      .module-overview { scroll-margin-top:12px; }
+    }
+    @media (max-width:390px) {
+      .sheet-section-nav.is-active:not(.modal-nav-hidden) { gap:5px;padding-left:8px!important;padding-right:8px!important; }
+      .sheet-nav-btn { gap:4px;padding:7px 3px;font-size:.61rem;border-radius:13px; }
+      .sheet-nav-btn .nav-number { flex-basis:27px;width:27px;height:27px;font-size:.8rem; }
+    }
+
+  
     .preview-notice {
       width:100%;padding:9px 18px;display:flex;justify-content:center;align-items:center;
       flex-wrap:wrap;gap:6px 12px;background:#FFF4D8;border-bottom:1px solid #E8D19A;
@@ -1829,7 +1889,7 @@
 <div class="preview-notice" role="note">
   <b>PREVIEW UI — TAMPILAN SAJA</b>
   <span>Input, simpan, edit, Cloud, dan WhatsApp tidak terhubung di halaman preview ini.</span>
-  <span class="preview-notice-tip">HP: geser dari tepi kiri ke kanan · Desktop: tekan SPACE atau klik Menu</span>
+  <span class="preview-notice-tip">HP: navigasi tetap di bawah · Desktop: SPACE atau klik Menu</span>
 </div>
 
   <!-- BANNER OTOMATIS MUNCUL SAAT SIAP DI-INSTALL SEBAGAI APLIKASI -->
@@ -2962,81 +3022,107 @@
   <script>
     (() => {
       const modules = {
-        wip: { section: "sectionWip", button: "tabBtnWip" },
-        fg: { section: "sectionFg", button: "tabBtnFg" },
-        spa: { section: "sectionSpa", button: "tabBtnSpa" }
+        wip: { section:"sectionWip", button:"tabBtnWip", nav:"wipSectionNav", panels:["wipInputSection","wipListCard","wipWaCard"] },
+        fg: { section:"sectionFg", button:"tabBtnFg", nav:"fgSectionNav", panels:["fgInputCard","fgListCard","fgWaCard"] },
+        spa: { section:"sectionSpa", button:"tabBtnSpa", nav:"spaSectionNav", panels:["spaInputSection","spaListCard","spaWaCard"] }
       };
-      const body = document.body;
-      const drawer = document.getElementById("modeTabs");
-      const backdrop = document.getElementById("desktopModeBackdrop");
-      const menuButton = document.getElementById("desktopModeToggle");
+      const body=document.body;
+      const drawer=document.getElementById("modeTabs");
+      const backdrop=document.getElementById("desktopModeBackdrop");
+      const menuButton=document.getElementById("desktopModeToggle");
+      let activeMode="wip", touchStart=null, scrollQueued=false;
 
-      function mobileLayout() {
-        return window.matchMedia && window.matchMedia("(max-width:900px)").matches;
+      function mobileLayout(){return window.matchMedia&&window.matchMedia("(max-width:900px)").matches;}
+      function setDrawerState(open){
+        body.classList.remove("desktop-mode-menu-open","mobile-mode-menu-open");
+        if(open)body.classList.add(mobileLayout()?"mobile-mode-menu-open":"desktop-mode-menu-open");
+        if(drawer){drawer.setAttribute("aria-hidden",open?"false":"true");if("inert"in drawer)drawer.inert=!open;}
+        if(menuButton)menuButton.setAttribute("aria-expanded",open?"true":"false");
       }
-      function setDrawerState(open) {
-        body.classList.remove("desktop-mode-menu-open", "mobile-mode-menu-open");
-        if (open) body.classList.add(mobileLayout() ? "mobile-mode-menu-open" : "desktop-mode-menu-open");
-        if (drawer) {
-          drawer.setAttribute("aria-hidden", open ? "false" : "true");
-          if ("inert" in drawer) drawer.inert = !open;
-        }
-        if (menuButton) menuButton.setAttribute("aria-expanded", open ? "true" : "false");
-      }
-      window.closeDesktopModeMenu = () => setDrawerState(false);
-      window.toggleDesktopModeMenu = () => {
-        const open = body.classList.contains("desktop-mode-menu-open") || body.classList.contains("mobile-mode-menu-open");
+      window.closeDesktopModeMenu=()=>setDrawerState(false);
+      window.toggleDesktopModeMenu=()=>{
+        const open=body.classList.contains("desktop-mode-menu-open")||body.classList.contains("mobile-mode-menu-open");
         setDrawerState(!open);
       };
-      window.switchMode = mode => {
-        if (!modules[mode]) return;
-        Object.entries(modules).forEach(([key, cfg]) => {
-          const section = document.getElementById(cfg.section);
-          const button = document.getElementById(cfg.button);
-          if (section) section.style.display = key === mode ? "grid" : "none";
-          if (button) button.className = "tab-btn" + (key === mode ? (mode === "wip" ? " active-wip" : mode === "fg" ? " active-fg" : " active-spa") : "");
+      function setActiveNav(index){
+        const cfg=modules[activeMode];if(!cfg)return;
+        const nav=document.getElementById(cfg.nav);
+        if(!nav)return;
+        nav.querySelectorAll(".sheet-nav-btn").forEach((btn,i)=>{
+          btn.classList.toggle("active",i===index);
+          btn.setAttribute("aria-current",i===index?"page":"false");
+        });
+      }
+      function scrollToSection(index){
+        const cfg=modules[activeMode],id=cfg&&cfg.panels[index],target=id&&document.getElementById(id);
+        if(!target)return;
+        setActiveNav(index);
+        const top=window.scrollY+target.getBoundingClientRect().top-12;
+        window.scrollTo({top:Math.max(0,top),behavior:"smooth"});
+      }
+      window.switchMode=mode=>{
+        const cfg=modules[mode];if(!cfg)return;
+        activeMode=mode;
+        Object.entries(modules).forEach(([key,item])=>{
+          const section=document.getElementById(item.section),button=document.getElementById(item.button),nav=document.getElementById(item.nav);
+          if(section)section.style.display=key===mode?"grid":"none";
+          if(button)button.className="tab-btn"+(key===mode?(mode==="wip"?" active-wip":mode==="fg"?" active-fg":" active-spa"):"");
+          if(nav)nav.classList.toggle("is-active",key===mode);
         });
         setDrawerState(false);
-        window.scrollTo({ top: 0, behavior: "auto" });
+        setActiveNav(0);
+        window.scrollTo({top:0,behavior:"auto"});
       };
-      Object.entries(modules).forEach(([mode,cfg]) => {
-        const btn = document.getElementById(cfg.button);
-        if (btn) btn.addEventListener("click", () => window.switchMode(mode));
+      Object.entries(modules).forEach(([mode,cfg])=>{
+        const button=document.getElementById(cfg.button);
+        if(button)button.addEventListener("click",()=>window.switchMode(mode));
+        const nav=document.getElementById(cfg.nav);
+        if(nav)nav.querySelectorAll(".sheet-nav-btn").forEach((btn,index)=>{
+          btn.addEventListener("click",()=>scrollToSection(index));
+        });
       });
-      if (menuButton) menuButton.addEventListener("click", window.toggleDesktopModeMenu);
-      if (backdrop) backdrop.addEventListener("click", window.closeDesktopModeMenu);
-      document.addEventListener("keydown", event => {
-        if (event.key === "Escape") { window.closeDesktopModeMenu(); return; }
-        if (event.code !== "Space" || event.repeat || !window.matchMedia("(min-width:901px)").matches) return;
-        if (event.altKey || event.ctrlKey || event.metaKey) return;
-        const target = event.target;
-        if (target && (target.isContentEditable || target.closest?.("input,textarea,select,button,a,[contenteditable='true'],[role='button']"))) return;
-        event.preventDefault();
-        window.toggleDesktopModeMenu();
+      if(menuButton)menuButton.addEventListener("click",window.toggleDesktopModeMenu);
+      if(backdrop)backdrop.addEventListener("click",window.closeDesktopModeMenu);
+      document.addEventListener("keydown",event=>{
+        if(event.key==="Escape"){window.closeDesktopModeMenu();return;}
+        if(event.code!=="Space"||event.repeat||!window.matchMedia("(min-width:901px)").matches)return;
+        if(event.altKey||event.ctrlKey||event.metaKey)return;
+        const target=event.target;
+        if(target&&(target.isContentEditable||target.closest?.("input,textarea,select,button,a,[contenteditable='true'],[role='button']")))return;
+        event.preventDefault();window.toggleDesktopModeMenu();
       });
-      let touchStart = null;
-      document.addEventListener("touchstart", event => {
-        if (!mobileLayout() || event.touches.length !== 1) return;
-        const t = event.touches[0];
-        const open = body.classList.contains("mobile-mode-menu-open");
-        const drawerWidth = Math.min(300, window.innerWidth * .86);
-        if ((!open && t.clientX <= 28) || (open && t.clientX <= drawerWidth + 20)) {
-          touchStart = { x:t.clientX, y:t.clientY, open };
-        } else touchStart = null;
-      }, { passive:true });
-      document.addEventListener("touchend", event => {
-        if (!touchStart || !event.changedTouches.length) return;
-        const start = touchStart; touchStart = null;
-        const t = event.changedTouches[0];
-        if (Math.abs(t.clientY - start.y) > 80) return;
-        const dx = t.clientX - start.x;
-        if (!start.open && dx >= 58) setDrawerState(true);
-        if (start.open && dx <= -58) setDrawerState(false);
-      }, { passive:true });
-      document.addEventListener("touchcancel", () => { touchStart = null; }, { passive:true });
+      document.addEventListener("touchstart",event=>{
+        if(!mobileLayout()||event.touches.length!==1)return;
+        const t=event.touches[0],open=body.classList.contains("mobile-mode-menu-open"),w=Math.min(300,window.innerWidth*.86);
+        touchStart=((!open&&t.clientX<=28)||(open&&t.clientX<=w+20))?{x:t.clientX,y:t.clientY,open}:null;
+      },{passive:true});
+      document.addEventListener("touchend",event=>{
+        if(!touchStart||!event.changedTouches.length)return;
+        const s=touchStart;touchStart=null;const t=event.changedTouches[0],dx=t.clientX-s.x;
+        if(Math.abs(t.clientY-s.y)>80)return;
+        if(!s.open&&dx>=58)setDrawerState(true);
+        if(s.open&&dx<=-58)setDrawerState(false);
+      },{passive:true});
+      document.addEventListener("touchcancel",()=>{touchStart=null;},{passive:true});
+      document.addEventListener("scroll",()=>{
+        if(!mobileLayout()||scrollQueued)return;
+        scrollQueued=true;
+        requestAnimationFrame(()=>{
+          scrollQueued=false;
+          const cfg=modules[activeMode];let active=0;
+          const line=Math.min(260,Math.max(125,window.innerHeight*.36));
+          cfg.panels.forEach((id,i)=>{
+            const node=document.getElementById(id);
+            if(node&&node.getBoundingClientRect().top<=line)active=i;
+          });
+          const max=Math.max(0,document.documentElement.scrollHeight-window.innerHeight);
+          if(max-window.scrollY<=18)active=2;
+          setActiveNav(active);
+        });
+      },{passive:true});
       setDrawerState(false);
+      setActiveNav(0);
     })();
   </script>
-
 </body>
 </html>
