@@ -1781,9 +1781,9 @@
       .module-overview-steps a { min-height:34px;padding:6px 8px;font-size:.64rem; }
     }
 
-    /* MOBILE BOTTOM NAV — tetap, horizontal, dan aktif mengikuti posisi scroll. */
+    /* MOBILE BOTTOM NAV — compact, tanpa strip warna tambahan. */
     @media (max-width:879px) {
-      body { padding-bottom:calc(126px + env(safe-area-inset-bottom, 0px)); }
+      body { padding-bottom:calc(82px + env(safe-area-inset-bottom, 0px)); }
       .sheet-section-nav {
         display:none !important;
         position:fixed !important;
@@ -1792,50 +1792,50 @@
         width:100% !important;max-width:none !important;
         margin:0 !important;
         grid-template-columns:repeat(3,minmax(0,1fr)) !important;
-        align-items:stretch;gap:8px;
-        padding:12px 12px calc(34px + env(safe-area-inset-bottom, 0px)) !important;
-        background:linear-gradient(to bottom,#FFFFFF 0%,#FFFFFF calc(100% - 28px),#1D287E calc(100% - 28px),#1D287E 100%) !important;
+        align-items:stretch;gap:7px;
+        padding:8px 10px calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+        background:#FFFFFF !important;
         border:0 !important;border-top:1px solid #E4EAF0 !important;
-        border-radius:20px 20px 0 0 !important;
-        box-shadow:0 -7px 22px rgba(27,42,64,.14) !important;
+        border-radius:15px 15px 0 0 !important;
+        box-shadow:0 -5px 16px rgba(27,42,64,.12) !important;
         z-index:120 !important;
         scroll-margin:0;
       }
       .sheet-section-nav.is-active:not(.modal-nav-hidden) { display:grid !important; }
       .sheet-nav-btn {
-        display:flex;min-width:0;min-height:68px;
-        align-items:center;justify-content:center;gap:6px;
-        padding:8px 5px;
-        border:1.5px solid #D6DEE7;
-        border-radius:16px;
+        display:flex;min-width:0;min-height:52px;
+        align-items:center;justify-content:center;gap:5px;
+        padding:6px 4px;
+        border:1px solid #D6DEE7;
+        border-radius:11px;
         background:#F6F8FA;
         color:#1D2C78;
         font-family:Inter,system-ui,sans-serif;
-        font-size:.70rem;font-weight:850;line-height:1.12;
+        font-size:.64rem;font-weight:850;line-height:1.1;
         white-space:nowrap;
         box-shadow:none;
       }
       .sheet-nav-btn .nav-number {
-        display:inline-flex;flex:0 0 31px;width:31px;height:31px;
+        display:inline-flex;flex:0 0 25px;width:25px;height:25px;
         align-items:center;justify-content:center;
         border-radius:50%;background:#E2E8F0;color:#1D2C78;
-        font-size:.9rem;font-weight:850;
+        font-size:.77rem;font-weight:850;
       }
       .sheet-nav-btn.active {
         background:#1D287E;border-color:#1D287E;color:#FFFFFF;
-        box-shadow:0 3px 9px rgba(29,40,126,.17);
+        box-shadow:0 2px 6px rgba(29,40,126,.15);
       }
       .sheet-nav-btn.active .nav-number { background:rgba(255,255,255,.20);color:#FFFFFF; }
       .sheet-section-target,#wipInputSection,#fgInputCard,#spaInputSection {
         scroll-margin-top:14px;
-        scroll-margin-bottom:130px;
+        scroll-margin-bottom:94px;
       }
       .module-overview { scroll-margin-top:12px; }
     }
     @media (max-width:390px) {
-      .sheet-section-nav.is-active:not(.modal-nav-hidden) { gap:5px;padding-left:8px!important;padding-right:8px!important; }
-      .sheet-nav-btn { gap:4px;padding:7px 3px;font-size:.61rem;border-radius:13px; }
-      .sheet-nav-btn .nav-number { flex-basis:27px;width:27px;height:27px;font-size:.8rem; }
+      .sheet-section-nav.is-active:not(.modal-nav-hidden) { gap:5px;padding-left:7px!important;padding-right:7px!important; }
+      .sheet-nav-btn { gap:3px;padding:5px 2px;font-size:.59rem;border-radius:10px; }
+      .sheet-nav-btn .nav-number { flex-basis:23px;width:23px;height:23px;font-size:.73rem; }
     }
 
   </style>
@@ -3880,14 +3880,39 @@
         return;
       }
 
+      const isDesktop = !isMobileSheetLayout();
+      const target = event.target;
+      const isTypingTarget = !!(target && (
+        target.isContentEditable ||
+        (typeof target.closest === "function" &&
+         target.closest("input, textarea, select, [contenteditable='true'], [role='textbox']"))
+      ));
+      const hasModifier = event.altKey || event.ctrlKey || event.metaKey;
+
+      // Shortcut desktop: F1 Input, F2 Daftar, F3 Laporan WhatsApp.
+      // Tidak mengambil alih tombol fungsi saat pengguna sedang mengetik,
+      // memakai editor, atau ketika dialog/modal sedang terbuka.
+      const functionKeyIndex = ({ F1:0, F2:1, F3:2 })[event.key];
+      if (isDesktop && functionKeyIndex !== undefined && !event.repeat && !hasModifier && !isTypingTarget) {
+        const hasOpenModal = Array.from(document.querySelectorAll(".modal-backdrop"))
+          .some(modal => getComputedStyle(modal).display !== "none");
+        if (!hasOpenModal) {
+          const config = SHEET_TAB_CONFIG[activeTabMode];
+          if (config && config.panels[functionKeyIndex]) {
+            event.preventDefault();
+            closeDesktopModeMenu();
+            scrollToSheetSection(config.panels[functionKeyIndex], config.navId, null);
+          }
+        }
+        return;
+      }
+
       // Space membuka/menutup sidebar hanya di desktop dan tidak mengambil alih
       // spasi ketika pengguna sedang mengetik atau mengoperasikan tombol/link.
       if (event.code !== "Space" || event.repeat || !window.matchMedia("(min-width: 901px)").matches) return;
-      if (event.altKey || event.ctrlKey || event.metaKey) return;
-      const target = event.target;
-      if (target && (target.isContentEditable ||
-          (typeof target.closest === "function" &&
-           target.closest("input, textarea, select, button, a, [contenteditable='true'], [role='button']")))) return;
+      if (hasModifier || isTypingTarget) return;
+      if (target && typeof target.closest === "function" &&
+          target.closest("button, a, [role='button']")) return;
 
       event.preventDefault();
       toggleDesktopModeMenu();
