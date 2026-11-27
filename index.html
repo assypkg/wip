@@ -901,6 +901,75 @@
       min-height:0;
     }
 
+    /* Dialog edit master: form edit mengambang, daftar di belakang tetap utuh. */
+    #masterEditDialog {
+      display:none;
+      position:fixed;
+      inset:0;
+      z-index:2600;
+      align-items:center;
+      justify-content:center;
+      padding:16px;
+      background:rgba(15,23,42,.58);
+      overscroll-behavior:contain;
+    }
+    #masterEditDialog .master-edit-dialog-card {
+      width:min(560px,100%);
+      max-height:min(88vh,760px);
+      max-height:min(88dvh,760px);
+      overflow-y:auto;
+      overscroll-behavior:contain;
+      padding:18px;
+      border:1px solid var(--border);
+      border-radius:15px;
+      background:var(--card-bg,#fff);
+      box-shadow:0 20px 60px rgba(15,23,42,.28);
+    }
+    #masterEditDialog .master-edit-dialog-header {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:14px;
+      padding-bottom:11px;
+      border-bottom:1px solid var(--border);
+    }
+    #masterEditDialog .master-edit-dialog-header h2 {
+      margin:0;
+      color:var(--navy);
+      font-size:1rem;
+      font-weight:850;
+    }
+    #masterEditDialog .master-edit-fields {
+      display:grid;
+      gap:8px;
+    }
+    #masterEditDialog .master-edit-fields input,
+    #masterEditDialog .master-edit-fields select {
+      width:100%;
+      min-width:0;
+    }
+    #masterEditDialog .master-edit-actions {
+      display:flex;
+      justify-content:flex-end;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:16px;
+      padding-top:12px;
+      border-top:1px solid var(--border);
+    }
+    @media (max-width:520px) {
+      #masterEditDialog { align-items:flex-end; padding:10px; }
+      #masterEditDialog .master-edit-dialog-card {
+        width:100%;
+        max-height:84vh;
+        max-height:84dvh;
+        padding:15px;
+        border-radius:15px 15px 12px 12px;
+      }
+      #masterEditDialog .master-edit-dialog-actions .btn { flex:1; }
+    }
+
     #wipEditModal .modal-card { max-width: 760px; max-height: 94vh; }
     #wipEditModalContent #wipInputCard { margin-bottom: 0; box-shadow: none; }
     #spaAddItemModal .modal-card { max-width: 560px; }
@@ -2171,6 +2240,22 @@
   </style>
 </head>
 <body>
+
+  <!-- DIALOG EDIT MASTER: tidak mengganti halaman atau posisi daftar di belakang -->
+  <div id="masterEditDialog" role="dialog" aria-modal="true" aria-labelledby="masterEditDialogTitle"
+       onclick="if(event.target===this)batalEditDialogMaster()">
+    <div class="master-edit-dialog-card">
+      <div class="master-edit-dialog-header">
+        <h2 id="masterEditDialogTitle">Edit Data Master</h2>
+        <button type="button" class="btn btn-outline" aria-label="Tutup dialog edit" onclick="batalEditDialogMaster()">✕</button>
+      </div>
+      <div id="masterEditDialogFields" class="master-edit-fields"></div>
+      <div class="master-edit-actions">
+        <button type="button" class="btn btn-outline" onclick="batalEditDialogMaster()">Batal</button>
+        <button type="button" class="btn btn-primary" id="btnSimpanDialogEditMaster" onclick="simpanEditDialogMaster()">💾 Simpan Perubahan</button>
+      </div>
+    </div>
+  </div>
 
   <!-- HEADER -->
   <header class="app-header">
@@ -3680,6 +3765,9 @@
     let fgWaPreviewPlaceholder = null;
     let fgEditWasMobileHidden = false;
     let editingCatalogIndex = null;
+    let masterEditDialogType = "";
+    let masterEditDialogIndex = null;
+    let masterEditDialogScrollState = null;
     let waWipManuallyEdited = false;
     let waSpaManuallyEdited = false;
     let waFgManuallyEdited = false;
@@ -9734,8 +9822,20 @@
     }
 
     function toggleEditorPemetaanMasterErp(index) {
-      masterErpEditingMappingIndex=masterErpEditingMappingIndex===index?null:index;
-      renderMasterErpMappingList();
+      const record=masterErpMappings[index];
+      if(!record)return;
+      masterErpEditingMappingIndex=index;
+      const options=masterProdukFg.map(name=>
+        '<option value="'+escapeMasterEditValue(name)+'" '+
+        (kunciNamaMasterProdukFg(name)===kunciNamaMasterProdukFg(record.fgProductName)?"selected":"")+
+        '>'+escapeMasterEditValue(name)+'</option>'
+      ).join("");
+      bukaDialogEditMaster("erp",index,"Ubah Pemetaan Item Code ERP",
+        '<div style="font-size:.75rem;color:var(--text-muted);line-height:1.5;">'+
+        '<b style="color:var(--navy);">'+escapeMasterEditValue(record.itemCode)+'</b><br>'+
+        escapeMasterEditValue(record.itemName)+'</div>'+
+        '<label for="masterEditErpProduct">Produk Master FG</label>'+
+        '<select id="masterEditErpProduct"><option value="">— Pilih produk Master FG —</option>'+options+'</select>');
     }
 
     function renderMasterErpPreview() {
@@ -10525,10 +10625,9 @@
       const name=masterJobOrders[index];
       if(!name)return;
       editingMasterJobOrder=index;
-      document.getElementById("masterJobOrderInput").value=name;
-      document.getElementById("btnSimpanMasterJobOrder").textContent="💾 Simpan Perubahan";
-      document.getElementById("btnBatalEditMasterJobOrder").style.display="inline-flex";
-      document.getElementById("masterJobOrderInput").focus();
+      bukaDialogEditMaster("jo",index,"Edit Master Job Order",
+        '<label for="masterEditJobOrder">Nomor Job Order</label>'+
+        '<input type="text" id="masterEditJobOrder" value="'+escapeMasterEditValue(name)+'" autocomplete="off" />');
     }
 
     function batalEditMasterJobOrder() {
@@ -10780,10 +10879,9 @@
       const name=masterLeaders[index];
       if(!name)return;
       editingMasterLeader=index;
-      document.getElementById("masterLeaderInput").value=name;
-      document.getElementById("btnSimpanMasterLeader").textContent="💾 Simpan Perubahan";
-      document.getElementById("btnBatalEditMasterLeader").style.display="inline-flex";
-      document.getElementById("masterLeaderInput").focus();
+      bukaDialogEditMaster("leader",index,"Edit Master Leader",
+        '<label for="masterEditLeaderName">Nama Leader</label>'+
+        '<input type="text" id="masterEditLeaderName" value="'+escapeMasterEditValue(name)+'" autocomplete="off" />');
     }
 
     function batalEditMasterLeader() {
@@ -11107,6 +11205,134 @@
       if(!event.target.closest(".fg-leader-search-wrap"))tutupFgLeaderSuggestions();
     });
 
+    function escapeMasterEditValue(value) {
+      return String(value??"").replace(/[&<>"']/g,char=>({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+      }[char]));
+    }
+
+    function ambilScrollMasterAktif(type) {
+      const pageByType={
+        wip:"masterModal",
+        fg:"masterProdukFgModal",
+        leader:"masterLeaderModal",
+        jo:"masterJobOrderModal",
+        erp:"masterErpModal"
+      };
+      const pageId=pageByType[type]||"";
+      const page=pageId?document.getElementById(pageId):null;
+      const scrollIds=["masterModalList","masterProdukFgList","masterLeaderList","masterJobOrderList","masterErpMappingList","masterErpJoStatusList"];
+      return {
+        pageId,
+        pageTop:page?Number(page.scrollTop)||0:0,
+        windowTop:Number(window.scrollY||window.pageYOffset||0),
+        lists:scrollIds.map(id=>{
+          const element=document.getElementById(id);
+          return element?{id,top:Number(element.scrollTop)||0}:null;
+        }).filter(Boolean)
+      };
+    }
+
+    function pulihkanScrollMasterAktif() {
+      const state=masterEditDialogScrollState;
+      if(!state)return;
+      requestAnimationFrame(()=>{
+        const page=state.pageId?document.getElementById(state.pageId):null;
+        if(page)page.scrollTop=state.pageTop;
+        (state.lists||[]).forEach(item=>{
+          const element=document.getElementById(item.id);
+          if(element)element.scrollTop=item.top;
+        });
+        window.scrollTo(0,state.windowTop||0);
+      });
+    }
+
+    function bukaDialogEditMaster(type,index,title,fieldsHtml) {
+      const dialog=document.getElementById("masterEditDialog");
+      const titleEl=document.getElementById("masterEditDialogTitle");
+      const fields=document.getElementById("masterEditDialogFields");
+      if(!dialog||!titleEl||!fields)return;
+      masterEditDialogType=type;
+      masterEditDialogIndex=index;
+      masterEditDialogScrollState=ambilScrollMasterAktif(type);
+      titleEl.textContent=title;
+      fields.innerHTML=fieldsHtml;
+      dialog.style.display="flex";
+      document.body.classList.add("master-edit-dialog-open");
+      const first=fields.querySelector("input,select,textarea");
+      if(first)requestAnimationFrame(()=>first.focus({preventScroll:true}));
+    }
+
+    function tutupDialogEditMaster() {
+      const dialog=document.getElementById("masterEditDialog");
+      if(dialog)dialog.style.display="none";
+      const fields=document.getElementById("masterEditDialogFields");
+      if(fields)fields.innerHTML="";
+      document.body.classList.remove("master-edit-dialog-open");
+      masterEditDialogType="";
+      masterEditDialogIndex=null;
+      pulihkanScrollMasterAktif();
+      masterEditDialogScrollState=null;
+    }
+
+    function batalEditDialogMaster() {
+      const type=masterEditDialogType;
+      if(type==="fg")batalEditMasterProdukFg();
+      else if(type==="wip")batalEditKatalog();
+      else if(type==="leader")batalEditMasterLeader();
+      else if(type==="jo")batalEditMasterJobOrder();
+      else if(type==="erp"){
+        masterErpEditingMappingIndex=null;
+        renderMasterErpMappingList();
+      }
+      tutupDialogEditMaster();
+    }
+
+    async function simpanEditDialogMaster() {
+      const type=masterEditDialogType;
+      if(!type)return;
+      const get=id=>document.getElementById(id);
+      const value=id=>get(id)?.value??"";
+      const button=get("btnSimpanDialogEditMaster");
+      if(button)button.disabled=true;
+      try {
+        if(type==="fg"){
+          get("masterProdukFgInput").value=value("masterEditFgName");
+          get("masterProdukFgTarget8h").value=value("masterEditFgTarget");
+          get("masterProdukFgPcsPerBox").value=value("masterEditFgPcsPerBox");
+          simpanItemMasterProdukFg();
+          if(editingMasterProdukFg===null)tutupDialogEditMaster();
+        }else if(type==="wip"){
+          get("newCatGroup").value=value("masterEditWipGroup");
+          get("newCatPart").value=value("masterEditWipPart");
+          tambahKatalogManual();
+          if(editingCatalogIndex===null)tutupDialogEditMaster();
+        }else if(type==="leader"){
+          get("masterLeaderInput").value=value("masterEditLeaderName");
+          simpanItemMasterLeader();
+          if(editingMasterLeader===null)tutupDialogEditMaster();
+        }else if(type==="jo"){
+          get("masterJobOrderInput").value=value("masterEditJobOrder");
+          simpanItemMasterJobOrder();
+          if(editingMasterJobOrder===null)tutupDialogEditMaster();
+        }else if(type==="erp"){
+          const selected=value("masterEditErpProduct");
+          if(!selected){
+            alert("Pilih produk Master FG untuk Item Code ini.");
+            return;
+          }
+          await pilihPemetaanMasterErp(masterEditDialogIndex,selected);
+          tutupDialogEditMaster();
+        }
+      }finally{
+        if(button&&document.getElementById("masterEditDialog")?.style.display!=="none")button.disabled=false;
+      }
+    }
+
+    document.addEventListener("keydown",event=>{
+      if(event.key==="Escape"&&masterEditDialogType)batalEditDialogMaster();
+    });
+
     function bukaSubmenuMaster(type) {
       toggleModal("masterHubModal", false);
       if (type === "fg") bukaMasterProdukFg();
@@ -11230,12 +11456,13 @@
       const name=masterProdukFg[index];
       if(!name)return;
       editingMasterProdukFg=index;
-      document.getElementById("masterProdukFgInput").value=name;
-      document.getElementById("masterProdukFgTarget8h").value=ambilTargetStandarFg(name)||"";
-      document.getElementById("masterProdukFgPcsPerBox").value=ambilPcsPerBoxStandarFg(name)||"";
-      document.getElementById("btnSimpanMasterProdukFg").textContent="💾 Simpan Perubahan";
-      document.getElementById("btnBatalEditMasterProdukFg").style.display="inline-flex";
-      document.getElementById("masterProdukFgInput").focus();
+      bukaDialogEditMaster("fg",index,"Edit Master Produk Finish Good",
+        '<label for="masterEditFgName">Nama Produk Finish Good</label>'+
+        '<input type="text" id="masterEditFgName" value="'+escapeMasterEditValue(name)+'" autocomplete="off" />'+
+        '<label for="masterEditFgTarget">Target Standar Produksi (8 Jam / PCS)</label>'+
+        '<input type="text" inputmode="numeric" id="masterEditFgTarget" value="'+escapeMasterEditValue(ambilTargetStandarFg(name)||"")+'" oninput="this.value=this.value.replace(/[^0-9]/g,\'\')" />'+
+        '<label for="masterEditFgPcsPerBox">Qty Standar per Box (PCS)</label>'+
+        '<input type="text" inputmode="numeric" id="masterEditFgPcsPerBox" value="'+escapeMasterEditValue(ambilPcsPerBoxStandarFg(name)||"")+'" oninput="this.value=this.value.replace(/[^0-9]/g,\'\')" />');
     }
 
     function batalEditMasterProdukFg(){
@@ -11437,14 +11664,14 @@
     }
 
     function mulaiEditKatalog(idx) {
-      const item = catalog[idx];
-      if (!item) return;
-      editingCatalogIndex = idx;
-      document.getElementById("newCatGroup").value = item.group;
-      document.getElementById("newCatPart").value = item.part;
-      const btn = document.querySelector("#masterModal .form-row-responsive .btn-primary");
-      if (btn) btn.textContent = "💾 Simpan Perubahan Master";
-      document.getElementById("newCatGroup").focus();
+      const item=catalog[idx];
+      if(!item)return;
+      editingCatalogIndex=idx;
+      bukaDialogEditMaster("wip",idx,"Edit Master WIP",
+        '<label for="masterEditWipGroup">Kelompok Produk</label>'+
+        '<input type="text" id="masterEditWipGroup" value="'+escapeMasterEditValue(item.group)+'" autocomplete="off" />'+
+        '<label for="masterEditWipPart">Komponen / Kode Part</label>'+
+        '<input type="text" id="masterEditWipPart" value="'+escapeMasterEditValue(item.part)+'" autocomplete="off" />');
     }
 
     function batalEditKatalog() {
