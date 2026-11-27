@@ -1766,6 +1766,48 @@
     }
     #sectionWip #wipInputSection,#sectionSpa #spaInputSection,
     #sectionFg #fgInputCard { scroll-margin-top:18px; }
+
+    /* Desktop: berikan ruang di bawah header sticky agar judul bagian tetap tampak
+       saat navigasi F1/F2/F3 menggulir ke Input, Daftar, atau WhatsApp. */
+    @media (min-width:901px) {
+      #sectionWip #wipInputSection,#sectionSpa #spaInputSection,#sectionFg #fgInputCard,
+      #sectionWip #wipListCard,#sectionFg #fgListCard,#sectionSpa #spaListCard,
+      #sectionWip #wipWaCard,#sectionFg #fgWaCard,#sectionSpa #spaWaCard {
+        scroll-margin-top:92px;
+      }
+    }
+
+    /* Kartu daftar: tiga kolom pada desktop lebar, turun ke dua lalu satu
+       kolom pada layar yang lebih sempit agar isi kartu tetap terbaca. */
+    #wipGroupedContainer,#fgListContainer,#spaGroupedContainer {
+      display:grid;
+      grid-template-columns:minmax(0,1fr);
+      align-items:start;
+      gap:12px;
+    }
+    #wipGroupedContainer > .group-card,
+    #fgListContainer > .group-card,
+    #spaGroupedContainer > .group-card {
+      min-width:0;
+      margin:0 !important;
+      height:100%;
+    }
+    #wipGroupedContainer > :only-child:not(.group-card),
+    #fgListContainer > :only-child:not(.group-card),
+    #spaGroupedContainer > :only-child:not(.group-card) {
+      grid-column:1 / -1;
+    }
+    @media (min-width:880px) {
+      #wipGroupedContainer,#fgListContainer,#spaGroupedContainer {
+        grid-template-columns:repeat(2,minmax(0,1fr));
+        gap:14px;
+      }
+    }
+    @media (min-width:1200px) {
+      #wipGroupedContainer,#fgListContainer,#spaGroupedContainer {
+        grid-template-columns:repeat(3,minmax(0,1fr));
+      }
+    }
     #wipMetaControls { margin-top:0; }
 
     @media (max-width:600px) {
